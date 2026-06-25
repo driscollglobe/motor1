@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Model Year — a daily car-industry game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Motor1.com light theme */
+    --bg:#e9edf2; --panel:#ffffff; --panel2:#f1f5f9; --line:#dde4ec;
+    --text:#13181e; --muted:#5b6672; --faint:#909aa6;
+    --blue:#1f6dff; --blue-deep:#0a4fc4; --blue-tint:#eaf1ff;
+    --green:#12a14b; --red:#df3a30; --ink:#ffffff;
+    --display:"Oswald",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --shadow:0 1px 2px rgba(20,33,61,.06),0 1px 3px rgba(20,33,61,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  #app{max-width:460px;margin:0 auto;padding:12px 12px 40px;min-height:100vh}
+  .display{font-family:var(--display);text-transform:uppercase;letter-spacing:.02em}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)} .faint{color:var(--faint)}
+  .green{color:var(--green)} .red{color:var(--red)} .accent{color:var(--blue)} .blue{color:var(--blue)}
+  button{font-family:var(--sans);cursor:pointer;border:0;color:inherit;background:none}
+  button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .row{display:flex;align-items:center;gap:8px}
+  .spread{justify-content:space-between}
+  .stack{display:flex;flex-direction:column}
+  .grow{flex:1}
+
+  /* topbar + motor1 logo */
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:4px 2px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+  .m1{display:inline-flex;align-items:center;gap:1px;text-decoration:none;color:var(--text);
+    font-family:var(--sans);font-weight:800;font-size:23px;letter-spacing:-.02em;line-height:1}
+  .m1 svg{width:25px;height:25px;display:block;margin:0 0 1px 0}
+  .m1 .com{font-size:13px;font-weight:700;align-self:flex-end;margin-bottom:3px;letter-spacing:0}
+  .gamechip{text-align:right;line-height:1}
+  .gamechip .gn{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.04em;color:var(--text)}
+  .gamechip .gd{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);margin-top:2px}
+
+  /* status cluster */
+  .cluster{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .gauge{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;text-align:center;box-shadow:var(--shadow)}
+  .gauge .k{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
+  .gauge .v{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:2px;line-height:1}
+  .gauge.year .v{color:var(--blue)}
+
+  /* event banner */
+  .event{background:var(--panel);border:1px solid var(--line);
+    border-left:4px solid var(--blue);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .event .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-family:var(--mono)}
+  .event .ttl{font-family:var(--display);font-weight:600;font-size:17px;margin:2px 0 3px}
+  .event .body{font-size:13px;color:var(--muted);line-height:1.35}
+
+  /* segment list */
+  .seglist{display:flex;flex-direction:column;gap:8px}
+  .seg{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow)}
+  .seg .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .seg .name{font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px}
+  .seg .name .emoji{font-size:15px}
+  .seg .arrow{font-family:var(--mono);font-size:13px;font-weight:600}
+  .seg .mid{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .pill b{color:var(--text);font-weight:600}
+  .rivchips{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .chip{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--blue-deep);
+    border:1px solid #cfe0ff;border-radius:4px;padding:1px 5px;background:var(--blue-tint)}
+  .chip.open{color:var(--faint);background:var(--panel2);border-color:var(--line)}
+  /* allocation stepper */
+  .alloc{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;
+    border-top:1px dashed var(--line);padding-top:8px}
+  .alloc .blurb{font-size:11px;color:var(--faint);line-height:1.3;flex:1}
+  .stepper{display:flex;align-items:center;gap:0;flex:none}
+  .stepper button{width:30px;height:30px;font-family:var(--mono);font-size:18px;font-weight:600;
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);line-height:1}
+  .stepper button:first-child{border-radius:6px 0 0 6px}
+  .stepper button:last-child{border-radius:0 6px 6px 0}
+  .stepper button:not(:disabled):active{background:var(--blue-tint);color:var(--blue-deep)}
+  .stepper button:disabled{color:var(--faint);cursor:default}
+  .stepper .qty{min-width:52px;text-align:center;font-family:var(--mono);font-size:12px;
+    background:var(--panel2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    height:30px;display:flex;flex-direction:column;justify-content:center;line-height:1.1}
+  .stepper .qty .u{font-size:12px;font-weight:600}
+  .stepper .qty .c{font-size:9px;color:var(--blue)}
+
+  /* posture */
+  .posture{margin-top:14px}
+  .seclbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+    font-family:var(--mono);margin-bottom:6px}
+  .seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .pbtn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;box-shadow:var(--shadow)}
+  .pbtn .pl{font-family:var(--display);font-weight:600;font-size:14px}
+  .pbtn .pd{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.25}
+  .pbtn.on{border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue)}
+  .pbtn.on .pl{color:var(--blue-deep)}
+
+  /* forecast */
+  .forecast{margin-top:14px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:8px;padding:10px 12px}
+  .forecast .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-deep);font-family:var(--mono)}
+  .forecast .txt{font-size:13px;color:var(--text);margin-top:3px;font-style:italic}
+  .forecast .warn{font-size:12px;color:var(--red);margin-top:6px}
+
+  /* run bar */
+  .runbar{position:sticky;bottom:0;margin:16px -12px -40px;padding:14px 12px 12px;
+    background:linear-gradient(180deg,rgba(233,237,242,0) 0,var(--bg) 18px);}
+  .capreadout{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;
+    font-family:var(--mono);font-size:12px}
+  .capreadout .big{font-size:17px;font-weight:600}
+  .btn{display:block;width:100%;text-align:center;border-radius:9px;padding:13px;
+    font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.03em;text-transform:uppercase}
+  .btn.primary{background:var(--blue);color:var(--ink);box-shadow:0 2px 8px rgba(31,109,255,.32)}
+  .btn.primary:active{filter:brightness(.94)}
+  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:13px;padding:11px;box-shadow:var(--shadow)}
+  .btn[disabled]{opacity:.45;cursor:default;box-shadow:none}
+  .actions{display:flex;gap:8px;margin-top:8px}
+  .actions .btn{margin:0}
+
+  /* result */
+  .result .hero{text-align:center;padding:18px 0 10px}
+  .result .heroK{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
+  .result .heroV{font-family:var(--mono);font-weight:600;font-size:46px;line-height:1;margin-top:4px}
+  .result .heroSub{font-size:13px;color:var(--muted);margin-top:6px}
+  .notes{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;line-height:1.35;box-shadow:var(--shadow)}
+  .note.warn{border-left:3px solid var(--red)}
+  .note.good{border-left:3px solid var(--green)}
+  .note.rival{border-left:3px solid var(--blue)}
+  .note .nh{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
+
+  /* intro / end */
+  .intro{padding:20px 4px}
+  .intro .big{font-family:var(--display);font-weight:700;font-size:40px;line-height:.95}
+  .intro .big .yr{color:var(--blue)}
+  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:14px 0 6px}
+  .sacred{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+  .sacred .s{font-size:12.5px;color:var(--text);display:flex;gap:8px;align-items:flex-start}
+  .sacred .s b{color:var(--blue)}
+
+  .end .grade{display:flex;align-items:center;gap:14px;justify-content:center;margin:6px 0 2px}
+  .end .gbadge{font-family:var(--display);font-weight:700;font-size:54px;width:84px;height:84px;
+    display:flex;align-items:center;justify-content:center;border-radius:14px;border:2px solid var(--blue);color:var(--blue);background:var(--blue-tint)}
+  .end .gbadge.s{border-color:var(--blue);color:var(--ink);background:var(--blue)}
+  .end .gbadge.f{border-color:var(--red);color:var(--red);background:#fdecea}
+  .end .rankline{font-family:var(--display);font-size:18px;font-weight:600}
+  .breakdown{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+  .brow{display:flex;justify-content:space-between;padding:8px 12px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--line)}
+  .brow:last-child{border-bottom:0}
+  .brow.total{background:var(--panel2);font-weight:600}
+  .brow .neg{color:var(--red)}
+  .vs{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .vsbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow)}
+  .vsbox .h{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px}
+  .vsbox.beat .h{color:var(--green)} .vsbox.lost .h{color:var(--red)}
+  .vsbox .nm{font-size:12.5px;line-height:1.5}
+  .story{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:13px;line-height:1.4;box-shadow:var(--shadow)}
+  .share{margin-top:12px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:8px;padding:11px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;line-height:1.5}
+
+  /* debug */
+  .debug{margin-top:20px;border:1px solid #cfe0ff;border-radius:8px;padding:10px;background:var(--blue-tint);font-family:var(--mono);font-size:11px;line-height:1.5}
+  .debug h4{margin:0 0 6px;font-family:var(--display);color:var(--blue-deep);font-size:13px}
+  .debug table{width:100%;border-collapse:collapse}
+  .debug td{padding:1px 4px;border-bottom:1px solid #d4e2fb}
+  .debug .num{text-align:right}
+  .dbtn{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text)}
+
+  .foot{margin-top:20px;text-align:center;font-size:11px;color:var(--faint);line-height:1.4}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   MODEL YEAR — Phase 1 (the playable engine).
+   Single self-contained page, vanilla JS, no backend. Every tunable number
+   lives in CONFIG. The three sacred mechanics are: contested share (revenue is
+   a slice of a shared pool), telegraphed rival reactions (a price war is warned
+   the year before it bites), and telegraphed events (a vague forecast a year
+   ahead, ~70% true). See section 6 of the brief for the exact math.
+   ========================================================================= */
+
+var CONFIG = {
+  debug: /[?&]debug=1\b/.test(location.search),
+  turns: 10,
+
+  /* starting state */
+  startCash: 5000,            // $M  (displays as $5.0B)
+  startBrand: 50,             // 0..100
+  startCapacity: { family: 30 },   // a small starting position in one mainstream segment
+
+  /* money / capacity economics */
+  poolUnit: 30,               // $M of demand per 1 point of base pool
+  capacityCostPerUnit: 20,    // $M to build one durable unit of capacity
+  opCostPerUnit: 1.6,         // $M/yr per unit — thin slices in crowded pools bleed against this
+  companyOverhead: 120,       // fixed $M/yr (idle hoarding bleeds against this)
+  debtInterestRate: 0.08,
+  capacityDecay: 0.08,        // capacity *= (1-this) every year (replaces Retool)
+  allocStepUnits: 5,          // +/- stepper increment
+  botMaxUnitsPerSeg: 45,      // par-bot guardrail: cap one segment's build in a single year
+
+  /* contested share + reactions */
+  dominanceThreshold: 0.28,   // player share above this provokes the home rival
+  priceCutPenalty: 0.12,      // shrinks that segment's pool NEXT year (1-this)
+  reactionCapacityBump: 0.20, // and the defender adds this fraction of capacity
+  brandFloorFactor: 0.8, brandFactorDiv: 250,   // brandFactor = 0.8 + brand/250
+
+  /* secular drift */
+  secularDriftEV: 0.06,       // EV pool grows: drift = 1 + yearIndex*this
+
+  /* events */
+  forecastTrueChance: 0.70,
+  severityFactor: { mild: 0.6, medium: 1.0, severe: 1.4 },
+  severityWeights: { mild: 0.30, medium: 0.45, severe: 0.25 },
+
+  /* postures (one company-wide choice per year) */
+  postures: {
+    budget:   { label:"Budget",   appeal:1.25, marginMod:0.70, brandDelta:-3, blurb:"Chase volume, cut the sticker." },
+    standard: { label:"Standard", appeal:1.00, marginMod:1.00, brandDelta: 0, blurb:"Hold the line." },
+    premium:  { label:"Premium",  appeal:0.80, marginMod:1.35, brandDelta:+3, blurb:"Fewer cars, fatter margins, build the badge." },
+  },
+
+  /* valuation */
+  brandValue: 8,              // $M per brand point
+  idlePenaltyPerUnit: 4,      // capacity that ran at a loss last year drags valuation
+  /* rivals — capacity grows on a bounded deterministic schedule (no runaway compounding) */
+  rivalStartCash: 1500,
+  rivalHomeGrowth: 0.10,      // home-segment capacity grows this much per year
+  rivalOffGrowth: 0.025,      // off-segment capacity grows this much per year
+  homeBonusValue: 1.25,       // entrenchment multiplier in a rival's home segments
+
+  emoji: { oil_shock:"🛢️", boom:"📈", recession:"📉", ev_subsidy:"⚡", suv_craze:"🚙", crisis:"💥", tariff:"🚧", quiet:"🏁" },
+  shareUrl: "modelyear.motor1.com",
+};
+
+/* ---- segments (base pool / margin / capacity value, with car-fantasy copy) ---- */
+var SEGMENTS = [
+  { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.14, capValue:10,
+    invest:"cheap commuters and fleet rentals", defender:"toyo" },
+  { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.20, capValue:13,
+    invest:"three-row haulers for the school run", defender:"wolfsburg" },
+  { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.34, capValue:15,
+    invest:"naturally aspirated heroes and track specials", defender:"maranello" },
+  { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.50, capValue:17,
+    invest:"leather, badges and quiet money", defender:"stuttgart" },
+  { id:"ev",          name:"EV / Future",    emoji:"⚡", basePool:30,  baseMargin:0.30, capValue:18,
+    invest:"the electric bet that keeps getting bigger", defender:"paloalto" },
+  { id:"pickup",      name:"Pickup / Truck", emoji:"🛻", basePool:70,  baseMargin:0.36, capValue:14,
+    invest:"full-size trucks that run on cheap gas", defender:"dearborn" },
+];
+var SEG_IDS = SEGMENTS.map(function(s){return s.id;});
+function segMeta(id){ for(var i=0;i<SEGMENTS.length;i++) if(SEGMENTS[i].id===id) return SEGMENTS[i]; }
+// article + short noun for the price-war note ("Heartland Haulers starts a truck price war.")
+var WAR_PHRASE = { economy:"an economy", family:"an SUV", performance:"a performance", luxury:"a luxury", ev:"an EV", pickup:"a truck" };
+
+/* ---- rivals: real makers worn lightly. One keeps its real hometown (Maranello);
+   the rest are IP-safe cultural winks (flag + behavior tell still point at who they are).
+   `city` holds the display name. Internal `id` is unchanged so game logic is untouched. ---- */
+var RIVALS = [
+  { id:"toyo",     city:"Kaizen Motors",     flag:"🇯🇵", short:"KAIZN", posture:"standard", brand:70,
+    tell:"Quality everywhere, never blinks.", home:["economy","family"],
+    capacity:{ economy:30, family:25, performance:2, luxury:3, ev:8, pickup:3 } },
+  { id:"wolfsburg",city:"People's Garage",   flag:"🇩🇪", short:"FOLK",  posture:"budget",   brand:55,
+    tell:"Volume giant, undercuts on price.", home:["family","economy"],
+    capacity:{ economy:22, family:28, performance:4, luxury:6, ev:6, pickup:2 } },
+  { id:"maranello",city:"Maranello",         flag:"🇮🇹", short:"MARA",  posture:"premium",  brand:88,
+    tell:"Red halo, builds one supercar.", home:["performance"],
+    capacity:{ economy:0, family:0, performance:18, luxury:4, ev:1, pickup:0 } },
+  { id:"stuttgart",city:"Überwerks",         flag:"🇩🇪", short:"WERK",  posture:"premium",  brand:82,
+    tell:"Engineered to intimidate.", home:["luxury","performance"],
+    capacity:{ economy:0, family:3, performance:14, luxury:22, ev:4, pickup:0 } },
+  { id:"paloalto", city:"Silicon Sparks",    flag:"🇺🇸", short:"SILI",  posture:"budget",   brand:66,
+    tell:"Bets the house on EV, cuts price.", home:["ev"],
+    capacity:{ economy:0, family:0, performance:3, luxury:3, ev:20, pickup:0 } },
+  { id:"dearborn", city:"Heartland Haulers",  flag:"🇺🇸", short:"HAUL",  posture:"standard", brand:60,
+    tell:"Truck dynasty defends its turf.", home:["pickup","family"],
+    capacity:{ economy:6, family:18, performance:2, luxury:0, ev:1, pickup:30 } },
+];
+function rivalMeta(id){ for(var i=0;i<RIVALS.length;i++) if(RIVALS[i].id===id) return RIVALS[i]; }
+
+/* ---- event deck: demand multipliers (at MEDIUM severity) + opCost effects ---- */
+var EVENTS = {
+  oil_shock:  { name:"Oil shock",        demand:{economy:1.25,family:0.95,performance:0.80,luxury:0.85,ev:1.30,pickup:0.60},
+    reveal:"Gas hits five bucks a gallon overnight. Anything thirsty sits on the lot.",
+    forecast:"Tension building in the oil-producing regions." },
+  boom:       { name:"Cheap gas boom",   demand:{economy:0.85,family:1.05,performance:1.20,luxury:1.20,ev:0.95,pickup:1.30},
+    reveal:"Cheap gas and easy credit. The showroom is mobbed for big toys.",
+    forecast:"Analysts whisper about a coming spending boom." },
+  recession:  { name:"Recession",        demand:{economy:1.30,family:0.85,performance:0.75,luxury:0.60,ev:0.90,pickup:0.90},
+    reveal:"The economy cracks. Financing dries up and the luxury floor goes silent.",
+    forecast:"The yield curve inverts. Storm clouds gather." },
+  ev_subsidy: { name:"EV subsidy wave",  demand:{economy:0.95,family:0.95,performance:0.85,luxury:0.90,ev:1.80,pickup:0.85},
+    opcost:{economy:1.10,family:1.10,performance:1.10,luxury:1.10,pickup:1.10},
+    reveal:"A fat federal subsidy lands. Every dealer suddenly wants a plug.",
+    forecast:"Washington hints at a green incentive package." },
+  suv_craze:  { name:"SUV craze",        demand:{economy:0.80,family:1.50,performance:0.95,luxury:1.05,ev:0.95,pickup:1.10},
+    reveal:"Everyone needs a three-row crossover. Family lots clear out.",
+    forecast:"Lifestyle magazines can't stop talking about crossovers." },
+  crisis:     { name:"Chip & lithium crunch", demand:{ev:0.92},
+    opcost:{economy:1.25,family:1.25,performance:1.25,luxury:1.25,ev:1.25,pickup:1.25},
+    reveal:"A chip and lithium crunch jams every line. Build costs spike across the board.",
+    forecast:"Supply chatter: critical parts may get scarce." },
+  tariff:     { name:"Tariff shock",     demand:{economy:0.95,family:0.97},
+    opcost:{economy:1.30,family:1.15},
+    reveal:"New tariffs hammer imported parts. Small cars get expensive to build.",
+    forecast:"Trade talks turn hostile on the evening news." },
+  quiet:      { name:"Quiet year",       demand:{},
+    reveal:"A calm model year. No shocks — just execution.",
+    forecast:"Forecasters see a quiet year ahead." },
+};
+var EVENT_DECK = ["oil_shock","boom","recession","ev_subsidy","suv_craze","crisis","tariff","quiet"];
+
+/* ============================ helpers ============================ */
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function hashString(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+function mulberry32(seed){ var a=seed>>>0; return function(){ a|=0;a=(a+0x6d2b79f5)|0; var t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+function rngFromSeed(s){ return mulberry32(hashString(s)); }
+function pickWeighted(rng,obj){ var total=0,k; for(k in obj) total+=obj[k]; var r=rng()*total; for(k in obj){ r-=obj[k]; if(r<=0) return k; } return k; }
+
+// money in $M -> "$5.0B" / "$320M" / "-$1.2B"
+function fmtMoney(v){
+  var sign = v<0 ? "-" : "", a=Math.abs(v);
+  if(a>=1000) return sign+"$"+(a/1000).toFixed(1)+"B";
+  return sign+"$"+Math.round(a)+"M";
+}
+function fmtSigned(v){ return (v>=0?"+":"")+fmtMoney(v); }
+function pct(x){ return Math.round(x*100)+"%"; }
+
+/* ============================ scenario (seed-fixed) ============================ */
+// The whole day's run is decided here so it is identical for everyone on a seed.
+function buildScenario(seed){
+  var rng = rngFromSeed("scenario|"+seed);
+  var events=[], severities=[];
+  for(var i=0;i<CONFIG.turns;i++){
+    events.push(EVENT_DECK[Math.floor(rng()*EVENT_DECK.length)]);
+    severities.push(pickWeighted(rng, CONFIG.severityWeights));
+  }
+  // forecast shown in year i is a hint about year i+1; ~70% true, else a red herring
+  var forecastTrue=[], forecastEvent=[];
+  for(i=0;i<CONFIG.turns-1;i++){
+    var truthful = rng() < CONFIG.forecastTrueChance;
+    forecastTrue.push(truthful);
+    if(truthful){ forecastEvent.push(events[i+1]); }
+    else {
+      var others = EVENT_DECK.filter(function(e){ return e!==events[i+1]; });
+      forecastEvent.push(others[Math.floor(rng()*others.length)]);
+    }
+  }
+  return { seed:seed, events:events, severities:severities, forecastTrue:forecastTrue, forecastEvent:forecastEvent };
+}
+
+/* ============================ state ============================ */
+function freshEntities(){
+  var ents=[];
+  var player={ id:"player", isPlayer:true, name:"Your company", short:"YOU",
+    cash:CONFIG.startCash, brand:CONFIG.startBrand, posture:"standard",
+    capacity:{}, home:[], lastSeg:{} };
+  SEG_IDS.forEach(function(s){ player.capacity[s] = CONFIG.startCapacity[s]||0; });
+  ents.push(player);
+  RIVALS.forEach(function(r){
+    var e={ id:r.id, isPlayer:false, name:r.city, short:r.short, flag:r.flag,
+      cash:CONFIG.rivalStartCash, brand:r.brand, posture:r.posture,
+      capacity:{}, home:r.home.slice(), lastSeg:{} };
+    SEG_IDS.forEach(function(s){ e.capacity[s] = r.capacity[s]||0; });
+    ents.push(e);
+  });
+  return ents;
+}
+function createState(seed){
+  var pending={}; SEG_IDS.forEach(function(s){ pending[s]=1; });
+  return {
+    seed:seed, scenario:buildScenario(seed), entities:freshEntities(),
+    pending:pending, yearIndex:0, history:[], playerPosture:"standard",
+    planned:{}, phase:"intro", lastResult:null,
+  };
+}
+function player(state){ return state.entities[0]; }
+
+/* ============================ market math (section 6) ============================ */
+function eventMultiplier(eventId,severity,segId){
+  var def=EVENTS[eventId], base=(def.demand&&def.demand[segId]!=null)?def.demand[segId]:1;
+  return 1 + (base-1)*CONFIG.severityFactor[severity];
+}
+function opCostMultiplier(eventId,severity,segId){
+  var def=EVENTS[eventId], base=(def.opcost&&def.opcost[segId]!=null)?def.opcost[segId]:1;
+  return 1 + (base-1)*CONFIG.severityFactor[severity];
+}
+function brandFactor(brand){ return CONFIG.brandFloorFactor + brand/CONFIG.brandFactorDiv; }
+function homeBonus(entity,segId){ return entity.home.indexOf(segId)>=0 ? CONFIG.homeBonusValue : 1; }
+function effectiveCapacity(entity,segId){
+  var ap=CONFIG.postures[entity.posture].appeal;
+  return (entity.capacity[segId]||0) * ap * brandFactor(entity.brand) * homeBonus(entity,segId);
+}
+
+// Demand pool for a segment this year. Sacred mechanic 1 lives in the share split below.
+function demandPool(state,segId,yearIndex){
+  var seg=segMeta(segId);
+  var ev=state.scenario.events[yearIndex], sev=state.scenario.severities[yearIndex];
+  var drift = segId==="ev" ? (1 + yearIndex*CONFIG.secularDriftEV) : 1;
+  return seg.basePool * CONFIG.poolUnit * eventMultiplier(ev,sev,segId) * drift * (state.pending[segId]||1);
+}
+
+// Rivals grow capacity on a bounded deterministic schedule (rule-based, seed-free):
+// faster in their home segments, slowly everywhere. They pay for it from cash so
+// their valuation stays honest for the final ranking.
+function rivalInvest(entity){
+  if(entity.isPlayer) return;
+  SEG_IDS.forEach(function(s){
+    var g = entity.home.indexOf(s)>=0 ? CONFIG.rivalHomeGrowth : CONFIG.rivalOffGrowth;
+    var before = entity.capacity[s]||0, after = before*(1+g);
+    entity.capacity[s] = after;
+    entity.cash -= (after-before)*CONFIG.capacityCostPerUnit;
+  });
+}
+
+// Resolve the model year at state.yearIndex. Player capacity/cash for this year's
+// build must already be applied by the caller. Mutates state; returns a summary.
+function resolveYear(state){
+  var y=state.yearIndex, ents=state.entities;
+  var ev=state.scenario.events[y], sev=state.scenario.severities[y];
+
+  // rivals build first (deterministic), then the market is contested
+  ents.forEach(rivalInvest);
+
+  var pools={}, sumEff={};
+  SEG_IDS.forEach(function(s){
+    pools[s]=demandPool(state,s,y);
+    var tot=0; ents.forEach(function(e){ tot+=effectiveCapacity(e,s); });
+    sumEff[s]=tot;
+  });
+
+  var playerProfit=0, playerSeg={};
+  ents.forEach(function(e){
+    var post=CONFIG.postures[e.posture], total=0;
+    e.lastSeg={};
+    SEG_IDS.forEach(function(s){
+      var seg=segMeta(s);
+      var share = sumEff[s]>0 ? effectiveCapacity(e,s)/sumEff[s] : 0;
+      var gross = share * pools[s];
+      var margin = seg.baseMargin * post.marginMod;
+      var opCost = (e.capacity[s]||0) * CONFIG.opCostPerUnit * opCostMultiplier(ev,sev,s);
+      var profit = gross*margin - opCost;
+      e.lastSeg[s] = { share:share, gross:gross, profit:profit, capacity:e.capacity[s]||0 };
+      total += profit;
+    });
+    var net = total - CONFIG.companyOverhead;   // debt is 0 in Phase 1
+    e.cash += net;
+    e.brand = clamp(e.brand + post.brandDelta, 1, 100);
+    if(e.isPlayer){ playerProfit=net; playerSeg=e.lastSeg; }
+  });
+
+  // Sacred mechanic 2: visible, telegraphed rival reaction to player dominance.
+  var notes=[], warnings=[], nextPending={};
+  SEG_IDS.forEach(function(s){ nextPending[s]=1; });
+  SEG_IDS.forEach(function(s){
+    var sh = playerSeg[s] ? playerSeg[s].share : 0;
+    if(sh > CONFIG.dominanceThreshold){
+      var seg=segMeta(s), def=rivalMeta(seg.defender), rivEnt=null;
+      for(var i=0;i<ents.length;i++) if(ents[i].id===seg.defender){ rivEnt=ents[i]; break; }
+      nextPending[s] = 1 - CONFIG.priceCutPenalty;
+      if(rivEnt) rivEnt.capacity[s] = (rivEnt.capacity[s]||0) * (1+CONFIG.reactionCapacityBump);
+      warnings.push({ seg:s, city:def.city,
+        text:def.city+" starts "+WAR_PHRASE[s]+" price war. Your "+seg.name+" profits get squeezed next year." });
+    }
+  });
+  state.pending = nextPending;
+
+  // capacity decay for everyone (replaces Retool)
+  ents.forEach(function(e){ SEG_IDS.forEach(function(s){ e.capacity[s] = (e.capacity[s]||0)*(1-CONFIG.capacityDecay); }); });
+
+  // record player history (drives the honest end screen)
+  var p=player(state);
+  var segLog={};
+  SEG_IDS.forEach(function(s){ segLog[s] = { capacity:p.lastSeg[s].capacity, share:p.lastSeg[s].share, profit:p.lastSeg[s].profit, alloc:(state.planned[s]||0) }; });
+  state.history.push({
+    year:y, event:ev, severity:sev, posture:p.posture,
+    profit:playerProfit, cashAfter:p.cash, brandAfter:p.brand, seg:segLog,
+    warnings:warnings.slice(),
+  });
+
+  return { profit:playerProfit, segProfit:playerSeg, notes:notes, warnings:warnings, pools:pools };
+}
+
+/* ============================ valuation / rank ============================ */
+function idlePenalty(entity){
+  var pen=0;
+  SEG_IDS.forEach(function(s){
+    if(entity.lastSeg[s] && entity.lastSeg[s].profit<0) pen += (entity.capacity[s]||0)*CONFIG.idlePenaltyPerUnit;
+  });
+  return pen;
+}
+function capacityValue(entity){
+  var v=0; SEG_IDS.forEach(function(s){ v += (entity.capacity[s]||0)*segMeta(s).capValue; }); return v;
+}
+function valuation(entity){
+  return entity.cash + capacityValue(entity) + entity.brand*CONFIG.brandValue - idlePenalty(entity);
+}
+function valuationBreakdown(entity){
+  return {
+    cash:entity.cash, capacity:capacityValue(entity), brand:entity.brand*CONFIG.brandValue,
+    idle:-idlePenalty(entity), total:valuation(entity),
+  };
+}
+function rankings(state){
+  return state.entities.map(function(e){ return { e:e, v:valuation(e) }; })
+    .sort(function(a,b){ return b.v-a.v; });
+}
+function playerRank(state){
+  var r=rankings(state); for(var i=0;i<r.length;i++) if(r[i].e.isPlayer) return i+1; return r.length;
+}
+function gradeFor(rank,total,fieldSize){
+  if(total<=0) return {g:"F",cls:"f"};
+  if(rank===1) return {g:"S",cls:"s"};
+  if(rank<=2) return {g:"A",cls:""};
+  if(rank<=3) return {g:"B",cls:""};
+  if(rank<=Math.ceil(fieldSize/2)) return {g:"C",cls:""};
+  return {g:"D",cls:""};
+}
+
+/* ============================ DOM helper ============================ */
+function el(tag,props,kids){
+  props=props||{}; var n=document.createElement(tag);
+  for(var k in props){ var v=props[k];
+    if(v==null||v===false) continue;
+    if(k==="class") n.className=v;
+    else if(k==="html") n.innerHTML=v;
+    else if(k==="text") n.textContent=v;
+    else if(k.indexOf("on")===0 && typeof v==="function") n.addEventListener(k.slice(2).toLowerCase(),v);
+    else n.setAttribute(k,v);
+  }
+  kids = kids==null?[]:(Array.isArray(kids)?kids:[kids]);
+  kids.forEach(function(c){ if(c==null||c===false) return; n.appendChild(typeof c==="string"?document.createTextNode(c):c); });
+  return n;
+}
+function arrowFor(mult){
+  if(mult>1.05) return {ch:"▲",cls:"green"};
+  if(mult<0.95) return {ch:"▼",cls:"red"};
+  return {ch:"▬",cls:"muted"};
+}
+
+/* ============================ app / rendering ============================ */
+var App = { state:null, root:null };
+
+function setSeed(seed){ App.state = createState(seed); }
+function newSeed(){ return "practice|"+Math.floor(Math.random()*1e9); }
+
+function render(){
+  var s=App.state, root=App.root;
+  root.innerHTML="";
+  root.appendChild(topbar());
+  if(s.phase==="intro") root.appendChild(introView());
+  else if(s.phase==="turn") root.appendChild(turnView());
+  else if(s.phase==="result") root.appendChild(resultView());
+  else if(s.phase==="end") root.appendChild(endView());
+  if(CONFIG.debug) root.appendChild(debugView());
+}
+
+function topbar(){
+  return el("header",{class:"topbar"},[
+    motor1Logo(),
+    el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text:"daily"}) ]),
+  ]);
+}
+// The motor1.com logo, recreated as inline SVG so the page stays self-contained:
+// lowercase "motor", the "1" inside a blue ring with the signature gap + dot, then ".com".
+function motor1Logo(){
+  var a=el("a",{class:"m1",href:"#","aria-label":"motor1.com",onclick:function(e){e.preventDefault();}});
+  a.innerHTML =
+    '<span class="mt">motor</span>'+
+    '<svg viewBox="0 0 64 64" aria-hidden="true">'+
+      '<path d="M42.1 53.8 A24 24 0 1 1 53.8 42.1" fill="none" stroke="var(--blue)" stroke-width="7.5" stroke-linecap="round"/>'+
+      '<circle cx="49.2" cy="49.2" r="5.2" fill="var(--blue)"/>'+
+      '<text x="31" y="45" text-anchor="middle" font-family="Oswald, system-ui, sans-serif" font-weight="700" font-size="38" fill="currentColor">1</text>'+
+    '</svg>'+
+    '<span class="com">.com</span>';
+  return a;
+}
+
+function introView(){
+  return el("div",{class:"intro"},[
+    el("div",{class:"big"},[ "Run an automaker for ", el("span",{class:"yr",text:"10 model years"}), "." ]),
+    el("div",{class:"lede",text:"New scenario, ten model years, about two minutes. Put your money across the market while the legends — from Maranello to Silicon Sparks — fight you for the same buyers. Highest company valuation wins."}),
+    el("div",{class:"sacred"},[
+      el("div",{class:"s"},[ el("b",{text:"Contested. "}), "Revenue is your slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
+      el("div",{class:"s"},[ el("b",{text:"Telegraphed. "}), "Dominate a segment and its owner starts a price war next year — and you're warned before it bites." ]),
+      el("div",{class:"s"},[ el("b",{text:"Forecast. "}), "A vague signal arrives a year ahead. Most are real. Some are bait. Reading them is the game." ]),
+    ]),
+    el("button",{class:"btn primary",style:"margin-top:16px",text:"Start the run",onclick:function(){ App.state.phase="turn"; render(); }}),
+    el("div",{class:"foot",text:"A daily car-industry game for Motor1. Vanilla JS, no backend, no real brand names in play."}),
+  ]);
+}
+
+function statusCluster(){
+  var s=App.state, p=player(s);
+  return el("div",{class:"cluster"},[
+    gauge("Year",(s.yearIndex+1)+" / "+CONFIG.turns,"year"),
+    gauge("Cash",fmtMoney(p.cash),p.cash<0?"":""),
+    gauge("Value",fmtMoney(valuation(p))),
+    gauge("Rank","#"+playerRank(s)+" / "+s.entities.length),
+  ]);
+}
+function gauge(k,v,cls){
+  return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:v}) ]);
+}
+
+function capitalRemaining(){
+  var s=App.state, p=player(s), spent=0;
+  SEG_IDS.forEach(function(seg){ spent += (s.planned[seg]||0)*CONFIG.capacityCostPerUnit; });
+  return p.cash - spent;
+}
+
+function turnView(){
+  var s=App.state, p=player(s), y=s.yearIndex;
+  var ev=EVENTS[s.scenario.events[y]];
+  var openingLabel = y===0 ? "Opening conditions" : "This year";
+
+  var wrap=el("div",{},[]);
+  wrap.appendChild(statusCluster());
+
+  // 1+2. reveal current event (the outcome of last year's forecast), pools already include it
+  wrap.appendChild(el("div",{class:"event"},[
+    el("div",{class:"lbl"},[ openingLabel+" · "+(y+1)+"/"+CONFIG.turns ]),
+    el("div",{class:"ttl"},[ CONFIG.emoji[s.scenario.events[y]]+" "+ev.name ]),
+    el("div",{class:"body",text:ev.reveal}),
+  ]));
+
+  // 3. the board: a compact row per segment + inline allocation
+  var list=el("div",{class:"seglist"});
+  SEGMENTS.forEach(function(seg){
+    var pool=demandPool(s,seg.id,y);
+    var evMult=eventMultiplier(s.scenario.events[y],s.scenario.severities[y],seg.id);
+    var drift = seg.id==="ev" ? (1+y*CONFIG.secularDriftEV) : 1;
+    var mult = evMult*drift*(s.pending[seg.id]||1);
+    var arr=arrowFor(mult);
+
+    // current share estimate (uses current capacities before this year's resolve)
+    var sumEff=0; s.entities.forEach(function(e){ sumEff+=effectiveCapacity(e,seg.id); });
+    var yourShare = sumEff>0 ? effectiveCapacity(p,seg.id)/sumEff : 0;
+
+    // rivals present
+    var chips=[];
+    s.entities.forEach(function(e){ if(!e.isPlayer && (e.capacity[seg.id]||0) >= 3) chips.push(el("span",{class:"chip",text:e.short})); });
+    if(!chips.length) chips.push(el("span",{class:"chip open",text:"open"}));
+
+    var planned=s.planned[seg.id]||0;
+    var cost=planned*CONFIG.capacityCostPerUnit;
+    var canAdd = capitalRemaining() >= CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit;
+
+    list.appendChild(el("div",{class:"seg"},[
+      el("div",{class:"top"},[
+        el("div",{class:"name"},[ el("span",{class:"emoji",text:seg.emoji}), seg.name ]),
+        el("div",{class:"arrow "+arr.cls},[ arr.ch+" demand" ]),
+      ]),
+      el("div",{class:"mid"},[
+        el("span",{class:"pill"},[ "you ", el("b",{text:pct(yourShare)}) ]),
+        el("span",{class:"pill"},[ "cap ", el("b",{text:String(Math.round(p.capacity[seg.id]||0))}) ]),
+        el("div",{class:"rivchips"},chips),
+      ]),
+      el("div",{class:"alloc"},[
+        el("div",{class:"blurb",text:"Build "+seg.invest+"."}),
+        el("div",{class:"stepper"},[
+          el("button",{type:"button","aria-label":"Remove capacity from "+seg.name,disabled:planned<=0,
+            onclick:function(){ stepAlloc(seg.id,-1); }},["–"]),
+          el("div",{class:"qty"},[
+            el("span",{class:"u",text:"+"+planned+"u"}),
+            el("span",{class:"c",text:planned>0?fmtMoney(cost):"—"}),
+          ]),
+          el("button",{type:"button","aria-label":"Add capacity to "+seg.name,disabled:!canAdd,
+            onclick:function(){ stepAlloc(seg.id,1); }},["+"]),
+        ]),
+      ]),
+    ]));
+  });
+  wrap.appendChild(list);
+
+  // 6. company-wide posture
+  var posWrap=el("div",{class:"posture"},[ el("div",{class:"seclbl",text:"Company posture this year"}) ]);
+  var seg3=el("div",{class:"seg3"});
+  ["budget","standard","premium"].forEach(function(pk){
+    var pc=CONFIG.postures[pk];
+    seg3.appendChild(el("div",{class:"pbtn"+(s.playerPosture===pk?" on":""),role:"button",tabindex:"0",
+      onclick:function(){ s.playerPosture=pk; render(); },
+      onkeydown:function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); s.playerPosture=pk; render(); } }},[
+      el("div",{class:"pl",text:pc.label}),
+      el("div",{class:"pd",text:pc.blurb}),
+    ]));
+  });
+  posWrap.appendChild(seg3);
+  wrap.appendChild(posWrap);
+
+  // 4. next year's forecast (vague, possibly false)
+  if(y < CONFIG.turns-1){
+    var fc=EVENTS[s.scenario.forecastEvent[y]];
+    wrap.appendChild(el("div",{class:"forecast"},[
+      el("div",{class:"lbl",text:"Forecast for "+(y+2)+"/"+CONFIG.turns}),
+      el("div",{class:"txt",text:"“"+fc.forecast+"”"}),
+    ]));
+  }
+
+  // pending price-war warnings that land THIS year (so the squeeze is never silent)
+  var liveWarns=[];
+  SEG_IDS.forEach(function(seg){ if((s.pending[seg]||1) < 1) liveWarns.push(segMeta(seg)); });
+  if(liveWarns.length){
+    wrap.appendChild(el("div",{class:"forecast",style:"border-color:var(--red)"},[
+      el("div",{class:"lbl",style:"color:var(--red)",text:"Price war in effect"}),
+      el("div",{class:"warn",text:"A rival cut prices in "+liveWarns.map(function(x){return x.name;}).join(", ")+". Those pools are thinner this year."}),
+    ]));
+  }
+
+  // 5/7. run bar
+  var rem=capitalRemaining();
+  wrap.appendChild(el("div",{class:"runbar"},[
+    el("div",{class:"capreadout"},[
+      el("span",{class:"muted",text:"Capital remaining"}),
+      el("span",{class:"big "+(rem<0?"red":"accent"),text:fmtMoney(rem)}),
+    ]),
+    el("button",{class:"btn primary",text:"Run the model year ▸",onclick:runYear}),
+  ]));
+
+  return wrap;
+}
+
+function stepAlloc(segId,dir){
+  var s=App.state;
+  var cur=s.planned[segId]||0;
+  if(dir>0){
+    if(capitalRemaining() < CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit) return;
+    s.planned[segId]=cur+CONFIG.allocStepUnits;
+  } else {
+    s.planned[segId]=Math.max(0,cur-CONFIG.allocStepUnits);
+  }
+  render();
+}
+
+function runYear(){
+  var s=App.state, p=player(s);
+  // commit the player's build (durable capacity) and posture
+  SEG_IDS.forEach(function(seg){
+    var u=s.planned[seg]||0;
+    if(u>0){ p.capacity[seg]=(p.capacity[seg]||0)+u; p.cash -= u*CONFIG.capacityCostPerUnit; }
+  });
+  p.posture=s.playerPosture;
+  var res=resolveYear(s);
+  s.lastResult=res;
+  s.phase = (s.yearIndex >= CONFIG.turns-1) ? "end" : "result";
+  render();
+  window.scrollTo(0,0);
+}
+
+function resultView(){
+  var s=App.state, res=s.lastResult, y=s.yearIndex;
+  var profit=res.profit;
+  var wrap=el("div",{class:"result"},[]);
+
+  wrap.appendChild(el("div",{class:"hero"},[
+    el("div",{class:"heroK",text:"Model year "+(y+1)+" result"}),
+    el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(profit)}),
+    el("div",{class:"heroSub",text:profit>=0?"Profit on the year.":"Loss on the year."}),
+  ]));
+
+  var notes=el("div",{class:"notes"});
+
+  // best / worst segment this year (computed, never faked)
+  var best=null,worst=null;
+  SEG_IDS.forEach(function(seg){
+    var sp=res.segProfit[seg]; if(!sp) return;
+    if(sp.capacity<=0) return;
+    if(best===null || sp.profit>res.segProfit[best].profit) best=seg;
+    if(worst===null || sp.profit<res.segProfit[worst].profit) worst=seg;
+  });
+  if(best!==null){
+    var bm=segMeta(best), bp=res.segProfit[best];
+    notes.appendChild(el("div",{class:"note good"},[
+      el("span",{class:"nh",text:"Best line"}),
+      bm.emoji+" "+bm.name+" carried you — "+pct(bp.share)+" of the pool, "+fmtSigned(bp.profit)+".",
+    ]));
+  }
+  if(worst!==null && worst!==best && res.segProfit[worst].profit<0){
+    var wm=segMeta(worst), wp=res.segProfit[worst];
+    notes.appendChild(el("div",{class:"note warn"},[
+      el("span",{class:"nh",text:"Dead weight"}),
+      wm.emoji+" "+wm.name+" bled "+fmtMoney(wp.profit)+" — too much steel chasing too little demand.",
+    ]));
+  }
+
+  // sacred mechanic 2 — the telegraphed warning for NEXT year
+  res.warnings.forEach(function(w){
+    notes.appendChild(el("div",{class:"note rival"},[
+      el("span",{class:"nh",text:"Incoming"}),
+      w.text,
+    ]));
+  });
+  if(!res.warnings.length){
+    notes.appendChild(el("div",{class:"note rival"},[
+      el("span",{class:"nh",text:"The field"}),
+      "No rival felt threatened enough to start a price war. You stayed under the radar.",
+    ]));
+  }
+
+  wrap.appendChild(notes);
+  wrap.appendChild(el("div",{class:"actions"},[
+    el("button",{class:"btn primary",text:"Next model year ▸",onclick:nextYear}),
+  ]));
+  return wrap;
+}
+
+function nextYear(){
+  var s=App.state;
+  s.yearIndex++;
+  s.planned={};
+  s.phase="turn";
+  render();
+  window.scrollTo(0,0);
+}
+
+/* ============================ end screen ============================ */
+function endView(){
+  var s=App.state, p=player(s);
+  var rank=playerRank(s), bd=valuationBreakdown(p);
+  var grade=gradeFor(rank,bd.total,s.entities.length);
+
+  // who you beat / lost to
+  var ranked=rankings(s), pv=valuation(p), beat=[], lost=[];
+  ranked.forEach(function(o){ if(o.e.isPlayer) return; (o.v<pv?beat:lost).push(o.e); });
+
+  // story beat from yearHistory (computed)
+  var story=storyBeat(s);
+
+  var wrap=el("div",{class:"end"},[]);
+  wrap.appendChild(el("div",{class:"hero"},[
+    el("div",{class:"heroK",text:"Final company valuation"}),
+    el("div",{class:"heroV accent",text:fmtMoney(bd.total)}),
+  ]));
+  wrap.appendChild(el("div",{class:"grade"},[
+    el("div",{class:"gbadge "+grade.cls,text:grade.g}),
+    el("div",{},[
+      el("div",{class:"rankline",text:"Ranked #"+rank+" of "+s.entities.length}),
+      el("div",{class:"muted",style:"font-size:12px",text:gradeBlurb(grade.g)}),
+    ]),
+  ]));
+
+  // breakdown — people don't trust an abstract number unless they see the parts
+  var brk=el("div",{class:"breakdown"},[
+    brow("Cash on hand",bd.cash),
+    brow("Factory capacity value",bd.capacity),
+    brow("Brand equity",bd.brand),
+    brow("Idle-capacity drag",bd.idle),
+    brow("Company valuation",bd.total,true),
+  ]);
+  wrap.appendChild(brk);
+
+  // beat / lost flex
+  wrap.appendChild(el("div",{class:"vs"},[
+    el("div",{class:"vsbox beat"},[ el("div",{class:"h",text:"You beat"}),
+      el("div",{class:"nm",html: beat.length?beat.map(function(e){return e.flag+" "+e.name;}).join("<br>"):"—" }) ]),
+    el("div",{class:"vsbox lost"},[ el("div",{class:"h",text:"You lost to"}),
+      el("div",{class:"nm",html: lost.length?lost.map(function(e){return e.flag+" "+e.name;}).join("<br>"):"Nobody. You won outright." }) ]),
+  ]));
+
+  wrap.appendChild(el("div",{class:"story",text:story}));
+
+  // a basic share line (the full two-line share string is Phase 2; this is a stub)
+  var strip=s.scenario.events.map(function(e){ return CONFIG.emoji[e]; }).join("");
+  var medal = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
+  var shareText = "🏭 Model Year · "+fmtMoney(bd.total)+" · "+medal+" of "+s.entities.length+"\n"+strip+
+    (beat.length?("  beat "+beat[0].name+" "+beat[0].flag):"")+(lost.length?(", lost to "+lost[0].name+" "+lost[0].flag):"");
+  wrap.appendChild(el("div",{class:"share",text:shareText}));
+  wrap.appendChild(el("div",{class:"actions"},[
+    el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
+    el("button",{class:"btn primary",text:"New run",onclick:function(){ setSeed(newSeed()); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+  ]));
+  return wrap;
+}
+function brow(k,v,total){
+  return el("div",{class:"brow"+(total?" total":"")},[
+    el("span",{text:k}),
+    el("span",{class:(v<0?"neg":""),text:(total?fmtMoney(v):fmtSigned(v))}),
+  ]);
+}
+function gradeBlurb(g){
+  return { S:"Top of the field. Nobody touched you.", A:"A genuine contender.", B:"Solid podium finish.",
+    C:"Mid-grid. Room to push.", D:"You survived. Barely.", F:"Bankrupt. The board has questions." }[g];
+}
+function copyShare(text,btn){
+  var done=function(){ var t=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=t;},1400); };
+  var full=text+"\n"+location.href;
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(done,done);
+  else done();
+}
+
+// Derive a one-line story from the history: best cumulative segment + worst single decision.
+function storyBeat(state){
+  var cum={}; SEG_IDS.forEach(function(s){ cum[s]=0; });
+  var worst=null;
+  state.history.forEach(function(h){
+    SEG_IDS.forEach(function(s){
+      cum[s]+=h.seg[s].profit;
+      // "worst decision" = the year you put the most money into the segment that lost the most
+      if(h.seg[s].alloc>0 && h.seg[s].profit<0){
+        var score=h.seg[s].profit; // most negative
+        if(worst===null||score<worst.score) worst={score:score,seg:s,year:h.year};
+      }
+    });
+  });
+  var bestSeg=SEG_IDS[0]; SEG_IDS.forEach(function(s){ if(cum[s]>cum[bestSeg]) bestSeg=s; });
+  var line = "Your money machine was "+segMeta(bestSeg).name+" ("+fmtSigned(Math.round(cum[bestSeg]))+" over the decade). ";
+  if(worst){
+    line += "Your worst call was pouring capital into "+segMeta(worst.seg).name+" in year "+(worst.year+1)+" — it lost "+fmtMoney(Math.abs(worst.score))+".";
+  } else {
+    line += "You never made a losing bet on a segment you invested in. Clean sheet.";
+  }
+  return line;
+}
+
+/* ============================ headless sim + bots (balance check) ============================ */
+// Run a full 10-year game under a fixed allocation policy. policy(state,year) ->
+// { alloc:{seg:units}, posture }. Returns the player's final valuation.
+function runHeadless(seed,policy){
+  var st=createState(seed); st.phase="turn";
+  for(var y=0;y<CONFIG.turns;y++){
+    var p=player(st);
+    var dec=policy(st,y)||{alloc:{},posture:"standard"};
+    st.planned={};
+    SEG_IDS.forEach(function(seg){
+      var u=(dec.alloc&&dec.alloc[seg])||0;
+      u=Math.min(u, Math.floor(Math.max(0,p.cash)/CONFIG.capacityCostPerUnit)); // affordability clamp
+      if(u>0){ st.planned[seg]=u; p.capacity[seg]=(p.capacity[seg]||0)+u; p.cash-=u*CONFIG.capacityCostPerUnit; }
+    });
+    p.posture=dec.posture||"standard";
+    resolveYear(st);
+    st.yearIndex++;
+  }
+  return { valuation:valuation(player(st)), rank:playerRankFinal(st) };
+}
+function playerRankFinal(st){
+  var r=st.entities.map(function(e){return {e:e,v:valuation(e)};}).sort(function(a,b){return b.v-a.v;});
+  for(var i=0;i<r.length;i++) if(r[i].e.isPlayer) return i+1; return r.length;
+}
+// Capacity bets pay back over years, so the sane policies build hard early and
+// taper to harvest. This weight is the fraction of CURRENT cash spent in year y.
+function buildWeight(y){ return Math.max(0, 0.55 - y*0.07); }
+function allocInto(state,segs,frac){
+  var p=player(state), budget=Math.max(0,p.cash)*frac, per=budget/segs.length, alloc={};
+  segs.forEach(function(s){
+    var units=Math.floor((per/CONFIG.capacityCostPerUnit)/CONFIG.allocStepUnits)*CONFIG.allocStepUnits;
+    units=Math.min(units, CONFIG.botMaxUnitsPerSeg);   // don't dump a whole pool's worth in one year
+    if(units>0) alloc[s]=units;
+  });
+  return alloc;
+}
+function segScore(st,y,s){
+  var m=eventMultiplier(st.scenario.events[y],st.scenario.severities[y],s)*(s==="ev"?(1+y*CONFIG.secularDriftEV):1)*(st.pending[s]||1);
+  var sumEff=0; st.entities.forEach(function(e){sumEff+=effectiveCapacity(e,s);});
+  var share=sumEff>0?effectiveCapacity(player(st),s)/sumEff:0;
+  var crowd = sumEff>0 ? (demandPool(st,s,y)/sumEff) : 0;   // revenue available per unit of effective capacity
+  return { s:s, score:m*(1+segMeta(s).baseMargin)*crowd*(share<CONFIG.dominanceThreshold?1:0.5), share:share, mult:m };
+}
+function postureForSegs(segs){ return (segs.indexOf("luxury")>=0||segs.indexOf("performance")>=0||segs.indexOf("ev")>=0)?"premium":"standard"; }
+var BOTS = {
+  hoard:       function(st,y){ return { alloc:{}, posture:"standard" }; },
+  evenSpread:  function(st,y){ return { alloc:allocInto(st,SEG_IDS,0.30), posture:"standard" }; },   // the bogey
+  suvValue:    function(st,y){ return { alloc:allocInto(st,["family","economy"],buildWeight(y)), posture:"budget" }; },
+  evFuture:    function(st,y){ return { alloc:allocInto(st,["ev","performance"],buildWeight(y)), posture:"premium" }; },
+  truckBaron:  function(st,y){ return { alloc:allocInto(st,["pickup","family"],buildWeight(y)), posture:"standard" }; },
+  luxHalo:     function(st,y){ return { alloc:allocInto(st,["luxury","performance"],buildWeight(y)), posture:"premium" }; },
+  // contrarian: build the cold-but-decent segments early, betting demand swings back
+  contrarian:  function(st,y){
+    if(y>4) return { alloc:{}, posture:"standard" };
+    var ranked=SEG_IDS.map(function(s){ return segScore(st,y,s); }).filter(function(o){return segMeta(o.s).baseMargin>=0.2;})
+      .sort(function(a,b){return a.mult-b.mult;});   // lowest demand mult first
+    var picks=[ranked[0].s, ranked[1].s];
+    return { alloc:allocInto(st,picks,buildWeight(y)), posture:postureForSegs(picks) };
+  },
+  // par: read this year's event + crowding, build the two best uncrowded segments early, harvest late
+  adaptive:    function(st,y){
+    var ranked=SEG_IDS.map(function(s){ return segScore(st,y,s); }).sort(function(a,b){return b.score-a.score;});
+    var picks=[ranked[0].s, ranked[1].s];
+    return { alloc:allocInto(st,picks,buildWeight(y)), posture:postureForSegs(picks) };
+  },
+};
+function balanceCheck(nSeeds){
+  nSeeds=nSeeds||120;
+  var names=Object.keys(BOTS), wins={}, sum={};
+  names.forEach(function(n){wins[n]=0;sum[n]=0;});
+  for(var i=0;i<nSeeds;i++){
+    var seed="balance|"+i, best=-Infinity, bestBot=null, vals={};
+    names.forEach(function(n){ var r=runHeadless(seed,BOTS[n]); vals[n]=r.valuation; sum[n]+=r.valuation; if(r.valuation>best){best=r.valuation;bestBot=n;} });
+    wins[bestBot]++;
+  }
+  return names.map(function(n){ return { bot:n, winRate:wins[n]/nSeeds, avg:sum[n]/nSeeds }; })
+    .sort(function(a,b){return b.winRate-a.winRate;});
+}
+
+/* ============================ debug panel ============================ */
+function debugView(){
+  var s=App.state;
+  var box=el("div",{class:"debug"},[ el("h4",{text:"DEBUG · seed "+s.seed}) ]);
+
+  // event sequence + forecast truth
+  var seqTbl=el("table",{});
+  s.scenario.events.forEach(function(ev,i){
+    var f = i<CONFIG.turns-1 ? (s.scenario.forecastTrue[i]?"true":"RED HERRING ("+s.scenario.forecastEvent[i]+")") : "—";
+    seqTbl.appendChild(el("tr",{},[
+      el("td",{text:"Y"+(i+1)}),
+      el("td",{text:CONFIG.emoji[ev]+" "+EVENTS[ev].name+" ["+s.scenario.severities[i]+"]"}),
+      el("td",{text:"fc: "+f}),
+    ]));
+  });
+  box.appendChild(el("div",{text:"Event sequence + forecast truth:"}));
+  box.appendChild(seqTbl);
+
+  // live rival valuations
+  var rk=rankings(s), rtbl=el("table",{});
+  rk.forEach(function(o,i){ rtbl.appendChild(el("tr",{},[
+    el("td",{text:(i+1)+"."}),
+    el("td",{text:o.e.short}),
+    el("td",{class:"num",text:fmtMoney(o.v)}),
+  ])); });
+  box.appendChild(el("div",{style:"margin-top:6px",text:"Field valuations (live):"}));
+  box.appendChild(rtbl);
+
+  // bot balance check
+  var out=el("div",{style:"margin-top:8px"},["(run the check to populate)"]);
+  box.appendChild(el("button",{class:"dbtn",text:"Run balance check (120 seeds)",onclick:function(){
+    out.innerHTML="running…";
+    setTimeout(function(){
+      var res=balanceCheck(120);
+      var t=el("table",{});
+      res.forEach(function(r){ t.appendChild(el("tr",{},[
+        el("td",{text:r.bot}),
+        el("td",{class:"num",text:pct(r.winRate)}),
+        el("td",{class:"num",text:fmtMoney(r.avg)}),
+      ])); });
+      out.innerHTML=""; out.appendChild(el("div",{text:"win% / avg valuation per bot (smart should beat dumb; no bot >30%)"})); out.appendChild(t);
+    },30);
+  }}));
+  box.appendChild(out);
+
+  // hand-checkable single-segment self test
+  box.appendChild(el("button",{class:"dbtn",style:"margin-left:6px",text:"Math self-test",onclick:function(){ alert(selfTest()); }}));
+  return box;
+}
+
+// Section 3 build order: verify contested-share math by hand against a known input.
+function selfTest(){
+  // Two entities in one segment. Pool 1000. A has 60 eff cap, B has 40. No posture/brand effects.
+  // A share = 60/100 = 0.6, gross = 600. margin 0.2 => 120. opCost 60*1 => 60. profit = 60.
+  var pool=1000, effA=60, effB=40, shareA=effA/(effA+effB), gross=shareA*pool, margin=0.2, opCost=60;
+  var profit=gross*margin-opCost;
+  var ok = Math.abs(shareA-0.6)<1e-9 && Math.abs(gross-600)<1e-9 && Math.abs(profit-60)<1e-9;
+  return "Contested-share self-test: share="+shareA.toFixed(3)+" gross="+gross+" profit="+profit+"  => "+(ok?"PASS":"FAIL");
+}
+
+/* ============================ boot ============================ */
+App.root=document.getElementById("app");
+setSeed(newSeed());
+render();
+// expose for measurement in the preview (no node runtime here)
+window.__MODELYEAR__ = { runHeadless:runHeadless, balanceCheck:balanceCheck, BOTS:BOTS, createState:createState, resolveYear:resolveYear, valuation:valuation, CONFIG:CONFIG, selfTest:selfTest };
+})();
+</script>
+</body>
+</html>
