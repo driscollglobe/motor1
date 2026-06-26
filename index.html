@@ -61,8 +61,10 @@
   .statusbar{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
   .tick{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em}
   .tick.up{color:var(--green)} .tick.down{color:var(--red)} .tick.flat{color:var(--muted)}
-  .nemesis{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  .nemesis{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
     border-left:3px solid var(--red);border-radius:8px;padding:8px 11px;box-shadow:var(--shadow)}
+  .ne-callout{flex-basis:100%;margin-top:5px;padding-top:5px;border-top:1px solid var(--line);font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.02em}
+  .ne-callout.good{color:var(--green)} .ne-callout.bad{color:var(--red)}
   .nemesis.ahead{border-left-color:var(--green)}
   .nemesis .ne-ic{font-family:var(--mono);font-weight:700}
   .nemesis.behind .ne-ic{color:var(--red)} .nemesis.ahead .ne-ic{color:var(--green)}
@@ -253,6 +255,45 @@
   .dbtn{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text)}
 
   .foot{margin-top:20px;text-align:center;font-size:11px;color:var(--faint);line-height:1.4}
+  /* ============ Pass 5: motion & ceremony (transform/opacity only) ============ */
+  @keyframes my-up{ from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+  @keyframes my-stamp{ 0%{opacity:0;transform:scale(.96)} 60%{opacity:1;transform:scale(1.04)} 100%{transform:scale(1)} }
+  @keyframes my-pulse{ 0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)} }
+  @keyframes my-flash-blue{ 0%{background:#dbe8ff} 100%{background:var(--panel)} }
+  @keyframes my-flash-red{ 0%{background:#fdded9} 100%{background:var(--panel)} }
+  @keyframes my-glow{ 0%,100%{box-shadow:0 2px 8px rgba(31,109,255,.3)} 50%{box-shadow:0 5px 20px rgba(31,109,255,.55)} }
+  @keyframes my-grade{ 0%{opacity:0;transform:scale(1.45)} 70%{opacity:1;transform:scale(.9)} 100%{transform:scale(1)} }
+  @keyframes my-slam{ 0%{opacity:0;transform:translateY(14px) scale(.98)} 100%{opacity:1;transform:none} }
+  @keyframes my-wipe{ from{transform:translateX(-110%)} to{transform:translateX(110%)} }
+  @keyframes my-nudge-up{ 0%{transform:translateY(0)} 35%{transform:translateY(-5px)} 100%{transform:translateY(0)} }
+  @keyframes my-shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+  @keyframes my-floatchip{ 0%{opacity:0;transform:translateY(2px)} 25%{opacity:1} 100%{opacity:0;transform:translateY(-24px)} }
+
+  .anim-up{ animation:my-up .26s cubic-bezier(.2,.7,.2,1) both; }
+  .anim-stamp{ animation:my-stamp .3s ease-out both; }
+  .pulse-once{ animation:my-pulse .5s ease-out; }
+  .flash-blue{ animation:my-flash-blue .9s ease-out; }
+  .flash-red{ animation:my-flash-red .9s ease-out; }
+  .cta-glow{ animation:my-glow 1.9s ease-in-out infinite; }
+  .grade-stamp{ animation:my-grade .5s cubic-bezier(.2,.7,.2,1) both; }
+  .slam-in{ animation:my-slam .34s cubic-bezier(.2,.7,.2,1) both; }
+  .nudge-up{ animation:my-nudge-up .55s ease-out; }
+  .shake{ animation:my-shake .42s ease-out; }
+
+  .launch-wipe{ position:absolute; inset:0; overflow:hidden; border-radius:9px; pointer-events:none; z-index:2 }
+  .launch-wipe::after{ content:""; position:absolute; top:0; bottom:0; left:0; width:55%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent); animation:my-wipe .6s ease-in-out forwards }
+  .btn.depress{ transform:scale(.97) }
+
+  .checker-wipe{ position:relative; overflow:hidden }
+  .checker-wipe::after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:linear-gradient(45deg,rgba(0,0,0,.07) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.07) 75%),linear-gradient(45deg,rgba(0,0,0,.07) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.07) 75%);
+    background-size:16px 16px; background-position:0 0,8px 8px; transform:translateX(-110%); animation:my-wipe .75s ease-out .05s forwards }
+
+  .floatchip{ position:absolute; font-family:var(--mono); font-weight:700; font-size:13px; color:var(--blue-deep);
+    pointer-events:none; z-index:5; animation:my-floatchip .75s ease-out forwards }
+  .countflash-up{ color:var(--green)!important } .countflash-down{ color:var(--red)!important }
+
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -703,23 +744,70 @@ var App = { state:null, root:null };
 function pad2(n){ return n<10?"0"+n:""+n; }
 function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }  // YYYYMMDD, same for everyone today
 function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
-function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); }
+function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); App.prevStats=null; App.prevBudget=null; App.prevNem=null; }
 function newSeed(){ return "practice|"+Math.floor(Math.random()*1e9); }
 
+/* ---- Pass 5 motion helpers (transform/opacity only; reduced-motion safe) ---- */
+function reduced(){ return prefersReducedMotion(); }
+// Tween a number from->to over ms with ease-out, writing fmt(value) each frame.
+function animateCount(node, from, to, ms, fmt){
+  fmt = fmt || function(v){ return String(Math.round(v)); };
+  if(!node) return;
+  if(reduced() || ms<=0 || from===to){ node.textContent=fmt(to); return; }
+  var t0=null, done=false;
+  function finish(){ if(done) return; done=true; node.textContent=fmt(to); }
+  function step(ts){
+    if(done) return;
+    if(t0===null) t0=ts;
+    var t=Math.min(1,(ts-t0)/ms), e=1-Math.pow(1-t,3);
+    node.textContent=fmt(from+(to-from)*e);
+    if(t<1) requestAnimationFrame(step); else finish();
+  }
+  requestAnimationFrame(step);
+  setTimeout(finish, ms+80);   // safety net: guarantee the final value even if rAF is throttled
+}
+// FLIP: run doReorder() (which rearranges container's children), then slide each child
+// from its old position to its new one with a transform. Same nodes must persist.
+function flipReorder(container, doReorder){
+  if(reduced()){ doReorder(); return; }
+  var kids=[].slice.call(container.children), first=kids.map(function(k){ return k.getBoundingClientRect().top; });
+  doReorder();
+  var now=[].slice.call(container.children);
+  now.forEach(function(k){ var i=kids.indexOf(k); if(i<0) return; var dy=first[i]-k.getBoundingClientRect().top; if(!dy) return; k.style.transition="none"; k.style.transform="translateY("+dy+"px)"; });
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    now.forEach(function(k){ k.style.transition="transform .5s cubic-bezier(.2,.7,.2,1)"; k.style.transform=""; });
+  }); });
+}
+// Apply staggered enter animation to a freshly mounted view's children.
+function staggerIn(view, opts){
+  if(reduced()||!view) return;
+  opts=opts||{};
+  var step=opts.step||40, i=0;
+  [].forEach.call(view.children, function(c){
+    if(c.classList.contains("event")) { i++; return; }    // the event banner stamps in on its own
+    c.classList.add("anim-up"); c.style.animationDelay=(i*step)+"ms"; i++;
+  });
+  var list=view.querySelector(".seglist");
+  if(list){ var j=0; [].forEach.call(list.children,function(seg){ seg.classList.add("anim-up"); seg.style.animationDelay=((i+ j)*0+ (3*step)+(j*step))+"ms"; j++; }); }
+}
+
 function render(){
-  var s=App.state, root=App.root;
+  var s=App.state, root=App.root, fresh=!!App.freshView;   // fresh = real phase change, not a stepper re-render
   root.innerHTML="";
   root.appendChild(topbar());
-  if(s.phase==="help") root.appendChild(helpView());
-  else if(s.phase==="intro") root.appendChild(introView());
-  else if(s.phase==="turn") root.appendChild(turnView());
-  else if(s.phase==="result") root.appendChild(resultView());
-  else if(s.phase==="end") root.appendChild(endView());
+  var view=null;
+  if(s.phase==="help") view=helpView();
+  else if(s.phase==="intro") view=introView();
+  else if(s.phase==="turn") view=turnView();
+  else if(s.phase==="result") view=resultView();
+  else if(s.phase==="end") view=endView();
+  if(view){ root.appendChild(view); if(fresh && s.phase!=="end") staggerIn(view); }   // end runs its own choreography
   if(CONFIG.debug && s.phase!=="help") root.appendChild(debugView());
+  App.freshView=false;
 }
 // How to play is reachable from anywhere; it remembers the screen to return to.
-function helpOpen(){ var s=App.state; if(s.phase!=="help") s._return=s.phase; s.phase="help"; render(); window.scrollTo(0,0); }
-function helpClose(){ var s=App.state; s.phase=s._return||"intro"; render(); window.scrollTo(0,0); }
+function helpOpen(){ var s=App.state; if(s.phase!=="help") s._return=s.phase; s.phase="help"; App.freshView=true; render(); window.scrollTo(0,0); }
+function helpClose(){ var s=App.state; s.phase=s._return||"intro"; App.freshView=true; render(); window.scrollTo(0,0); }
 
 function topbar(){
   return el("header",{class:"topbar"},[
@@ -799,15 +887,25 @@ function helpView(){
 
 function statusCluster(){
   var s=App.state, p=player(s);
+  var cash=p.cash, val=valuation(p);
+  var prev=App.prevStats||{cash:cash,value:val};
+  var cashV=el("div",{class:"v num",text:fmtMoney(prev.cash)});
+  var valV =el("div",{class:"v num",text:fmtMoney(prev.value)});
+  animateCount(cashV, prev.cash, cash, 600, fmtMoney);
+  animateCount(valV,  prev.value, val, 600, fmtMoney);
+  App.prevStats={cash:cash,value:val};
   return el("div",{class:"cluster"},[
     gauge("Year",(s.yearIndex+1)+" / "+CONFIG.turns,"year"),
-    gauge("Cash",fmtMoney(p.cash),p.cash<0?"":""),
-    gauge("Value",fmtMoney(valuation(p))),
+    gaugeNode("Cash",cashV),
+    gaugeNode("Value",valV),
     gauge("Rank","#"+playerRank(s)+" / "+s.entities.length),
   ]);
 }
 function gauge(k,v,cls){
   return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:v}) ]);
+}
+function gaugeNode(k,vNode,cls){
+  return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), vNode ]);
 }
 // The nemesis: the rival nearest the player in valuation, tiebreaking toward one whose
 // home is the player's strongest lane. Re-evaluated every year so the chase stays live.
@@ -839,15 +937,20 @@ function forecastBeat(state,y){
 }
 function nemesisBanner(state,y){
   var nem=nemesisFor(state); if(!nem) return null;
-  var pv=valuation(player(state)), gap=valuation(nem)-pv;
+  var pv=valuation(player(state)), gap=valuation(nem)-pv, behind=gap>0;
   var left=CONFIG.turns-(y+1);
-  var behind=gap>0;
   var leftTxt = left<=0 ? "final year" : (left+(left===1?" year left":" years left"));
-  return el("div",{class:"nemesis "+(behind?"behind":"ahead")},[
+  var prev=App.prevNem, sameNem=prev&&prev.id===nem.id, passed=sameNem&&(prev.behind!==behind);
+  var gapNode=el("b",{text:fmtMoney(Math.abs(gap))});
+  if(App.freshView && sameNem) animateCount(gapNode, Math.abs(prev.gap), Math.abs(gap), 600, fmtMoney);
+  App.prevNem={id:nem.id, gap:gap, behind:behind};
+  var banner=el("div",{class:"nemesis "+(behind?"behind":"ahead")+(passed&&App.freshView?" shake":"")},[
     el("span",{class:"ne-ic",text:behind?"▼":"▲"}),
-    el("span",{class:"ne-txt",html:(behind?"Chasing ":"Holding off ")+"<b>"+nem.name+"</b> "+nem.flag+" — "+fmtMoney(Math.abs(gap))+(behind?" behind":" ahead")}),
+    el("span",{class:"ne-txt"},[ (behind?"Chasing ":"Holding off "), el("b",{text:nem.name}), " "+nem.flag+" — ", gapNode, (behind?" behind":" ahead") ]),
     el("span",{class:"ne-left",text:leftTxt}),
   ]);
+  if(passed && App.freshView) banner.appendChild(el("div",{class:"ne-callout "+(behind?"bad":"good"),text:(behind?("⚑ "+nem.name+" just passed you"):("⚑ You passed "+nem.name))}));
+  return banner;
 }
 function standingsTicker(state){
   var r=state.lastRank||playerRank(state), mv=state.rankMove||0;
@@ -879,7 +982,7 @@ function turnView(){
   if(beat){ wrap.appendChild(el("div",{class:"beat "+beat.tone},[ el("span",{class:"beat-ic",text: beat.tone==="good"?"✅":beat.tone==="bad"?"⚠️":"•"}), beat.text ])); }
 
   // 1+2. reveal current event (the outcome of last year's forecast), pools already include it
-  wrap.appendChild(el("div",{class:"event"},[
+  wrap.appendChild(el("div",{class:"event"+(App.freshView?" anim-stamp":"")},[
     el("div",{class:"lbl"},[ openingLabel+" · "+(y+1)+"/"+CONFIG.turns ]),
     el("div",{class:"ttl"},[ CONFIG.emoji[s.scenario.events[y]]+" "+ev.name ]),
     el("div",{class:"body",text:ev.reveal}),
@@ -916,10 +1019,11 @@ function turnView(){
     var cost=planned*CONFIG.capacityCostPerUnit;
     var canAdd = capitalRemaining() >= CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit;
 
-    list.appendChild(el("div",{class:"seg"},[
+    var underWar = (s.pending[seg.id]||1) < 1;
+    list.appendChild(el("div",{class:"seg"+(underWar&&App.freshView?" flash-red":"")},[
       el("div",{class:"top"},[
         el("div",{class:"name"},[ el("span",{class:"emoji",text:seg.emoji}), seg.name ]),
-        el("div",{class:"arrow "+arr.cls},[ arr.ch+" demand" ]),
+        el("div",{class:"arrow "+arr.cls+(App.freshView?" pulse-once":"")},[ arr.ch+" demand" ]),
       ]),
       el("div",{class:"mid"},[
         el("span",{class:"pill"},[ "you ", el("b",{text:pct(yourShare)}) ]),
@@ -978,14 +1082,18 @@ function turnView(){
     ]));
   }
 
-  // 5/7. run bar
+  // 5/7. run bar — the remaining budget ticks down live as you allocate
   var rem=capitalRemaining();
+  var fromBudget = (App.prevBudget==null) ? rem : App.prevBudget;
+  var remNode=el("span",{text:fmtMoney(fromBudget)});
+  animateCount(remNode, fromBudget, rem, 350, fmtMoney);
+  App.prevBudget=rem;
   wrap.appendChild(el("div",{class:"runbar"},[
     el("div",{class:"capreadout"},[
       el("span",{class:"muted",text:"Investment budget"}),
-      el("span",{class:"big "+(rem<0?"red":"accent"),text:fmtMoney(rem)+" of "+fmtMoney(p.cash)+" left"}),
+      el("span",{class:"big "+(rem<0?"red":"accent")},[ remNode, " of "+fmtMoney(p.cash)+" left" ]),
     ]),
-    el("button",{class:"btn primary",text:"Run the model year ▸",onclick:runYear}),
+    el("button",{class:"btn primary cta-glow",text:"Run the model year ▸",onclick:launchYear}),
   ]));
 
   return wrap;
@@ -993,16 +1101,44 @@ function turnView(){
 
 function stepAlloc(segId,dir){
   var s=App.state;
-  var cur=s.planned[segId]||0;
+  var cur=s.planned[segId]||0, changed=false;
   if(dir>0){
     if(capitalRemaining() < CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit) return;
-    s.planned[segId]=cur+CONFIG.allocStepUnits;
-  } else {
-    s.planned[segId]=Math.max(0,cur-CONFIG.allocStepUnits);
+    s.planned[segId]=cur+CONFIG.allocStepUnits; changed=true;
+  } else if(cur>0){
+    s.planned[segId]=Math.max(0,cur-CONFIG.allocStepUnits); changed=true;
   }
+  if(changed) floatChip(segId,dir);
   render();
 }
+// a small "+N" chip that floats up from the tapped stepper (on body, survives the re-render)
+function floatChip(segId,dir){
+  if(reduced()) return;
+  var name=segMeta(segId).name;
+  var btn=document.querySelector('[aria-label="'+(dir>0?"Add capacity to ":"Remove capacity from ")+name+'"]');
+  if(!btn) return;
+  var r=btn.getBoundingClientRect();
+  var chip=el("div",{class:"floatchip",text:(dir>0?"+":"−")+CONFIG.allocStepUnits});
+  chip.style.left=(r.left+r.width/2-10+window.scrollX)+"px";
+  chip.style.top=(r.top-4+window.scrollY)+"px";
+  document.body.appendChild(chip);
+  setTimeout(function(){ if(chip.parentNode) chip.parentNode.removeChild(chip); }, 760);
+}
 
+// The launch ceremony: a brief green-flag wipe across the action bar, then the result
+// reveals. Skippable with a tap. Reduced-motion goes straight to the result.
+function launchYear(ev){
+  var btn=ev&&ev.currentTarget;
+  if(reduced()){ runYear(); return; }
+  var bar=document.querySelector(".runbar");
+  if(btn) btn.classList.add("depress");
+  if(bar) bar.appendChild(el("div",{class:"launch-wipe"}));
+  var done=false, timer=null, skip=null;
+  function go(){ if(done) return; done=true; if(timer) clearTimeout(timer); if(skip) document.removeEventListener("pointerdown",skip,true); runYear(); }
+  timer=setTimeout(go, 660);
+  skip=function(){ go(); };
+  setTimeout(function(){ if(!done) document.addEventListener("pointerdown",skip,true); }, 120);  // arm after the triggering tap
+}
 function runYear(){
   var s=App.state, p=player(s);
   // commit the player's build: it opens NEXT year (delayed capacity). Pay for it now.
@@ -1016,6 +1152,7 @@ function runYear(){
   s.lastResult=res;
   if(s.yearIndex >= CONFIG.turns-1){ activatePending(s); s.phase="end"; }  // final builds count as asset value
   else s.phase="result";
+  App.freshView=true;
   render();
   window.scrollTo(0,0);
 }
@@ -1025,9 +1162,11 @@ function resultView(){
   var profit=res.profit;
   var wrap=el("div",{class:"result"},[]);
 
+  var heroV=el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(0)});
+  animateCount(heroV, 0, profit, 650, fmtSigned);   // the year's profit/loss counts up
   wrap.appendChild(el("div",{class:"hero"},[
     el("div",{class:"heroK",text:"Model year "+(y+1)+" result"}),
-    el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(profit)}),
+    heroV,
     el("div",{class:"heroSub",text:profit>=0?"Profit on the year.":"Loss on the year."}),
   ]));
 
@@ -1092,6 +1231,7 @@ function beginTurn(){
   s.rankMove = (s.lastRank==null) ? 0 : (s.lastRank - r);   // +ve = climbed
   s.lastRank = r;
   s.phase="turn";
+  App.freshView=true; App.prevBudget=null;   // budget resets to full at the start of a year
   render();
   window.scrollTo(0,0);
 }
@@ -1123,25 +1263,32 @@ function endView(){
     el("div",{class:"ttl display",text:"Ten years, one number"}),
   ]));
 
-  // standings grid — revealed lowest finish to highest
-  var rowEls=[], grid=el("div",{class:"standings"});
+  // standings grid — rivals drop in lowest->highest, then the player FLIPs into their slot
+  var grid=el("div",{class:"standings"}), rivalEls=[], playerObj=null, playerIdx=0;
   ranked.forEach(function(o,i){
+    if(o.e.isPlayer) playerIdx=i;
     var medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":("P"+(i+1));
+    var vNode=el("div",{class:"v num",text:"$0"});
     var row=el("div",{class:"srow"+(o.e.isPlayer?" you":"")},[
       el("div",{class:"pos",text:medal}),
       el("div",{class:"who",html:(o.e.isPlayer?"Your company":(o.e.flag+" "+o.e.name))}),
-      el("div",{class:"v num",text:fmtMoney(o.v)}),
+      vNode,
     ]);
-    rowEls.push({row:row,idx:i}); grid.appendChild(row);
+    var obj={row:row,idx:i,vNode:vNode,val:o.v};
+    if(o.e.isPlayer) playerObj=obj; else rivalEls.push(obj);
   });
+  rivalEls.forEach(function(o){ grid.appendChild(o.row); });   // rivals in final order
+  grid.appendChild(playerObj.row);                              // player parked at the bottom (will FLIP up)
+  var slotBefore=null; rivalEls.forEach(function(o){ if(o.idx===playerIdx+1) slotBefore=o.row; });
   wrap.appendChild(grid);
 
   // verdict — grade + nemesis headline + final valuation
+  var finalvalNode=el("div",{class:"finalval num",text:"$0"});
   var verdict=el("div",{class:"verdict"},[
     el("div",{class:"gbadge2 "+grade.cls,text:grade.g}),
     el("div",{class:"headline",text:headline}),
     el("div",{class:"vsub",text:"Ranked #"+rank+" of "+s.entities.length+" · "+gradeBlurb(grade.g)}),
-    el("div",{class:"finalval num",text:fmtMoney(bd.total)}),
+    finalvalNode,
   ]);
   wrap.appendChild(verdict);
 
@@ -1179,15 +1326,36 @@ function endView(){
   ]));
   wrap.appendChild(rest);
 
-  // drop the field in one at a time (lowest finish first), then the verdict, then the rest
+  // staged finale: rivals slam in lowest->highest with count-ups; the player drops in at
+  // the bottom then FLIPs up into its slot; the verdict stamps in (checkered wipe) and the
+  // final valuation counts up; then the rest. Tap to skip straight to the final board.
+  var timers=[], done=false;
+  function revealRow(o,ms){ o.row.classList.add("in","slam-in"); animateCount(o.vNode, 0, o.val, ms||480, fmtMoney); }
+  function settleVerdict(){
+    verdict.classList.add("in","checker-wipe");
+    var gb=verdict.querySelector(".gbadge2"); if(gb) gb.classList.add("grade-stamp");
+  }
+  function placePlayer(){ if(slotBefore && playerObj.row.nextSibling!==slotBefore) grid.insertBefore(playerObj.row, slotBefore); }
+  function finishAll(){
+    if(done) return; done=true; timers.forEach(clearTimeout);
+    rivalEls.concat([playerObj]).forEach(function(o){ o.row.classList.add("in"); o.vNode.textContent=fmtMoney(o.val); });
+    placePlayer(); settleVerdict(); finalvalNode.textContent=fmtMoney(bd.total); rest.classList.add("in");
+    document.removeEventListener("pointerdown", skip, true);
+  }
+  function skip(){ finishAll(); }
   if(prefersReducedMotion()){
-    rowEls.forEach(function(x){ x.row.classList.add("in"); }); verdict.classList.add("in"); rest.classList.add("in");
+    rivalEls.concat([playerObj]).forEach(function(o){ o.row.classList.add("in"); o.vNode.textContent=fmtMoney(o.val); });
+    placePlayer(); verdict.classList.add("in"); finalvalNode.textContent=fmtMoney(bd.total); rest.classList.add("in");
   } else {
-    var order=rowEls.slice().sort(function(a,b){ return b.idx-a.idx; });
-    order.forEach(function(x,i){ setTimeout(function(){ x.row.classList.add("in"); }, 220+i*170); });
-    var t=220+order.length*170;
-    setTimeout(function(){ verdict.classList.add("in"); }, t+200);
-    setTimeout(function(){ rest.classList.add("in"); }, t+650);
+    var rivalsAsc=rivalEls.slice().sort(function(a,b){ return b.idx-a.idx; });   // lowest finish first
+    var base=280, gapMs=140;
+    rivalsAsc.forEach(function(o,i){ timers.push(setTimeout(function(){ revealRow(o); }, base+i*gapMs)); });
+    var t=base+rivalsAsc.length*gapMs;
+    timers.push(setTimeout(function(){ revealRow(playerObj,560); }, t+140));                                  // player drops in at the bottom
+    timers.push(setTimeout(function(){ flipReorder(grid, placePlayer); }, t+780));                            // ...then slides up into its slot
+    timers.push(setTimeout(function(){ settleVerdict(); animateCount(finalvalNode, 0, bd.total, 700, fmtMoney); }, t+1350));
+    timers.push(setTimeout(function(){ rest.classList.add("in"); }, t+1900));
+    setTimeout(function(){ if(!done) document.addEventListener("pointerdown", skip, true); }, 220);           // arm tap-to-skip
   }
   return wrap;
 }
