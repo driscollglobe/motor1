@@ -60,8 +60,13 @@
   .event .ttl{font-family:var(--display);font-weight:600;font-size:17px;margin:2px 0 3px}
   .event .body{font-size:13px;color:var(--muted);line-height:1.35}
 
+  /* delayed-capacity hint */
+  .buildhint{background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:8px;padding:8px 11px;
+    font-size:12px;color:var(--blue-deep);line-height:1.35;margin-bottom:10px}
+  .buildhint b{color:var(--blue-deep)}
   /* segment list */
   .seglist{display:flex;flex-direction:column;gap:8px}
+  .opensnext{margin-top:7px;font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
   .seg{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow)}
   .seg .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .seg .name{font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px}
@@ -136,13 +141,13 @@
   .note .nh{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
 
   /* intro / end */
-  .intro{padding:20px 4px}
-  .intro .big{font-family:var(--display);font-weight:700;font-size:40px;line-height:.95}
-  .intro .big .yr{color:var(--blue)}
-  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:14px 0 6px}
-  .sacred{display:flex;flex-direction:column;gap:6px;margin:14px 0}
-  .sacred .s{font-size:12.5px;color:var(--text);display:flex;gap:8px;align-items:flex-start}
-  .sacred .s b{color:var(--blue)}
+  .intro{padding:18px 4px 4px}
+  .intro .big{font-family:var(--display);font-weight:700;font-size:37px;line-height:1.04;letter-spacing:.005em;text-wrap:balance}
+  .intro .big .yr{color:var(--blue);white-space:nowrap}
+  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:14px 0 18px;max-width:42ch}
+  .sacred{display:flex;flex-direction:column;gap:11px;margin:0 0 4px;border-top:1px solid var(--line);padding-top:16px}
+  .sacred .s{font-size:13px;color:var(--text);line-height:1.45}
+  .sacred .s b{color:var(--blue);font-weight:700;letter-spacing:.01em}
 
   .end .grade{display:flex;align-items:center;gap:14px;justify-content:center;margin:6px 0 2px}
   .end .gbadge{font-family:var(--display);font-weight:700;font-size:54px;width:84px;height:84px;
@@ -150,6 +155,14 @@
   .end .gbadge.s{border-color:var(--blue);color:var(--ink);background:var(--blue)}
   .end .gbadge.f{border-color:var(--red);color:var(--red);background:#fdecea}
   .end .rankline{font-family:var(--display);font-size:18px;font-weight:600}
+  /* par panel */
+  .parbox{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+  .parhead{display:flex;align-items:baseline;justify-content:space-between;padding:10px 12px;background:var(--blue-tint);border-bottom:1px solid var(--line)}
+  .parhead .parbig{font-family:var(--mono);font-size:19px;font-weight:600}
+  .parhead .parsub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .parrow{display:flex;justify-content:space-between;padding:7px 12px;font-family:var(--mono);font-size:12.5px;border-bottom:1px solid var(--line);color:var(--muted)}
+  .parrow:last-child{border-bottom:0}
+  .parrow.cleared{color:var(--text)} .parrow.cleared .num{color:var(--green);font-weight:600}
   .breakdown{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
   .brow{display:flex;justify-content:space-between;padding:8px 12px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--line)}
   .brow:last-child{border-bottom:0}
@@ -205,23 +218,28 @@ var CONFIG = {
   opCostPerUnit: 1.6,         // $M/yr per unit — thin slices in crowded pools bleed against this
   companyOverhead: 120,       // fixed $M/yr (idle hoarding bleeds against this)
   debtInterestRate: 0.08,
-  capacityDecay: 0.08,        // capacity *= (1-this) every year (replaces Retool)
+  capacityDecay: 0.12,        // capacity *= (1-this) every year — high enough that chasing a new segment each year bleeds, so commitment is rewarded (replaces Retool)
   allocStepUnits: 5,          // +/- stepper increment
-  botMaxUnitsPerSeg: 45,      // par-bot guardrail: cap one segment's build in a single year
+  botMaxUnitsPerSeg: 20,      // par-bot guardrail: keep a bot's yearly build under the watchlist alarm
 
   /* contested share + reactions */
-  dominanceThreshold: 0.28,   // player share above this provokes the home rival
+  dominanceThreshold: 0.38,   // player share above this provokes the home rival (high enough to let a committed niche owner exist)
   priceCutPenalty: 0.12,      // shrinks that segment's pool NEXT year (1-this)
   reactionCapacityBump: 0.20, // and the defender adds this fraction of capacity
+  rivalAlarmBuildUnits: 20,   // building more than this into a rival's home segment in one year alarms it
+  believerFrac: 0.60,         // forecast/reactive bots: fraction of cash poured into their single pick
+  believerCap: 21,            // ...capped at this many units/yr (just over the alarm so a believer's wrong bet draws a reaction and hurts)
   brandFloorFactor: 0.8, brandFactorDiv: 250,   // brandFactor = 0.8 + brand/250
 
   /* secular drift */
-  secularDriftEV: 0.06,       // EV pool grows: drift = 1 + yearIndex*this
+  secularDriftEV: 0.16,       // EV pool grows: drift = 1 + yearIndex*this (the EV transition genuinely arrives late-game)
 
-  /* events */
+  /* events — swings are large so anticipating the right one (and committing a year
+     early) pays, and a wrong forecast bet genuinely hurts */
   forecastTrueChance: 0.70,
-  severityFactor: { mild: 0.6, medium: 1.0, severe: 1.4 },
-  severityWeights: { mild: 0.30, medium: 0.45, severe: 0.25 },
+  eraBias: 5,                 // per-seed: era events are (1+this)x as likely, giving each day a character
+  severityFactor: { mild: 0.85, medium: 1.45, severe: 2.15 },
+  severityWeights: { mild: 0.25, medium: 0.42, severe: 0.33 },
 
   /* postures (one company-wide choice per year) */
   postures: {
@@ -245,13 +263,13 @@ var CONFIG = {
 
 /* ---- segments (base pool / margin / capacity value, with car-fantasy copy) ---- */
 var SEGMENTS = [
-  { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.14, capValue:10,
+  { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.20, capValue:10,
     invest:"cheap commuters and fleet rentals", defender:"toyo" },
-  { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.20, capValue:13,
+  { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.26, capValue:13,
     invest:"three-row haulers for the school run", defender:"wolfsburg" },
-  { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.34, capValue:15,
+  { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.30, capValue:15,
     invest:"naturally aspirated heroes and track specials", defender:"maranello" },
-  { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.50, capValue:17,
+  { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.46, capValue:17,
     invest:"leather, badges and quiet money", defender:"stuttgart" },
   { id:"ev",          name:"EV / Future",    emoji:"⚡", basePool:30,  baseMargin:0.30, capValue:18,
     invest:"the electric bet that keeps getting bigger", defender:"paloalto" },
@@ -291,31 +309,31 @@ function rivalMeta(id){ for(var i=0;i<RIVALS.length;i++) if(RIVALS[i].id===id) r
 /* ---- event deck: demand multipliers (at MEDIUM severity) + opCost effects ---- */
 var EVENTS = {
   oil_shock:  { name:"Oil shock",        demand:{economy:1.25,family:0.95,performance:0.80,luxury:0.85,ev:1.30,pickup:0.60},
-    reveal:"Gas hits five bucks a gallon overnight. Anything thirsty sits on the lot.",
+    reveal:"Gas just punched through five bucks a gallon and every V8 on the lot turned into a boat anchor. Trucks crater, the cheap and the electric fly.",
     forecast:"Tension building in the oil-producing regions." },
   boom:       { name:"Cheap gas boom",   demand:{economy:0.85,family:1.05,performance:1.20,luxury:1.20,ev:0.95,pickup:1.30},
-    reveal:"Cheap gas and easy credit. The showroom is mobbed for big toys.",
+    reveal:"Cheap gas, fat bonuses, and a showroom full of horsepower — buyers are signing for the loud, fast, and expensive. Trucks, supercars and luxury roar.",
     forecast:"Analysts whisper about a coming spending boom." },
   recession:  { name:"Recession",        demand:{economy:1.30,family:0.85,performance:0.75,luxury:0.60,ev:0.90,pickup:0.90},
-    reveal:"The economy cracks. Financing dries up and the luxury floor goes silent.",
+    reveal:"The credit taps slam shut and the luxury floor goes tomb-quiet. Suddenly everyone needs a cheap commuter, not a status symbol. Economy up, the badge stuff bleeds.",
     forecast:"The yield curve inverts. Storm clouds gather." },
   ev_subsidy: { name:"EV subsidy wave",  demand:{economy:0.95,family:0.95,performance:0.85,luxury:0.90,ev:1.80,pickup:0.85},
     opcost:{economy:1.10,family:1.10,performance:1.10,luxury:1.10,pickup:1.10},
-    reveal:"A fat federal subsidy lands. Every dealer suddenly wants a plug.",
+    reveal:"Washington is cutting fat checks for anything with a plug, and the whole country wants a charger in the garage. EV demand goes vertical; gas burners get a cost bump.",
     forecast:"Washington hints at a green incentive package." },
   suv_craze:  { name:"SUV craze",        demand:{economy:0.80,family:1.50,performance:0.95,luxury:1.05,ev:0.95,pickup:1.10},
-    reveal:"Everyone needs a three-row crossover. Family lots clear out.",
+    reveal:"Every household with a dog and a soccer schedule decided it needs a three-row crossover yesterday. Family lots clear out; nobody wants a hatchback.",
     forecast:"Lifestyle magazines can't stop talking about crossovers." },
   crisis:     { name:"Chip & lithium crunch", demand:{ev:0.92},
     opcost:{economy:1.25,family:1.25,performance:1.25,luxury:1.25,ev:1.25,pickup:1.25},
-    reveal:"A chip and lithium crunch jams every line. Build costs spike across the board.",
+    reveal:"A chip-and-lithium crunch jams every assembly line on Earth. Building anything costs a fortune this year — and the battery cars hurt worst.",
     forecast:"Supply chatter: critical parts may get scarce." },
   tariff:     { name:"Tariff shock",     demand:{economy:0.95,family:0.97},
     opcost:{economy:1.30,family:1.15},
-    reveal:"New tariffs hammer imported parts. Small cars get expensive to build.",
+    reveal:"Fresh tariffs slap imported parts overnight, and the thin-margin cheap cars are suddenly expensive to screw together. Economy and family build costs jump.",
     forecast:"Trade talks turn hostile on the evening news." },
   quiet:      { name:"Quiet year",       demand:{},
-    reveal:"A calm model year. No shocks — just execution.",
+    reveal:"No shocks, no headlines, no excuses. Just a clean model year and whoever reads the road best.",
     forecast:"Forecasters see a quiet year ahead." },
 };
 var EVENT_DECK = ["oil_shock","boom","recession","ev_subsidy","suv_craze","crisis","tariff","quiet"];
@@ -340,9 +358,18 @@ function pct(x){ return Math.round(x*100)+"%"; }
 // The whole day's run is decided here so it is identical for everyone on a seed.
 function buildScenario(seed){
   var rng = rngFromSeed("scenario|"+seed);
+  // Each seed gets an "era": one or two events are far more likely this decade, so
+  // the day has a character (a truck era, an EV era, a recessionary decade). That is
+  // what lets a committed specialist win on the days that favor it, instead of a
+  // forecast-chaser winning every seed. Quiet is excluded as an era theme.
+  var themeDeck = EVENT_DECK.filter(function(e){ return e!=="quiet"; });
+  var eraA = themeDeck[Math.floor(rng()*themeDeck.length)];
+  var eraB = themeDeck[Math.floor(rng()*themeDeck.length)];
+  var weights = {}; EVENT_DECK.forEach(function(e){ weights[e]=1; });
+  weights[eraA] += CONFIG.eraBias; weights[eraB] += CONFIG.eraBias;
   var events=[], severities=[];
   for(var i=0;i<CONFIG.turns;i++){
-    events.push(EVENT_DECK[Math.floor(rng()*EVENT_DECK.length)]);
+    events.push(pickWeighted(rng, weights));
     severities.push(pickWeighted(rng, CONFIG.severityWeights));
   }
   // forecast shown in year i is a hint about year i+1; ~70% true, else a red herring
@@ -364,14 +391,14 @@ function freshEntities(){
   var ents=[];
   var player={ id:"player", isPlayer:true, name:"Your company", short:"YOU",
     cash:CONFIG.startCash, brand:CONFIG.startBrand, posture:"standard",
-    capacity:{}, home:[], lastSeg:{} };
-  SEG_IDS.forEach(function(s){ player.capacity[s] = CONFIG.startCapacity[s]||0; });
+    capacity:{}, pendingCap:{}, home:[], lastSeg:{} };
+  SEG_IDS.forEach(function(s){ player.capacity[s] = CONFIG.startCapacity[s]||0; player.pendingCap[s]=0; });
   ents.push(player);
   RIVALS.forEach(function(r){
     var e={ id:r.id, isPlayer:false, name:r.city, short:r.short, flag:r.flag,
       cash:CONFIG.rivalStartCash, brand:r.brand, posture:r.posture,
-      capacity:{}, home:r.home.slice(), lastSeg:{} };
-    SEG_IDS.forEach(function(s){ e.capacity[s] = r.capacity[s]||0; });
+      capacity:{}, pendingCap:{}, home:r.home.slice(), lastSeg:{} };
+    SEG_IDS.forEach(function(s){ e.capacity[s] = r.capacity[s]||0; e.pendingCap[s]=0; });
     ents.push(e);
   });
   return ents;
@@ -385,6 +412,17 @@ function createState(seed){
   };
 }
 function player(state){ return state.entities[0]; }
+
+// Delayed capacity: a year's build is bought into pendingCap and only comes online
+// at the START of the next model year. This is what makes the forecast matter — you
+// must commit a year ahead under uncertainty instead of reacting risk-free.
+function activatePending(state){
+  state.entities.forEach(function(e){
+    SEG_IDS.forEach(function(s){
+      if(e.pendingCap[s]){ e.capacity[s]=(e.capacity[s]||0)+e.pendingCap[s]; e.pendingCap[s]=0; }
+    });
+  });
+}
 
 /* ============================ market math (section 6) ============================ */
 function eventMultiplier(eventId,severity,segId){
@@ -411,15 +449,16 @@ function demandPool(state,segId,yearIndex){
 }
 
 // Rivals grow capacity on a bounded deterministic schedule (rule-based, seed-free):
-// faster in their home segments, slowly everywhere. They pay for it from cash so
-// their valuation stays honest for the final ranking.
+// faster in their home segments, slowly everywhere. Like the player, their build is
+// delayed — it goes into pendingCap and opens next year. They pay from cash so their
+// valuation stays honest for the final ranking.
 function rivalInvest(entity){
   if(entity.isPlayer) return;
   SEG_IDS.forEach(function(s){
     var g = entity.home.indexOf(s)>=0 ? CONFIG.rivalHomeGrowth : CONFIG.rivalOffGrowth;
-    var before = entity.capacity[s]||0, after = before*(1+g);
-    entity.capacity[s] = after;
-    entity.cash -= (after-before)*CONFIG.capacityCostPerUnit;
+    var add = (entity.capacity[s]||0)*g;
+    entity.pendingCap[s] = (entity.pendingCap[s]||0) + add;   // opens next year
+    entity.cash -= add*CONFIG.capacityCostPerUnit;
   });
 }
 
@@ -459,18 +498,29 @@ function resolveYear(state){
     if(e.isPlayer){ playerProfit=net; playerSeg=e.lastSeg; }
   });
 
-  // Sacred mechanic 2: visible, telegraphed rival reaction to player dominance.
+  // Sacred mechanic 2: visible, telegraphed rival reactions. TWO triggers, both
+  // bite NEXT year (shrink that pool) and both are surfaced now as a market note:
+  //   - dominance: player share in a segment is above dominanceThreshold (price war)
+  //   - watchlist: player POURS new capacity (> rivalAlarmBuildUnits) into a rival's
+  //     home segment this year, even while still below the share threshold.
   var notes=[], warnings=[], nextPending={};
   SEG_IDS.forEach(function(s){ nextPending[s]=1; });
+  var pBuild = player(state).pendingCap;   // this year's player build (delayed), set by the caller
   SEG_IDS.forEach(function(s){
     var sh = playerSeg[s] ? playerSeg[s].share : 0;
-    if(sh > CONFIG.dominanceThreshold){
-      var seg=segMeta(s), def=rivalMeta(seg.defender), rivEnt=null;
-      for(var i=0;i<ents.length;i++) if(ents[i].id===seg.defender){ rivEnt=ents[i]; break; }
-      nextPending[s] = 1 - CONFIG.priceCutPenalty;
-      if(rivEnt) rivEnt.capacity[s] = (rivEnt.capacity[s]||0) * (1+CONFIG.reactionCapacityBump);
-      warnings.push({ seg:s, city:def.city,
+    var dominate = sh > CONFIG.dominanceThreshold;
+    var alarm = (pBuild[s]||0) > CONFIG.rivalAlarmBuildUnits;
+    if(!dominate && !alarm) return;
+    var seg=segMeta(s), def=rivalMeta(seg.defender), rivEnt=null;
+    for(var i=0;i<ents.length;i++) if(ents[i].id===seg.defender){ rivEnt=ents[i]; break; }
+    nextPending[s] = 1 - CONFIG.priceCutPenalty;
+    if(rivEnt) rivEnt.pendingCap[s] = (rivEnt.pendingCap[s]||0) + (rivEnt.capacity[s]||0)*CONFIG.reactionCapacityBump; // defends next year
+    if(dominate){
+      warnings.push({ seg:s, kind:"war",
         text:def.city+" starts "+WAR_PHRASE[s]+" price war. Your "+seg.name+" profits get squeezed next year." });
+    } else {
+      warnings.push({ seg:s, kind:"watch",
+        text:def.city+" spots you tooling up in "+seg.name+" and is gearing up to defend. That pool tightens next year." });
     }
   });
   state.pending = nextPending;
@@ -551,7 +601,10 @@ function arrowFor(mult){
 /* ============================ app / rendering ============================ */
 var App = { state:null, root:null };
 
-function setSeed(seed){ App.state = createState(seed); }
+function pad2(n){ return n<10?"0"+n:""+n; }
+function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }  // YYYYMMDD, same for everyone today
+function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
+function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); }
 function newSeed(){ return "practice|"+Math.floor(Math.random()*1e9); }
 
 function render(){
@@ -568,7 +621,7 @@ function render(){
 function topbar(){
   return el("header",{class:"topbar"},[
     motor1Logo(),
-    el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text:"daily"}) ]),
+    el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text: App.state.isPractice?"Practice":("Daily #"+App.state.dailyNumber)}) ]),
   ]);
 }
 // The motor1.com logo, recreated as inline SVG so the page stays self-contained:
@@ -591,12 +644,15 @@ function introView(){
     el("div",{class:"big"},[ "Run an automaker for ", el("span",{class:"yr",text:"10 model years"}), "." ]),
     el("div",{class:"lede",text:"New scenario, ten model years, about two minutes. Put your money across the market while the legends — from Maranello to Silicon Sparks — fight you for the same buyers. Highest company valuation wins."}),
     el("div",{class:"sacred"},[
-      el("div",{class:"s"},[ el("b",{text:"Contested. "}), "Revenue is your slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
-      el("div",{class:"s"},[ el("b",{text:"Telegraphed. "}), "Dominate a segment and its owner starts a price war next year — and you're warned before it bites." ]),
-      el("div",{class:"s"},[ el("b",{text:"Forecast. "}), "A vague signal arrives a year ahead. Most are real. Some are bait. Reading them is the game." ]),
+      el("div",{class:"s"},[ el("b",{text:"Contested — "}), "your revenue is a slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
+      el("div",{class:"s"},[ el("b",{text:"Telegraphed — "}), "dominate a segment and its owner starts a price war next year. You're warned before it bites." ]),
+      el("div",{class:"s"},[ el("b",{text:"Forecast — "}), "a vague signal arrives a year ahead. Most are real, some are bait. Reading them is the game." ]),
     ]),
-    el("button",{class:"btn primary",style:"margin-top:16px",text:"Start the run",onclick:function(){ App.state.phase="turn"; render(); }}),
-    el("div",{class:"foot",text:"A daily car-industry game for Motor1. Vanilla JS, no backend, no real brand names in play."}),
+    el("button",{class:"btn primary",style:"margin-top:16px",text:(App.state.isPractice?"Start practice run":("Play daily #"+App.state.dailyNumber)),onclick:function(){ App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+    el("div",{class:"actions",style:"margin-top:8px"},[
+      el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+    ]),
+    el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}),
   ]);
 }
 
@@ -633,6 +689,11 @@ function turnView(){
     el("div",{class:"ttl"},[ CONFIG.emoji[s.scenario.events[y]]+" "+ev.name ]),
     el("div",{class:"body",text:ev.reveal}),
   ]));
+
+  // delayed-capacity reminder: what you build this year opens next year
+  wrap.appendChild(el("div",{class:"buildhint",html: y<CONFIG.turns-1
+    ? "🏗️ New capacity opens <b>next year</b> (model year "+(y+2)+") — you're building for the forecast, not this year's headline."
+    : "🏁 Final model year — new builds won't open in time to earn. They only add asset value at the buzzer." }));
 
   // 3. the board: a compact row per segment + inline allocation
   var list=el("div",{class:"seglist"});
@@ -679,6 +740,7 @@ function turnView(){
             onclick:function(){ stepAlloc(seg.id,1); }},["+"]),
         ]),
       ]),
+      planned>0 ? el("div",{class:"opensnext",text:"▸ +"+planned+" opening "+(y<CONFIG.turns-1?("next year ("+(y+2)+")"):"too late to earn")}) : null,
     ]));
   });
   wrap.appendChild(list);
@@ -744,15 +806,17 @@ function stepAlloc(segId,dir){
 
 function runYear(){
   var s=App.state, p=player(s);
-  // commit the player's build (durable capacity) and posture
+  // commit the player's build: it opens NEXT year (delayed capacity). Pay for it now.
   SEG_IDS.forEach(function(seg){
     var u=s.planned[seg]||0;
-    if(u>0){ p.capacity[seg]=(p.capacity[seg]||0)+u; p.cash -= u*CONFIG.capacityCostPerUnit; }
+    p.pendingCap[seg]=u;
+    if(u>0){ p.cash -= u*CONFIG.capacityCostPerUnit; }
   });
   p.posture=s.playerPosture;
   var res=resolveYear(s);
   s.lastResult=res;
-  s.phase = (s.yearIndex >= CONFIG.turns-1) ? "end" : "result";
+  if(s.yearIndex >= CONFIG.turns-1){ activatePending(s); s.phase="end"; }  // final builds count as asset value
+  else s.phase="result";
   render();
   window.scrollTo(0,0);
 }
@@ -818,6 +882,7 @@ function nextYear(){
   var s=App.state;
   s.yearIndex++;
   s.planned={};
+  activatePending(s);   // last year's builds (yours and the rivals') come online now
   s.phase="turn";
   render();
   window.scrollTo(0,0);
@@ -849,6 +914,20 @@ function endView(){
     ]),
   ]));
 
+  // par — where the player's number lands against the strategy field on this same seed
+  var par=computePar(s.seed);
+  var botsBeaten=par.vals.filter(function(v){return v<bd.total;}).length;
+  var vsPar=Math.round((bd.total-par.par)/Math.max(1,Math.abs(par.par))*100);
+  wrap.appendChild(el("div",{class:"parbox"},[
+    el("div",{class:"parhead"},[
+      el("span",{class:"parbig "+(bd.total>=par.par?"green":"red"),text:(vsPar>=0?"+":"")+vsPar+"% vs par"}),
+      el("span",{class:"parsub",text:"Beat "+botsBeaten+" of "+par.n+" strategy bots"}),
+    ]),
+    parrow("Bogey · even-spread floor",par.bogey,pv),
+    parrow("Par · 65th percentile",par.par,pv),
+    parrow("Top 10% · the line to chase",par.top10,pv),
+  ]));
+
   // breakdown — people don't trust an abstract number unless they see the parts
   var brk=el("div",{class:"breakdown"},[
     brow("Cash on hand",bd.cash),
@@ -877,7 +956,7 @@ function endView(){
   wrap.appendChild(el("div",{class:"share",text:shareText}));
   wrap.appendChild(el("div",{class:"actions"},[
     el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
-    el("button",{class:"btn primary",text:"New run",onclick:function(){ setSeed(newSeed()); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+    el("button",{class:"btn primary",text:"Practice run",onclick:function(){ setSeed(newSeed(),true); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
   ]));
   return wrap;
 }
@@ -885,6 +964,12 @@ function brow(k,v,total){
   return el("div",{class:"brow"+(total?" total":"")},[
     el("span",{text:k}),
     el("span",{class:(v<0?"neg":""),text:(total?fmtMoney(v):fmtSigned(v))}),
+  ]);
+}
+function parrow(label,val,pv){
+  return el("div",{class:"parrow"+(pv>=val?" cleared":"")},[
+    el("span",{text:label}),
+    el("span",{class:"num",text:fmtMoney(val)+(pv>=val?"  ✓":"")}),
   ]);
 }
 function gradeBlurb(g){
@@ -928,18 +1013,21 @@ function storyBeat(state){
 function runHeadless(seed,policy){
   var st=createState(seed); st.phase="turn";
   for(var y=0;y<CONFIG.turns;y++){
+    activatePending(st);                 // last year's builds (yours + rivals') come online
     var p=player(st);
     var dec=policy(st,y)||{alloc:{},posture:"standard"};
     st.planned={};
+    SEG_IDS.forEach(function(seg){ p.pendingCap[seg]=0; });
     SEG_IDS.forEach(function(seg){
       var u=(dec.alloc&&dec.alloc[seg])||0;
       u=Math.min(u, Math.floor(Math.max(0,p.cash)/CONFIG.capacityCostPerUnit)); // affordability clamp
-      if(u>0){ st.planned[seg]=u; p.capacity[seg]=(p.capacity[seg]||0)+u; p.cash-=u*CONFIG.capacityCostPerUnit; }
+      if(u>0){ st.planned[seg]=u; p.pendingCap[seg]=u; p.cash-=u*CONFIG.capacityCostPerUnit; }  // delayed build
     });
     p.posture=dec.posture||"standard";
     resolveYear(st);
     st.yearIndex++;
   }
+  activatePending(st);                    // final builds count as asset value
   return { valuation:valuation(player(st)), rank:playerRankFinal(st) };
 }
 function playerRankFinal(st){
@@ -958,34 +1046,88 @@ function allocInto(state,segs,frac){
   });
   return alloc;
 }
-function segScore(st,y,s){
-  var m=eventMultiplier(st.scenario.events[y],st.scenario.severities[y],s)*(s==="ev"?(1+y*CONFIG.secularDriftEV):1)*(st.pending[s]||1);
+// Score a segment for an arbitrary event/severity (used to score either THIS year
+// or — for forecast-followers — what NEXT year is forecast to look like). Because
+// capacity now opens a year late, a smart bot scores the FORECAST, not the headline.
+function scoreFor(st,yProduce,s,eventId,sev){
+  var m=eventMultiplier(eventId,sev,s)*(s==="ev"?(1+yProduce*CONFIG.secularDriftEV):1);
   var sumEff=0; st.entities.forEach(function(e){sumEff+=effectiveCapacity(e,s);});
   var share=sumEff>0?effectiveCapacity(player(st),s)/sumEff:0;
-  var crowd = sumEff>0 ? (demandPool(st,s,y)/sumEff) : 0;   // revenue available per unit of effective capacity
+  var poolish=segMeta(s).basePool*CONFIG.poolUnit*m;
+  var crowd=sumEff>0?poolish/sumEff:poolish;        // revenue available per unit of effective capacity
   return { s:s, score:m*(1+segMeta(s).baseMargin)*crowd*(share<CONFIG.dominanceThreshold?1:0.5), share:share, mult:m };
 }
+function segScoreThisYear(st,y,s){ return scoreFor(st,y,s,st.scenario.events[y],st.scenario.severities[y]); }
+function segScoreForecast(st,y,s){
+  if(y>=CONFIG.turns-1) return { s:s, score:0, mult:1 };
+  return scoreFor(st,y+1,s,st.scenario.forecastEvent[y],"medium");   // bet on next year's forecast at medium severity
+}
+function topTwo(scored){ scored=scored.slice().sort(function(a,b){return b.score-a.score;}); return [scored[0].s,scored[1].s]; }
+function topOne(scored){ return scored.slice().sort(function(a,b){return b.score-a.score;})[0].s; }
+// Aggressive single-segment build (used by the believer bots). It deliberately pours in
+// past the watchlist alarm, so a wrong bet really hurts — that is the risk that lets the
+// steady bots win on seeds where the forecast misfires.
+function allocConcentrated(state,seg,frac,cap){
+  var p=player(state), budget=Math.max(0,p.cash)*frac;
+  var units=Math.floor((budget/CONFIG.capacityCostPerUnit)/CONFIG.allocStepUnits)*CONFIG.allocStepUnits;
+  units=Math.min(units, cap||50);
+  var a={}; if(units>0) a[seg]=units; return a;
+}
 function postureForSegs(segs){ return (segs.indexOf("luxury")>=0||segs.indexOf("performance")>=0||segs.indexOf("ev")>=0)?"premium":"standard"; }
+// A committed specialist: build and SUSTAIN one lane every year (sub-alarm builds, so it
+// isn't auto-punished), riding it. Wins on the seeds whose era favors that lane, loses on
+// the rest — exactly the "wins on the days that favor it" behaviour the spec wants.
+function laneBot(lane, posture){
+  return function(st,y){
+    if(y>=CONFIG.turns-1) return { alloc:{}, posture:posture };
+    return { alloc:allocInto(st,lane,buildWeight(y)), posture:posture };
+  };
+}
 var BOTS = {
   hoard:       function(st,y){ return { alloc:{}, posture:"standard" }; },
   evenSpread:  function(st,y){ return { alloc:allocInto(st,SEG_IDS,0.30), posture:"standard" }; },   // the bogey
-  suvValue:    function(st,y){ return { alloc:allocInto(st,["family","economy"],buildWeight(y)), posture:"budget" }; },
-  evFuture:    function(st,y){ return { alloc:allocInto(st,["ev","performance"],buildWeight(y)), posture:"premium" }; },
-  truckBaron:  function(st,y){ return { alloc:allocInto(st,["pickup","family"],buildWeight(y)), posture:"standard" }; },
-  luxHalo:     function(st,y){ return { alloc:allocInto(st,["luxury","performance"],buildWeight(y)), posture:"premium" }; },
-  // contrarian: build the cold-but-decent segments early, betting demand swings back
+  premiumSpread:function(st,y){ return { alloc:allocInto(st,["luxury","ev","performance","pickup"],0.34), posture:"premium" }; },  // diversified, margin-tilted — wins premium/EV/boom eras
+  valueSpread: function(st,y){ return { alloc:allocInto(st,["economy","family","pickup"],0.34), posture:"standard" }; },           // diversified, volume-tilted — wins recession/SUV eras
+  truckTitan:  laneBot(["pickup"],  "standard"),  // wins on cheap-gas / boom eras
+  evVisionary: laneBot(["ev"],      "premium"),   // wins on EV-subsidy eras + the late EV transition
+  luxBaron:    laneBot(["luxury"],  "premium"),   // wins on boom / luxury eras
+  familyVolume:laneBot(["family"],  "standard"),  // wins on SUV-craze eras
+  economyKing: laneBot(["economy"], "standard"),  // wins on recession eras (when everything else craters)
+  // contrarian: commits hard into the COLDEST decent segment this year, betting demand
+  // swings back by the time the capacity opens. Wins the seeds where the crowd (and the
+  // believers) pile into the wrong thing.
   contrarian:  function(st,y){
-    if(y>4) return { alloc:{}, posture:"standard" };
-    var ranked=SEG_IDS.map(function(s){ return segScore(st,y,s); }).filter(function(o){return segMeta(o.s).baseMargin>=0.2;})
-      .sort(function(a,b){return a.mult-b.mult;});   // lowest demand mult first
-    var picks=[ranked[0].s, ranked[1].s];
-    return { alloc:allocInto(st,picks,buildWeight(y)), posture:postureForSegs(picks) };
+    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
+    var ranked=SEG_IDS.map(function(s){ return segScoreThisYear(st,y,s); }).filter(function(o){return segMeta(o.s).baseMargin>=0.18;})
+      .sort(function(a,b){return a.mult-b.mult;});   // coldest first
+    var top=ranked[0].s;
+    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
   },
-  // par: read this year's event + crowding, build the two best uncrowded segments early, harvest late
+  // eraReader: reads the DECADE's character from the events seen so far and commits early
+  // to the segment its dominant event favours, compounding first-mover share. Wins the
+  // strong-era seeds (a clear truck/EV/recession decade) that the 1-year readers miss.
+  eraReader:   function(st,y){
+    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
+    var counts={}; for(var i=0;i<=y;i++){ var e=st.scenario.events[i]; counts[e]=(counts[e]||0)+1; }
+    var dom=null,mx=0; for(var k in counts){ if(k!=="quiet"&&counts[k]>mx){mx=counts[k];dom=k;} }
+    if(!dom) dom=st.scenario.events[y];
+    var best=null,bm=-1; SEG_IDS.forEach(function(s){ var m=eventMultiplier(dom,"medium",s)*(s==="ev"?(1+(y+1)*CONFIG.secularDriftEV):1); if(m>bm){bm=m;best=s;} });
+    return { alloc:allocConcentrated(st,best,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([best]) };
+  },
+  // reactiveLate: pours hard into THIS year's hottest segment — but capacity opens a year
+  // late, so it is betting that next year looks like this year. Usually it doesn't.
+  reactiveLate:function(st,y){
+    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
+    var top=topOne(SEG_IDS.map(function(s){ return segScoreThisYear(st,y,s); }));
+    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
+  },
+  // adaptive: a forecast BELIEVER — commits hard into the single segment next year's
+  // forecast favours. Right ~70% of the time (forecasts are seed-fixed, 30% red herrings),
+  // so on seeds with several false forecasts it craters and a steady bot wins the day.
   adaptive:    function(st,y){
-    var ranked=SEG_IDS.map(function(s){ return segScore(st,y,s); }).sort(function(a,b){return b.score-a.score;});
-    var picks=[ranked[0].s, ranked[1].s];
-    return { alloc:allocInto(st,picks,buildWeight(y)), posture:postureForSegs(picks) };
+    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
+    var top=topOne(SEG_IDS.map(function(s){ return segScoreForecast(st,y,s); }));
+    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
   },
 };
 function balanceCheck(nSeeds){
@@ -999,6 +1141,17 @@ function balanceCheck(nSeeds){
   }
   return names.map(function(n){ return { bot:n, winRate:wins[n]/nSeeds, avg:sum[n]/nSeeds }; })
     .sort(function(a,b){return b.winRate-a.winRate;});
+}
+
+// Par for one seed: run every bot on the same scenario the player faced, so the player
+// can see where their valuation lands. Bogey = even-spread floor, par = 65th percentile,
+// top10 = the elite line. Cheap (a dozen 10-year sims).
+function computePar(seed){
+  var names=Object.keys(BOTS);
+  var vals=names.map(function(n){ return runHeadless(seed,BOTS[n]).valuation; });
+  var sorted=vals.slice().sort(function(a,b){return a-b;});
+  function pctile(p){ return sorted[clamp(Math.round(p*(sorted.length-1)),0,sorted.length-1)]; }
+  return { bogey:runHeadless(seed,BOTS.evenSpread).valuation, par:pctile(0.65), top10:pctile(0.90), vals:vals, n:names.length };
 }
 
 /* ============================ debug panel ============================ */
@@ -1063,10 +1216,10 @@ function selfTest(){
 
 /* ============================ boot ============================ */
 App.root=document.getElementById("app");
-setSeed(newSeed());
+setSeed(todaySeed(), false);   // default to today's official daily, identical for everyone
 render();
 // expose for measurement in the preview (no node runtime here)
-window.__MODELYEAR__ = { runHeadless:runHeadless, balanceCheck:balanceCheck, BOTS:BOTS, createState:createState, resolveYear:resolveYear, valuation:valuation, CONFIG:CONFIG, selfTest:selfTest };
+window.__MODELYEAR__ = { runHeadless:runHeadless, balanceCheck:balanceCheck, computePar:computePar, BOTS:BOTS, createState:createState, resolveYear:resolveYear, activatePending:activatePending, valuation:valuation, CONFIG:CONFIG, selfTest:selfTest };
 })();
 </script>
 </body>
