@@ -308,6 +308,12 @@ var CONFIG = {
   eraBias: 5,                 // per-seed: era events are (1+this)x as likely, giving each day a character
   severityFactor: { mild: 0.85, medium: 1.45, severe: 2.15 },
   severityWeights: { mild: 0.25, medium: 0.42, severe: 0.33 },
+  stakesCurve: 1.5,           // rising stakes: early years skew mild, the last years carry the biggest swings
+  finaleAmplifier: 1.60,      // the final model year's swing is amplified this much — the decade-definer (also pulls every bot under the 30% gate)
+
+  /* personal events — seed-deterministic, modest punctuation, applied to ALL entities */
+  recallProbPerBudgetYr: 0.05, recallMaxProb: 0.22, recallBrandHit: 12, recallCashHit: 80,   // cheaping out (Budget) catches up
+  viralProbPerPremiumYr: 0.015, viralMaxProb: 0.08, viralBrandFloor: 78, viralBonusProb: 0.0, viralBrandBump: 5,  // Premium can break out (kept small so it doesn't compound past the gate)
 
   /* postures (one company-wide choice per year) */
   postures: {
@@ -436,9 +442,13 @@ function buildScenario(seed){
   var weights = {}; EVENT_DECK.forEach(function(e){ weights[e]=1; });
   weights[eraA] += CONFIG.eraBias; weights[eraB] += CONFIG.eraBias;
   var events=[], severities=[];
+  var sw0=CONFIG.severityWeights;
   for(var i=0;i<CONFIG.turns;i++){
     events.push(pickWeighted(rng, weights));
-    severities.push(pickWeighted(rng, CONFIG.severityWeights));
+    // rising stakes: tilt the severity draw toward mild early, toward severe late (seed-deterministic)
+    var t = CONFIG.turns>1 ? i/(CONFIG.turns-1) : 1;
+    var sw = { mild: sw0.mild*(1+CONFIG.stakesCurve*(1-t)), medium: sw0.medium, severe: sw0.severe*(1+CONFIG.stakesCurve*t) };
+    severities.push(pickWeighted(rng, sw));
   }
   // forecast shown in year i is a hint about year i+1; ~70% true, else a red herring
   var forecastTrue=[], forecastEvent=[];
@@ -459,13 +469,13 @@ function freshEntities(){
   var ents=[];
   var player={ id:"player", isPlayer:true, name:"Your company", short:"YOU",
     cash:CONFIG.startCash, brand:CONFIG.startBrand, posture:"standard",
-    capacity:{}, pendingCap:{}, home:[], lastSeg:{} };
+    capacity:{}, pendingCap:{}, home:[], lastSeg:{}, budgetStreak:0, premiumStreak:0 };
   SEG_IDS.forEach(function(s){ player.capacity[s] = CONFIG.startCapacity[s]||0; player.pendingCap[s]=0; });
   ents.push(player);
   RIVALS.forEach(function(r){
     var e={ id:r.id, isPlayer:false, name:r.city, short:r.short, flag:r.flag,
       cash:CONFIG.rivalStartCash, brand:r.brand, posture:r.posture,
-      capacity:{}, pendingCap:{}, home:r.home.slice(), lastSeg:{} };
+      capacity:{}, pendingCap:{}, home:r.home.slice(), lastSeg:{}, budgetStreak:0, premiumStreak:0 };
     SEG_IDS.forEach(function(s){ e.capacity[s] = r.capacity[s]||0; e.pendingCap[s]=0; });
     ents.push(e);
   });
@@ -514,7 +524,11 @@ function demandPool(state,segId,yearIndex){
   var seg=segMeta(segId);
   var ev=state.scenario.events[yearIndex], sev=state.scenario.severities[yearIndex];
   var drift = segId==="ev" ? (1 + yearIndex*CONFIG.secularDriftEV) : 1;
-  return seg.basePool * CONFIG.poolUnit * eventMultiplier(ev,sev,segId) * drift * (state.pending[segId]||1);
+  var em = eventMultiplier(ev,sev,segId);
+  // the final model year is the decade-definer: amplify the SWING (deviation from 1), not the
+  // flat pool — so backing the right segment wins big and the wrong one craters (rewards commitment).
+  if(yearIndex===CONFIG.turns-1) em = 1 + (em-1)*CONFIG.finaleAmplifier;
+  return seg.basePool * CONFIG.poolUnit * em * drift * (state.pending[segId]||1);
 }
 
 // Rivals grow capacity on a bounded deterministic schedule (rule-based, seed-free):
@@ -529,6 +543,18 @@ function rivalInvest(entity){
     entity.pendingCap[s] = (entity.pendingCap[s]||0) + add;   // opens next year
     entity.cash -= add*CONFIG.capacityCostPerUnit;
   });
+}
+
+// Seed-deterministic personal event for one entity-year. Recall scales with a Budget
+// streak, viral with a Premium streak / high brand. Modest magnitude; applies to all
+// entities (bots included) so the daily stays comparable. Mutates the entity.
+function rollPersonalEvent(state,e,y){
+  var r=rngFromSeed(state.seed+"|pe|"+e.id+"|"+y)();
+  var recallP=Math.min(CONFIG.recallMaxProb, CONFIG.recallProbPerBudgetYr*(e.budgetStreak||0));
+  var viralP =Math.min(CONFIG.viralMaxProb, CONFIG.viralProbPerPremiumYr*(e.premiumStreak||0) + (e.brand>=CONFIG.viralBrandFloor?CONFIG.viralBonusProb:0));
+  if(r < recallP){ e.brand=clamp(e.brand-CONFIG.recallBrandHit,1,100); e.cash-=CONFIG.recallCashHit; return {type:"recall", cashDelta:-CONFIG.recallCashHit}; }
+  if(r > 1-viralP){ e.brand=clamp(e.brand+CONFIG.viralBrandBump,1,100); return {type:"viral", cashDelta:0}; }
+  return null;
 }
 
 // Resolve the model year at state.yearIndex. Player capacity/cash for this year's
@@ -547,7 +573,7 @@ function resolveYear(state){
     sumEff[s]=tot;
   });
 
-  var playerProfit=0, playerSeg={};
+  var playerProfit=0, playerSeg={}, playerPE=null;
   ents.forEach(function(e){
     var post=CONFIG.postures[e.posture], total=0;
     e.lastSeg={};
@@ -564,7 +590,11 @@ function resolveYear(state){
     var net = total - CONFIG.companyOverhead;   // debt is 0 in Phase 1
     e.cash += net;
     e.brand = clamp(e.brand + post.brandDelta, 1, 100);
-    if(e.isPlayer){ playerProfit=net; playerSeg=e.lastSeg; }
+    // posture streaks + seed-deterministic personal event (recall / viral), all entities
+    e.budgetStreak  = (e.posture==="budget")  ? (e.budgetStreak||0)+1  : 0;
+    e.premiumStreak = (e.posture==="premium") ? (e.premiumStreak||0)+1 : 0;
+    var pe = rollPersonalEvent(state, e, y);
+    if(e.isPlayer){ playerProfit = net + (pe?pe.cashDelta:0); playerSeg=e.lastSeg; playerPE=pe; }
   });
 
   // Sacred mechanic 2: visible, telegraphed rival reactions. TWO triggers, both
@@ -607,7 +637,7 @@ function resolveYear(state){
     warnings:warnings.slice(),
   });
 
-  return { profit:playerProfit, segProfit:playerSeg, notes:notes, warnings:warnings, pools:pools };
+  return { profit:playerProfit, segProfit:playerSeg, notes:notes, warnings:warnings, pools:pools, personal:playerPE };
 }
 
 /* ============================ valuation / rank ============================ */
@@ -860,6 +890,10 @@ function turnView(){
     ? "🏗️ New capacity opens <b>next year</b> (model year "+(y+2)+") — you're building for the forecast, not this year's headline."
     : "🏁 Final model year — new builds won't open in time to earn. They only add asset value at the buzzer." }));
 
+  // foreshadow recall risk when the player leans on Budget (E)
+  if(p.budgetStreak>=2) wrap.appendChild(el("div",{class:"beat bad"},[ el("span",{class:"beat-ic",text:"⚠️"}),
+    "You've run Budget "+p.budgetStreak+" years straight — corners are being cut, and recall risk is climbing." ]));
+
   // 3. the board: a compact row per segment + inline allocation
   var list=el("div",{class:"seglist"});
   SEGMENTS.forEach(function(seg){
@@ -889,7 +923,7 @@ function turnView(){
       ]),
       el("div",{class:"mid"},[
         el("span",{class:"pill"},[ "you ", el("b",{text:pct(yourShare)}) ]),
-        el("span",{class:"pill"},[ "cap ", el("b",{text:String(Math.round(p.capacity[seg.id]||0))}) ]),
+        el("span",{class:"pill"},[ "capacity ", el("b",{text:String(Math.round(p.capacity[seg.id]||0))}) ]),
         el("div",{class:"rivchips"},chips),
       ]),
       el("div",{class:"alloc"},[
@@ -898,14 +932,14 @@ function turnView(){
           el("button",{type:"button","aria-label":"Remove capacity from "+seg.name,disabled:planned<=0,
             onclick:function(){ stepAlloc(seg.id,-1); }},["–"]),
           el("div",{class:"qty"},[
-            el("span",{class:"u",text:"+"+planned+"u"}),
-            el("span",{class:"c",text:planned>0?fmtMoney(cost):"—"}),
+            el("span",{class:"u",text:planned>0?fmtMoney(cost):"$0"}),
+            el("span",{class:"c",text:"invest"}),
           ]),
           el("button",{type:"button","aria-label":"Add capacity to "+seg.name,disabled:!canAdd,
             onclick:function(){ stepAlloc(seg.id,1); }},["+"]),
         ]),
       ]),
-      planned>0 ? el("div",{class:"opensnext",text:"▸ +"+planned+" opening "+(y<CONFIG.turns-1?("next year ("+(y+2)+")"):"too late to earn")}) : null,
+      planned>0 ? el("div",{class:"opensnext",text:"→ +"+planned+" capacity, "+(y<CONFIG.turns-1?"opens next year":"too late to earn this run")}) : null,
     ]));
   });
   wrap.appendChild(list);
@@ -948,8 +982,8 @@ function turnView(){
   var rem=capitalRemaining();
   wrap.appendChild(el("div",{class:"runbar"},[
     el("div",{class:"capreadout"},[
-      el("span",{class:"muted",text:"Capital remaining"}),
-      el("span",{class:"big "+(rem<0?"red":"accent"),text:fmtMoney(rem)}),
+      el("span",{class:"muted",text:"Investment budget"}),
+      el("span",{class:"big "+(rem<0?"red":"accent"),text:fmtMoney(rem)+" of "+fmtMoney(p.cash)+" left"}),
     ]),
     el("button",{class:"btn primary",text:"Run the model year ▸",onclick:runYear}),
   ]));
@@ -998,6 +1032,15 @@ function resultView(){
   ]));
 
   var notes=el("div",{class:"notes"});
+
+  // personal event (recall / viral) — the most dramatic beat, lead with it
+  if(res.personal && res.personal.type==="recall"){
+    notes.appendChild(el("div",{class:"note warn"},[ el("span",{class:"nh",text:"Recall"}),
+      "Cutting corners caught up with you — a recall hammers your brand and costs "+fmtMoney(Math.abs(res.personal.cashDelta))+". Quality isn't free." ]));
+  } else if(res.personal && res.personal.type==="viral"){
+    notes.appendChild(el("div",{class:"note good"},[ el("span",{class:"nh",text:"Breakout"}),
+      "One of your cars goes viral — the badge is suddenly everywhere and your brand spikes." ]));
+  }
 
   // best / worst segment this year (computed, never faked)
   var best=null,worst=null;
