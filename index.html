@@ -57,6 +57,24 @@
   .gauge .v{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:2px;line-height:1}
   .gauge.year .v{color:var(--blue)}
 
+  /* standings ticker + nemesis head-to-head */
+  .statusbar{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+  .tick{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em}
+  .tick.up{color:var(--green)} .tick.down{color:var(--red)} .tick.flat{color:var(--muted)}
+  .nemesis{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+    border-left:3px solid var(--red);border-radius:8px;padding:8px 11px;box-shadow:var(--shadow)}
+  .nemesis.ahead{border-left-color:var(--green)}
+  .nemesis .ne-ic{font-family:var(--mono);font-weight:700}
+  .nemesis.behind .ne-ic{color:var(--red)} .nemesis.ahead .ne-ic{color:var(--green)}
+  .nemesis .ne-txt{font-size:12.5px;flex:1;line-height:1.3} .nemesis .ne-txt b{font-weight:700}
+  .nemesis .ne-left{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;text-align:right;flex:none}
+  /* forecast-resolution beat */
+  .beat{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;border-radius:8px;padding:9px 11px;margin-bottom:10px}
+  .beat .beat-ic{flex:none}
+  .beat.good{background:#e7f6ee;color:#0c6b34;border:1px solid #b6e2c8}
+  .beat.bad{background:#fdecea;color:#a52218;border:1px solid #f3c3bd}
+  .beat.flat{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+
   /* event banner */
   .event{background:var(--panel);border:1px solid var(--line);
     border-left:4px solid var(--blue);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -187,6 +205,32 @@
   .parrow{display:flex;justify-content:space-between;padding:7px 12px;font-family:var(--mono);font-size:12.5px;border-bottom:1px solid var(--line);color:var(--muted)}
   .parrow:last-child{border-bottom:0}
   .parrow.cleared{color:var(--text)} .parrow.cleared .num{color:var(--green);font-weight:600}
+  /* end-screen staged reveal */
+  .endhead{text-align:center;padding:6px 0 2px}
+  .endhead .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .endhead .ttl{font-family:var(--display);font-weight:700;font-size:25px;letter-spacing:.02em;margin-top:2px}
+  .standings{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+  .srow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--line);
+    opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .3s ease}
+  .srow:last-child{border-bottom:0}
+  .srow.in{opacity:1;transform:none}
+  .srow.you{background:var(--blue-tint)}
+  .srow .pos{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--faint);width:32px;flex:none;text-align:center}
+  .srow.you .pos{color:var(--blue-deep)}
+  .srow .who{flex:1;font-size:14px}
+  .srow.you .who{font-weight:700;color:var(--blue-deep)}
+  .srow .v{font-family:var(--mono);font-size:14px;font-weight:600}
+  .verdict{text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity .4s ease,transform .4s ease}
+  .verdict.in{opacity:1;transform:none}
+  .verdict .gbadge2{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:14px;
+    border:2px solid var(--blue);background:var(--blue-tint);color:var(--blue);font-family:var(--display);font-weight:700;font-size:38px;margin-bottom:8px}
+  .verdict .gbadge2.s{background:var(--blue);color:#fff}
+  .verdict .gbadge2.f{border-color:var(--red);color:var(--red);background:#fdecea}
+  .verdict .headline{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.22;margin:2px auto;max-width:30ch}
+  .verdict .vsub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .verdict .finalval{font-size:30px;font-weight:600;color:var(--blue);margin-top:8px}
+  .endrest{opacity:0;transition:opacity .5s ease;margin-top:16px}
+  .endrest.in{opacity:1}
   .breakdown{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
   .brow{display:flex;justify-content:space-between;padding:8px 12px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--line)}
   .brow:last-child{border-bottom:0}
@@ -433,6 +477,7 @@ function createState(seed){
     seed:seed, scenario:buildScenario(seed), entities:freshEntities(),
     pending:pending, yearIndex:0, history:[], playerPosture:"standard",
     planned:{}, phase:"intro", lastResult:null,
+    lastRank:null, rankMove:0,   // for the standings ticker
   };
 }
 function player(state){ return state.entities[0]; }
@@ -679,9 +724,9 @@ function introView(){
       el("div",{class:"s"},[ el("b",{text:"Telegraphed — "}), "dominate a segment and its owner starts a price war next year. You're warned before it bites." ]),
       el("div",{class:"s"},[ el("b",{text:"Forecast — "}), "a vague signal arrives a year ahead. Most are real, some are bait. Reading them is the game." ]),
     ]),
-    el("button",{class:"btn primary",style:"margin-top:16px",text:(App.state.isPractice?"Start practice run":("Play daily #"+App.state.dailyNumber)),onclick:function(){ App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+    el("button",{class:"btn primary",style:"margin-top:16px",text:(App.state.isPractice?"Start practice run":("Play daily #"+App.state.dailyNumber)),onclick:function(){ beginTurn(); }}),
     el("div",{class:"actions",style:"margin-top:8px"},[
-      el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+      el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
     ]),
     el("button",{class:"helplink",text:"New here? How to play →",onclick:helpOpen}),
     el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}),
@@ -734,6 +779,52 @@ function statusCluster(){
 function gauge(k,v,cls){
   return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:v}) ]);
 }
+// The nemesis: the rival nearest the player in valuation, tiebreaking toward one whose
+// home is the player's strongest lane. Re-evaluated every year so the chase stays live.
+function nemesisFor(state){
+  var p=player(state), pv=valuation(p);
+  var strongest=SEG_IDS[0],mx=-1; SEG_IDS.forEach(function(sg){ if((p.capacity[sg]||0)>mx){mx=p.capacity[sg]||0;strongest=sg;} });
+  var best=null,bestScore=Infinity;
+  state.entities.forEach(function(e){
+    if(e.isPlayer) return;
+    var score=Math.abs(valuation(e)-pv) - (e.home.indexOf(strongest)>=0?0.001:0);  // tiny nudge toward a lane rival
+    if(score<bestScore){ bestScore=score; best=e; }
+  });
+  return best;
+}
+// One line before the board: did last year's bet pay off? Uses history + this year's event.
+function forecastBeat(state,y){
+  if(y<=0) return null;
+  var actual=state.scenario.events[y], sev=state.scenario.severities[y];
+  var evName=EVENTS[actual].name.toLowerCase();
+  var prev=state.history[y-1];
+  // the player's biggest build last year (it opens this year)
+  var bigSeg=null,bigU=0; if(prev){ SEG_IDS.forEach(function(sg){ var u=prev.seg[sg].alloc||0; if(u>bigU){bigU=u;bigSeg=sg;} }); }
+  if(!bigSeg) return { tone:"flat", text:"You sat out last year's build. The "+evName+" lands with your lineup unchanged." };
+  var m=eventMultiplier(actual,sev,bigSeg), nm=segMeta(bigSeg).name;
+  var calledIt = state.scenario.forecastTrue[y-1];
+  if(m>1.08) return { tone:"good", text:"Your new "+nm+" capacity opens right as the "+evName+" hits"+(calledIt?" — you called it":"")+". Perfect timing." };
+  if(m<0.92) return { tone:"bad", text:"Your fresh "+nm+" line opens into the teeth of the "+evName+". Brutal timing." };
+  return { tone:"flat", text:"Your "+nm+" build comes online into a "+evName+" that barely moves it." };
+}
+function nemesisBanner(state,y){
+  var nem=nemesisFor(state); if(!nem) return null;
+  var pv=valuation(player(state)), gap=valuation(nem)-pv;
+  var left=CONFIG.turns-(y+1);
+  var behind=gap>0;
+  var leftTxt = left<=0 ? "final year" : (left+(left===1?" year left":" years left"));
+  return el("div",{class:"nemesis "+(behind?"behind":"ahead")},[
+    el("span",{class:"ne-ic",text:behind?"▼":"▲"}),
+    el("span",{class:"ne-txt",html:(behind?"Chasing ":"Holding off ")+"<b>"+nem.name+"</b> "+nem.flag+" — "+fmtMoney(Math.abs(gap))+(behind?" behind":" ahead")}),
+    el("span",{class:"ne-left",text:leftTxt}),
+  ]);
+}
+function standingsTicker(state){
+  var r=state.lastRank||playerRank(state), mv=state.rankMove||0;
+  var word = mv>0 ? "▲ Climbed to" : mv<0 ? "▼ Slipped to" : "Holding";
+  var cls = mv>0 ? "up" : mv<0 ? "down" : "flat";
+  return el("span",{class:"tick "+cls,text:word+" P"+r+" of "+state.entities.length});
+}
 
 function capitalRemaining(){
   var s=App.state, p=player(s), spent=0;
@@ -748,6 +839,14 @@ function turnView(){
 
   var wrap=el("div",{},[]);
   wrap.appendChild(statusCluster());
+
+  // standings ticker + named-nemesis head-to-head (D + C)
+  var nb=nemesisBanner(s,y);
+  if(nb){ var bar=el("div",{class:"statusbar"},[ standingsTicker(s), nb ]); wrap.appendChild(bar); }
+
+  // forecast-resolution beat: did last year's bet pay off? (D)
+  var beat=forecastBeat(s,y);
+  if(beat){ wrap.appendChild(el("div",{class:"beat "+beat.tone},[ el("span",{class:"beat-ic",text: beat.tone==="good"?"✅":beat.tone==="bad"?"⚠️":"•"}), beat.text ])); }
 
   // 1+2. reveal current event (the outcome of last year's forecast), pools already include it
   wrap.appendChild(el("div",{class:"event"},[
@@ -944,47 +1043,71 @@ function resultView(){
   return wrap;
 }
 
+// Enter a model year: record rank movement for the standings ticker, then render.
+function beginTurn(){
+  var s=App.state, r=playerRank(s);
+  s.rankMove = (s.lastRank==null) ? 0 : (s.lastRank - r);   // +ve = climbed
+  s.lastRank = r;
+  s.phase="turn";
+  render();
+  window.scrollTo(0,0);
+}
 function nextYear(){
   var s=App.state;
   s.yearIndex++;
   s.planned={};
   activatePending(s);   // last year's builds (yours and the rivals') come online now
-  s.phase="turn";
-  render();
-  window.scrollTo(0,0);
+  beginTurn();
 }
 
-/* ============================ end screen ============================ */
+/* ============================ end screen (staged finale reveal) ============================ */
+function prefersReducedMotion(){ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+
 function endView(){
   var s=App.state, p=player(s);
   var rank=playerRank(s), bd=valuationBreakdown(p);
   var grade=gradeFor(rank,bd.total,s.entities.length);
-
-  // who you beat / lost to
-  var ranked=rankings(s), pv=valuation(p), beat=[], lost=[];
-  ranked.forEach(function(o){ if(o.e.isPlayer) return; (o.v<pv?beat:lost).push(o.e); });
-
-  // story beat from yearHistory (computed)
+  var ranked=rankings(s), pv=bd.total;
+  var nem=nemesisFor(s), nv=nem?valuation(nem):0, ahead=bd.total>=nv;
+  var headline = rank===1 ? "🏆 You won the decade outright."
+    : ahead ? ("🏁 You held off "+nem.name+" by "+fmtMoney(bd.total-nv)+".")
+            : ("So close — "+nem.name+" edged you by "+fmtMoney(nv-bd.total)+".");
   var story=storyBeat(s);
 
   var wrap=el("div",{class:"end"},[]);
-  wrap.appendChild(el("div",{class:"hero"},[
-    el("div",{class:"heroK",text:"Final company valuation"}),
-    el("div",{class:"heroV accent",text:fmtMoney(bd.total)}),
-  ]));
-  wrap.appendChild(el("div",{class:"grade"},[
-    el("div",{class:"gbadge "+grade.cls,text:grade.g}),
-    el("div",{},[
-      el("div",{class:"rankline",text:"Ranked #"+rank+" of "+s.entities.length}),
-      el("div",{class:"muted",style:"font-size:12px",text:gradeBlurb(grade.g)}),
-    ]),
+  wrap.appendChild(el("div",{class:"endhead"},[
+    el("div",{class:"k",text:"🏁 Final standings · Daily #"+s.dailyNumber}),
+    el("div",{class:"ttl display",text:"Ten years, one number"}),
   ]));
 
-  // par — where the player's number lands against the strategy field on this same seed
+  // standings grid — revealed lowest finish to highest
+  var rowEls=[], grid=el("div",{class:"standings"});
+  ranked.forEach(function(o,i){
+    var medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":("P"+(i+1));
+    var row=el("div",{class:"srow"+(o.e.isPlayer?" you":"")},[
+      el("div",{class:"pos",text:medal}),
+      el("div",{class:"who",html:(o.e.isPlayer?"Your company":(o.e.flag+" "+o.e.name))}),
+      el("div",{class:"v num",text:fmtMoney(o.v)}),
+    ]);
+    rowEls.push({row:row,idx:i}); grid.appendChild(row);
+  });
+  wrap.appendChild(grid);
+
+  // verdict — grade + nemesis headline + final valuation
+  var verdict=el("div",{class:"verdict"},[
+    el("div",{class:"gbadge2 "+grade.cls,text:grade.g}),
+    el("div",{class:"headline",text:headline}),
+    el("div",{class:"vsub",text:"Ranked #"+rank+" of "+s.entities.length+" · "+gradeBlurb(grade.g)}),
+    el("div",{class:"finalval num",text:fmtMoney(bd.total)}),
+  ]);
+  wrap.appendChild(verdict);
+
+  // everything else fades in after the reveal
+  var rest=el("div",{class:"endrest"});
   var par=computePar(s.seed);
   var botsBeaten=par.vals.filter(function(v){return v<bd.total;}).length;
   var vsPar=Math.round((bd.total-par.par)/Math.max(1,Math.abs(par.par))*100);
-  wrap.appendChild(el("div",{class:"parbox"},[
+  rest.appendChild(el("div",{class:"parbox"},[
     el("div",{class:"parhead"},[
       el("span",{class:"parbig "+(bd.total>=par.par?"green":"red"),text:(vsPar>=0?"+":"")+vsPar+"% vs par"}),
       el("span",{class:"parsub",text:"Beat "+botsBeaten+" of "+par.n+" strategy bots"}),
@@ -993,37 +1116,36 @@ function endView(){
     parrow("Par · 65th percentile",par.par,pv),
     parrow("Top 10% · the line to chase",par.top10,pv),
   ]));
-
-  // breakdown — people don't trust an abstract number unless they see the parts
-  var brk=el("div",{class:"breakdown"},[
+  rest.appendChild(el("div",{class:"breakdown"},[
     brow("Cash on hand",bd.cash),
     brow("Factory capacity value",bd.capacity),
     brow("Brand equity",bd.brand),
     brow("Idle-capacity drag",bd.idle),
     brow("Company valuation",bd.total,true),
-  ]);
-  wrap.appendChild(brk);
-
-  // beat / lost flex
-  wrap.appendChild(el("div",{class:"vs"},[
-    el("div",{class:"vsbox beat"},[ el("div",{class:"h",text:"You beat"}),
-      el("div",{class:"nm",html: beat.length?beat.map(function(e){return e.flag+" "+e.name;}).join("<br>"):"—" }) ]),
-    el("div",{class:"vsbox lost"},[ el("div",{class:"h",text:"You lost to"}),
-      el("div",{class:"nm",html: lost.length?lost.map(function(e){return e.flag+" "+e.name;}).join("<br>"):"Nobody. You won outright." }) ]),
   ]));
+  rest.appendChild(el("div",{class:"story",text:story}));
 
-  wrap.appendChild(el("div",{class:"story",text:story}));
-
-  // a basic share line (the full two-line share string is Phase 2; this is a stub)
   var strip=s.scenario.events.map(function(e){ return CONFIG.emoji[e]; }).join("");
-  var medal = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
-  var shareText = "🏭 Model Year · "+fmtMoney(bd.total)+" · "+medal+" of "+s.entities.length+"\n"+strip+
-    (beat.length?("  beat "+beat[0].name+" "+beat[0].flag):"")+(lost.length?(", lost to "+lost[0].name+" "+lost[0].flag):"");
-  wrap.appendChild(el("div",{class:"share",text:shareText}));
-  wrap.appendChild(el("div",{class:"actions"},[
+  var medalTop = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
+  var nemLine = rank===1 ? "won the decade outright" : ahead ? ("ran down "+nem.name+" "+nem.flag) : ("lost to "+nem.name+" "+nem.flag+" at the line");
+  var shareText = "🏭 Model Year #"+s.dailyNumber+" · "+fmtMoney(bd.total)+" · "+medalTop+" of "+s.entities.length+"\n"+strip+"  "+nemLine;
+  rest.appendChild(el("div",{class:"share",text:shareText}));
+  rest.appendChild(el("div",{class:"actions"},[
     el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
-    el("button",{class:"btn primary",text:"Practice run",onclick:function(){ setSeed(newSeed(),true); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
+    el("button",{class:"btn primary",text:"Practice run",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
   ]));
+  wrap.appendChild(rest);
+
+  // drop the field in one at a time (lowest finish first), then the verdict, then the rest
+  if(prefersReducedMotion()){
+    rowEls.forEach(function(x){ x.row.classList.add("in"); }); verdict.classList.add("in"); rest.classList.add("in");
+  } else {
+    var order=rowEls.slice().sort(function(a,b){ return b.idx-a.idx; });
+    order.forEach(function(x,i){ setTimeout(function(){ x.row.classList.add("in"); }, 220+i*170); });
+    var t=220+order.length*170;
+    setTimeout(function(){ verdict.classList.add("in"); }, t+200);
+    setTimeout(function(){ rest.classList.add("in"); }, t+650);
+  }
   return wrap;
 }
 function brow(k,v,total){
