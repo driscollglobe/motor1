@@ -42,6 +42,10 @@
     font-family:var(--sans);font-weight:800;font-size:23px;letter-spacing:-.02em;line-height:1}
   .m1 svg{width:25px;height:25px;display:block;margin:0 0 1px 0}
   .m1 .com{font-size:13px;font-weight:700;align-self:flex-end;margin-bottom:3px;letter-spacing:0}
+  .topright{display:flex;align-items:center;gap:10px}
+  .helpbtn{flex:none;width:25px;height:25px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);
+    color:var(--muted);font-weight:700;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .helpbtn:hover{border-color:var(--blue);color:var(--blue)}
   .gamechip{text-align:right;line-height:1}
   .gamechip .gn{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.04em;color:var(--text)}
   .gamechip .gd{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);margin-top:2px}
@@ -148,6 +152,26 @@
   .sacred{display:flex;flex-direction:column;gap:11px;margin:0 0 4px;border-top:1px solid var(--line);padding-top:16px}
   .sacred .s{font-size:13px;color:var(--text);line-height:1.45}
   .sacred .s b{color:var(--blue);font-weight:700;letter-spacing:.01em}
+  .helplink{display:block;width:100%;text-align:center;margin-top:14px;font-size:13px;font-weight:600;color:var(--blue);background:none}
+  .helplink:hover{text-decoration:underline}
+
+  /* how to play */
+  .help{padding:6px 2px 4px}
+  .help-h h2{font-family:var(--display);font-weight:700;font-size:28px;margin:0 0 5px;letter-spacing:.01em}
+  .help-h p{font-size:13.5px;color:var(--muted);margin:0 0 6px;line-height:1.5}
+  .help .seclbl{margin-top:18px}
+  .help-step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+  .help-step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;
+    font-family:var(--mono);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .help-step .c .t{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.01em}
+  .help-step .c .b{font-size:13px;color:var(--muted);line-height:1.45;margin-top:2px}
+  .help-rule{display:flex;gap:11px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:10px 12px;margin-bottom:7px;box-shadow:var(--shadow)}
+  .help-rule .ic{font-size:18px;flex:none;line-height:1.25}
+  .help-rule .t{font-family:var(--display);font-weight:600;font-size:14px}
+  .help-rule .b{font-size:12.5px;color:var(--muted);line-height:1.42;margin-top:1px}
+  .help-p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:5px 0 16px}
+  .help .btn.primary{margin-top:6px}
 
   .end .grade{display:flex;align-items:center;gap:14px;justify-content:center;margin:6px 0 2px}
   .end .gbadge{font-family:var(--display);font-weight:700;font-size:54px;width:84px;height:84px;
@@ -611,17 +635,24 @@ function render(){
   var s=App.state, root=App.root;
   root.innerHTML="";
   root.appendChild(topbar());
-  if(s.phase==="intro") root.appendChild(introView());
+  if(s.phase==="help") root.appendChild(helpView());
+  else if(s.phase==="intro") root.appendChild(introView());
   else if(s.phase==="turn") root.appendChild(turnView());
   else if(s.phase==="result") root.appendChild(resultView());
   else if(s.phase==="end") root.appendChild(endView());
-  if(CONFIG.debug) root.appendChild(debugView());
+  if(CONFIG.debug && s.phase!=="help") root.appendChild(debugView());
 }
+// How to play is reachable from anywhere; it remembers the screen to return to.
+function helpOpen(){ var s=App.state; if(s.phase!=="help") s._return=s.phase; s.phase="help"; render(); window.scrollTo(0,0); }
+function helpClose(){ var s=App.state; s.phase=s._return||"intro"; render(); window.scrollTo(0,0); }
 
 function topbar(){
   return el("header",{class:"topbar"},[
     motor1Logo(),
-    el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text: App.state.isPractice?"Practice":("Daily #"+App.state.dailyNumber)}) ]),
+    el("div",{class:"topright"},[
+      el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text: App.state.isPractice?"Practice":("Daily #"+App.state.dailyNumber)}) ]),
+      el("button",{class:"helpbtn","aria-label":"How to play",title:"How to play",onclick:helpOpen,text:"?"}),
+    ]),
   ]);
 }
 // The motor1.com logo, recreated as inline SVG so the page stays self-contained:
@@ -652,7 +683,42 @@ function introView(){
     el("div",{class:"actions",style:"margin-top:8px"},[
       el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); App.state.phase="turn"; render(); window.scrollTo(0,0); }}),
     ]),
+    el("button",{class:"helplink",text:"New here? How to play →",onclick:helpOpen}),
     el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}),
+  ]);
+}
+
+function helpStep(n,t,b){
+  return el("div",{class:"help-step"},[
+    el("div",{class:"n",text:n}),
+    el("div",{class:"c"},[ el("div",{class:"t",text:t}), el("div",{class:"b",text:b}) ]),
+  ]);
+}
+function helpRule(ic,t,b){
+  return el("div",{class:"help-rule"},[
+    el("div",{class:"ic",text:ic}),
+    el("div",{},[ el("div",{class:"t",text:t}), el("div",{class:"b",text:b}) ]),
+  ]);
+}
+function helpView(){
+  return el("div",{class:"help"},[
+    el("div",{class:"help-h"},[
+      el("h2",{class:"display",text:"How to play"}),
+      el("p",{text:"You run an automaker for ten model years. Read the market, place your bets a year early, and finish worth more than the legends. About two minutes a day."}),
+    ]),
+    el("div",{class:"seclbl",text:"Every model year"}),
+    helpStep("1","Read the market","An event hits — oil shock, EV boom, recession — and swings demand up or down in each segment. A vague forecast also hints at NEXT year. Most forecasts are real; about a third are bait."),
+    helpStep("2","Build capacity","Spend cash to build factory capacity in the segments you like. Here's the catch: what you build this year only opens NEXT year. You're betting on the forecast, not today's headline."),
+    helpStep("3","Pick a posture","One company-wide call for the year — Budget (more buyers, thin margins), Standard, or Premium (fewer sales, fat margins, grows your brand)."),
+    helpStep("4","Run the year","Profit lands, brand shifts, and rivals make their moves. Then on to the next model year."),
+    el("div",{class:"seclbl",text:"What to watch"}),
+    helpRule("⏳","Capacity opens a year late","Build for where the market is GOING, not where it is. A factory you start now produces next year — so the forecast is everything."),
+    helpRule("🥧","Revenue is a shared slice","Each segment is one demand pool split by capacity. Pile into a crowded segment and you split a thin pie; own a quiet one and it pays."),
+    helpRule("📣","Rivals fight back — with warning","Dominate a segment, or pour money into a rival's home turf, and they start a price war that thins that pool next year. You always get the warning first."),
+    helpRule("📉","Positions fade","Capacity decays a little every year. Keep reinvesting to hold a segment — or let a bad bet quietly melt away."),
+    el("div",{class:"seclbl",text:"Winning"}),
+    el("p",{class:"help-p",text:"After ten years your company is valued on cash + factory value + brand equity, minus drag from idle capacity. You're ranked against six rivals and the strategy bots: clear the bogey, beat par, and chase the top-10% line."}),
+    el("button",{class:"btn primary",text:"Got it — back",onclick:helpClose}),
   ]);
 }
 
