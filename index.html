@@ -368,6 +368,44 @@
   .photo .pfill.you{ background:var(--blue) } .photo .pfill.them{ background:var(--muted) }
   .photo .pval{ font-family:var(--mono);font-size:11px;font-weight:600;width:56px;text-align:right;flex:none }
 
+  /* ============ Pass 7: car art (cars on screen; one livery palette across board/cards/garage/share) ============ */
+  @keyframes my-carrise{ 0%{opacity:0;transform:translateY(22px) scale(.96)} 100%{opacity:1;transform:none} }
+  .caro{ display:block;width:100%;height:auto }
+  /* louder livery board: thicker accent + livery-tinted header band carrying the inline car */
+  .seg{ border-left-width:6px;overflow:hidden }
+  .seghead{ display:flex;align-items:center;gap:10px;background:var(--seg-tint);margin:-9px -10px 8px;padding:7px 10px 6px;border-bottom:1px solid var(--line) }
+  .segcar{ width:90px;flex:none;border-radius:6px;overflow:hidden;background:linear-gradient(180deg,#1a1c20,#0d0e11);padding:2px 0 0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05) }
+  .seghead .name{ flex:1;min-width:0 }
+  .seghead .arrow{ flex:none }
+  /* launch reveal card (the "card beat") */
+  .launchcard{ background:linear-gradient(180deg,#15171c,#0c0d10);border:1px solid var(--line);border-top:3px solid var(--seg,var(--blue));
+    border-radius:12px;padding:12px 12px 14px;margin:0 0 14px;box-shadow:0 6px 20px rgba(13,14,16,.22);text-align:center }
+  .car-rise{ animation:my-carrise .5s cubic-bezier(.2,.7,.2,1) both }
+  .launchcard .lc-k{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#9aa3b0;margin-bottom:4px }
+  .launchcard .lc-stage{ border-radius:9px;overflow:hidden }
+  .launchcard .lc-name{ display:flex;align-items:baseline;justify-content:center;gap:9px;margin-top:9px;flex-wrap:wrap }
+  .launchcard .lc-model{ font-family:var(--display);font-weight:700;font-size:21px;color:#fff;letter-spacing:.02em }
+  .launchcard .lc-maker{ font-family:var(--mono);font-size:11px;color:#8b94a2;text-transform:uppercase;letter-spacing:.06em }
+  .launchcard .lc-specs{ display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:9px }
+  .launchcard .lc-spec{ font-family:var(--mono);font-size:11px;font-weight:600;color:#dfe4ea;background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:3px 8px }
+  /* finale garage + flagship */
+  .garage{ margin-bottom:14px }
+  .garage-k{ font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;text-align:center }
+  /* a swipeable garage: each car renders at a legible fixed height; >3 cars scroll horizontally instead of shrinking */
+  .garage-stage{ border-radius:12px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    box-shadow:0 6px 20px rgba(13,14,16,.2);border:1px solid #0c0d10;background:#0c0d10 }
+  .garage-stage svg{ height:104px;width:auto;max-width:none;display:block }
+  .garage-hint{ font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:center;margin-top:5px }
+  .flagcard{ background:linear-gradient(180deg,#15171c,#0c0d10);border:1px solid var(--line);border-top:3px solid var(--seg,var(--blue));
+    border-radius:12px 12px 0 0;padding:11px 12px 12px;margin-top:12px;text-align:center }
+  .flagcard .fc-k{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9aa3b0;margin-bottom:4px }
+  .flagcard .fc-stage{ border-radius:9px;overflow:hidden }
+  .flagcard .fc-name{ display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap }
+  .flagcard .fc-model{ font-family:var(--display);font-weight:700;font-size:18px;color:#fff;letter-spacing:.02em }
+  .flagcard .fc-maker{ font-family:var(--mono);font-size:10.5px;color:#8b94a2;text-transform:uppercase;letter-spacing:.06em }
+  .flagcard + .share{ margin-top:0;border-top-left-radius:0;border-top-right-radius:0 }
+
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -376,6 +414,320 @@
 <script>
 (function(){
 "use strict";
+
+/* ===== Pass 7: CarArt module (embedded verbatim; parametric recolorable vehicle SVGs) ===== */
+/* ===========================================================================
+   MODEL YEAR :: CarArt  (parametric vehicle art, runtime-free)
+   Extracted from the Claude Design system, stripped of the Design runtime.
+   Pure vanilla JS, no dependencies. Generates premium recolorable car SVGs
+   from a single livery hex. Drop this whole block into the game's <script>.
+   =========================================================================== */
+class CarArt {
+  // ---------- color math ----------
+  clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  rgbToHex(r,g,b){ const f=x=>('0'+Math.round(this.clamp(x,0,255)).toString(16)).slice(-2); return '#'+f(r)+f(g)+f(b); }
+  hexToHsl(hex){ let [r,g,b]=this.hexToRgb(hex); r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b); let h=0,s=0,l=(mx+mn)/2; const d=mx-mn; if(d){ s=l>0.5?d/(2-mx-mn):d/(mx+mn); if(mx===r)h=((g-b)/d+(g<b?6:0)); else if(mx===g)h=(b-r)/d+2; else h=(r-g)/d+4; h*=60; } return [h,s*100,l*100]; }
+  hslToHex(h,s,l){ h=(h%360+360)%360; s=this.clamp(s,0,100)/100; l=this.clamp(l,0,100)/100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l); const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return this.rgbToHex(f(0)*255,f(8)*255,f(4)*255); }
+  mix(hex,hex2,t){ const a=this.hexToRgb(hex),b=this.hexToRgb(hex2); return this.rgbToHex(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t); }
+  hexA(hex,al){ const c=this.hexToRgb(hex); return 'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')'; }
+  lum(hex){ const c=this.hexToRgb(hex).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+
+  // THE RECIPE: one livery value -> everything
+  derive(hex){ const [h,s,l]=this.hexToHsl(hex); return {
+    top: this.hslToHex(h, s-8,  l+16),   // key-lit top stop
+    mid: hex,                            // true livery
+    bot: this.hslToHex(h, s+6,  l-22),   // shadowed lower body
+    rim: this.mix(hex,'#ffffff',0.78),   // near-white rim-light edge
+    cal: this.hslToHex(h, s+14, l+8),    // brake caliper accent
+  }; }
+
+  // ---------- shared wheel (neutral alloy + livery caliper) ----------
+  wheel(cx,cy,r,cal,uid){
+    const ri=r*0.2, ro=r*0.66; let spk='';
+    for(let k=0;k<5;k++){ const a=(k*72-90)*Math.PI/180;
+      for(const dg of [-8,8]){ const aa=a+dg*Math.PI/180;
+        spk+=`<line x1="${(cx+Math.cos(aa)*ri).toFixed(1)}" y1="${(cy+Math.sin(aa)*ri).toFixed(1)}" x2="${(cx+Math.cos(aa)*ro).toFixed(1)}" y2="${(cy+Math.sin(aa)*ro).toFixed(1)}" stroke="url(#rm${uid})" stroke-width="${(r*0.085).toFixed(2)}" stroke-linecap="round"/>`; } }
+    const c0=32*Math.PI/180, c1=86*Math.PI/180, rc=r*0.5;
+    const cp=`M${(cx+Math.cos(c0)*rc).toFixed(1)},${(cy+Math.sin(c0)*rc).toFixed(1)} A${rc.toFixed(1)},${rc.toFixed(1)} 0 0 1 ${(cx+Math.cos(c1)*rc).toFixed(1)},${(cy+Math.sin(c1)*rc).toFixed(1)}`;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#ti${uid})"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.8).toFixed(1)}" fill="#0d0e11"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.58).toFixed(1)}" fill="#2f3338"/>`
+      +`<path d="${cp}" stroke="${cal}" stroke-width="${(r*0.14).toFixed(2)}" fill="none" stroke-linecap="round"/>`
+      +spk
+      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.68).toFixed(1)}" fill="none" stroke="url(#rm${uid})" stroke-width="${(r*0.08).toFixed(2)}"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.21).toFixed(1)}" fill="url(#rm${uid})"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.08).toFixed(1)}" fill="#1c1e22"/>`;
+  }
+
+  bottom(b){ const a=b.archR, cy=100, dx=Math.sqrt(Math.max(1,a*a-(b.sill-cy)*(b.sill-cy)));
+    const fl=(b.fw+dx).toFixed(1), fr=(b.fw-dx).toFixed(1), rl=(b.rw+dx).toFixed(1), rr=(b.rw-dx).toFixed(1);
+    return `L${fl},${b.sill} A${a},${a} 0 0 0 ${fr},${b.sill} L${rl},${b.sill} A${a},${a} 0 0 0 ${rr},${b.sill} L${b.rearEnd},${b.sill} Z`; }
+
+  // ---------- one car, no stage (origin in 0..340 frame, hub y=100, ground y=118) ----------
+  carArt(type,hex,uid){
+    const d=this.derive(hex), b=this.BODIES[type];
+    const defs=`<defs>`
+      +`<linearGradient id="bg${uid}" x1="0" y1="${b.y1}" x2="0" y2="${b.sill+8}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${d.top}"/><stop offset="0.5" stop-color="${d.mid}"/><stop offset="0.86" stop-color="${d.mid}"/><stop offset="1" stop-color="${d.bot}"/></linearGradient>`
+      +`<linearGradient id="gl${uid}" x1="0" y1="${b.y1}" x2="0" y2="${b.sill}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#eef5fc"/><stop offset="0.4" stop-color="#aecae6"/><stop offset="0.52" stop-color="#5d83a6"/><stop offset="0.56" stop-color="#7ea4c6"/><stop offset="0.72" stop-color="#bdd6ec"/><stop offset="1" stop-color="#e7f1fa"/></linearGradient>`
+      +`<radialGradient id="ti${uid}" cx="0.4" cy="0.36" r="0.72"><stop offset="0" stop-color="#3a3e44"/><stop offset="1" stop-color="#101114"/></radialGradient>`
+      +`<radialGradient id="rm${uid}" cx="0.4" cy="0.34" r="0.85"><stop offset="0" stop-color="#f1f4f8"/><stop offset="0.55" stop-color="#b6bcc5"/><stop offset="1" stop-color="#6f757e"/></radialGradient>`
+      +`<linearGradient id="hl${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset="1" stop-color="#b6d0e8"/></linearGradient>`
+      +`<linearGradient id="tlg${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6a52"/><stop offset="1" stop-color="#9c1d18"/></linearGradient>`
+      +`<filter id="bl${uid}" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="2.4"/></filter>`
+      +this.wheelDefs(uid+'f')+this.wheelDefs(uid+'r')
+      +`</defs>`;
+    const body=`<path d="${b.top} ${this.bottom(b)}" fill="url(#bg${uid})"/>`;
+    const extra=b.extra?b.extra(d,b,this):'';
+    const sheen=`<path d="${b.rim}" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.12" filter="url(#bl${uid})"/>`;
+    const glass=`<path d="${b.win}" fill="url(#gl${uid})"/>`;
+    const pillar=b.pillar?`<path d="${b.pillar}" fill="none" stroke="${d.bot}" stroke-width="2.6" opacity="0.9" stroke-linecap="round"/>`:'';
+    const rim=`<path d="${b.rim}" fill="none" stroke="${d.rim}" stroke-width="1.4" opacity="0.95" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const detail=this.detailLayer(b,d,uid);
+    const wheels=this.wheel(b.fw,100,b.wr,d.cal,uid+'f')+this.wheel(b.rw,100,b.wr,d.cal,uid+'r');
+    return defs+body+sheen+extra+detail.body+glass+pillar+detail.top+rim+wheels;
+  }
+
+  // rugged dark wheel-arch cladding (SUV / pickup) — a thick arc hugging each arch
+  cladding(b,d){ const r=b.archR+2.5, cy=100, dx=Math.sqrt(Math.max(1,r*r-(b.sill-cy)*(b.sill-cy)));
+    const arc=(cx)=>`<path d="M${(cx-dx).toFixed(1)},${b.sill} A${r},${r} 0 0 1 ${(cx+dx).toFixed(1)},${b.sill}" fill="none" stroke="#15171c" stroke-width="5" opacity="0.85"/>`;
+    return arc(b.rw)+arc(b.fw); }
+
+  detailLayer(b,d,uid){
+    const dn=b.dnose, dt=b.dtail, by=b.belt;
+    let lo='', hi='';
+    // rocker / sill accent (between wheels)
+    lo+=`<line x1="${b.rw+b.archR}" y1="${b.sill-2}" x2="${b.fw-b.archR}" y2="${b.sill-2}" stroke="${d.bot}" stroke-width="3" opacity="0.5" stroke-linecap="round"/>`;
+    // character line (highlight) + lower crease (shadow)
+    lo+=`<path d="${b.belt2||('M'+dt+','+by+' L'+dn+','+(by-1.5))}" fill="none" stroke="${d.rim}" stroke-width="1.3" opacity="0.55" stroke-linecap="round"/>`;
+    lo+=`<line x1="${dt+8}" y1="${by+9}" x2="${dn-7}" y2="${by+8}" stroke="${d.bot}" stroke-width="1.1" opacity="0.4"/>`;
+    // door cut lines
+    (b.doors||[]).forEach(x=>{ lo+=`<line x1="${x}" y1="${by-7}" x2="${x}" y2="${b.sill-3}" stroke="${d.bot}" stroke-width="1" opacity="0.45"/>`; });
+    // door handle
+    if(b.handle){ lo+=`<line x1="${b.handle[0]-4.5}" y1="${b.handle[1]}" x2="${b.handle[0]+4.5}" y2="${b.handle[1]}" stroke="${d.bot}" stroke-width="2.2" opacity="0.85" stroke-linecap="round"/>`; }
+    // front fascia / intake
+    if(b.intake){ const [ix,iy,iw,ih]=b.intake; hi+=`<path d="M${ix},${iy} L${ix-iw},${iy} L${ix-iw+2},${iy+ih} L${ix-2},${iy+ih} Z" fill="#0c0d10" opacity="0.55"/>`; }
+    // headlight
+    if(b.hl){ const [x,y,w,h]=b.hl; hi+=`<path d="M${x},${y} L${x-w},${y+0.5} L${x-w+1},${y+h} L${x-1},${y+h-0.5} Z" fill="url(#hl${uid})" stroke="${d.bot}" stroke-width="0.5" opacity="0.95"/>`; }
+    // taillight
+    if(b.tl){ const [x,y,w,h]=b.tl; hi+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="#2a120f"/><rect x="${x+0.7}" y="${y+0.9}" width="${w-1.4}" height="${h-1.8}" rx="1.2" fill="url(#tlg${uid})" opacity="0.92"/>`; }
+    // side mirror (on A-pillar, points forward)
+    if(b.mirror){ const [mx,my]=b.mirror; hi+=`<path d="M${mx},${my} l7,-0.5 l1,4 l-7,1 z" fill="${d.mid}" stroke="${d.rim}" stroke-width="0.6"/><line x1="${mx}" y1="${my+1}" x2="${mx-3}" y2="${my+2}" stroke="${d.bot}" stroke-width="1.4"/>`; }
+    return { body:lo, top:hi };
+  }
+
+  // wheel uses ti/rm with uid+'f' / uid+'r' ids -> need defs per wheel; regenerate small defs
+  wheelDefs(uid){ return `<radialGradient id="ti${uid}" cx="0.4" cy="0.36" r="0.72"><stop offset="0" stop-color="#3a3e44"/><stop offset="1" stop-color="#101114"/></radialGradient><radialGradient id="rm${uid}" cx="0.4" cy="0.34" r="0.85"><stop offset="0" stop-color="#f1f4f8"/><stop offset="0.55" stop-color="#b6bcc5"/><stop offset="1" stop-color="#6f757e"/></radialGradient>`; }
+
+  // ---------- stage-wrapped single car (for cards & recolor strip) ----------
+  stageSVG(type,hex,uid){
+    const stDefs=`<defs><radialGradient id="st${uid}" cx="0.5" cy="0.4" r="0.72"><stop offset="0" stop-color="#2b303a"/><stop offset="0.55" stop-color="#15171c"/><stop offset="1" stop-color="#090a0c"/></radialGradient>`
+      +`<linearGradient id="fd${uid}" x1="0" y1="118" x2="0" y2="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0a0b0d" stop-opacity="0"/><stop offset="1" stop-color="#0a0b0d" stop-opacity="0.98"/></linearGradient></defs>`;
+    return `<svg viewBox="0 0 340 150" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`
+      +stDefs
+      +`<rect x="0" y="0" width="340" height="150" fill="url(#st${uid})"/>`
+      +`<ellipse cx="170" cy="119" rx="150" ry="8" fill="#000" opacity="0.45"/>`
+      +`<g transform="matrix(1 0 0 -1 0 237)" opacity="0.16">${this.carArt(type,hex,uid+'R')}</g>`
+      +`<rect x="0" y="118" width="340" height="32" fill="url(#fd${uid})"/>`
+      +this.carArt(type,hex,uid)
+      +`</svg>`;
+  }
+
+  // ---------- lineup ----------
+  lineup(list){
+    const pitch=300, n=list.length, W=40+n*pitch, H=150;
+    let shad='',refl='',cars='';
+    list.forEach((m,i)=>{ const tx=20+i*pitch; const uid='lp'+i;
+      shad+=`<ellipse cx="${tx+170}" cy="119" rx="146" ry="7" fill="#000" opacity="0.4"/>`;
+      refl+=`<g transform="translate(${tx},0)"><g transform="matrix(1 0 0 -1 0 237)" opacity="0.15">${this.carArt(m.type,m.hex,uid+'R')}</g></g>`;
+      cars+=`<g transform="translate(${tx},0)">${this.carArt(m.type,m.hex,uid)}</g>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`
+      +`<defs><radialGradient id="stL" cx="0.5" cy="0.32" r="0.85"><stop offset="0" stop-color="#2b303a"/><stop offset="0.6" stop-color="#131519"/><stop offset="1" stop-color="#08090b"/></radialGradient>`
+      +`<linearGradient id="fdL" x1="0" y1="118" x2="0" y2="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0a0b0d" stop-opacity="0"/><stop offset="1" stop-color="#0a0b0d" stop-opacity="0.98"/></linearGradient></defs>`
+      +`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#stL)"/>`
+      +shad+refl
+      +`<rect x="0" y="118" width="${W}" height="32" fill="url(#fdL)"/>`
+      +cars
+      +`</svg>`;
+  }
+
+  recipeRows(){
+    const hex=this.demoHex(); const d=this.derive(hex);
+    const row=(k,note,col)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><span style="width:34px;height:18px;border-radius:4px;flex:none;background:${col};border:1px solid rgba(255,255,255,.1)"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#cfd3db;width:62px">${k}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7c828d">${note}</span></div>`;
+    return row('top','L +16 · S −8',d.top)+row('mid','= livery',d.mid)+row('bot','L −22 · S +6',d.bot)+row('rim','mix 78% white',d.rim)+row('caliper','L +8 · S +14',d.cal);
+  }
+
+  // ---------- data ----------
+  get MODELS(){ return [
+    {id:'eco', type:'hatch', seg:'ECONOMY',     hex:'#2E9E5B', name:'Sprout',    mono:'SP', maker:'Atlas Motor Co', year:'MY27', power:'109', zero:'9.6', price:'19'},
+    {id:'fam', type:'suv',   seg:'FAMILY · SUV',hex:'#2F6FE0', name:'Summit',    mono:'SU', maker:'Atlas Motor Co', year:'MY28', power:'248', zero:'7.2', price:'38'},
+    {id:'per', type:'coupe', seg:'PERFORMANCE', hex:'#E5392F', name:'Vello',     mono:'VE', maker:'Atlas Motor Co', year:'MY29', power:'503', zero:'3.6', price:'82'},
+    {id:'lux', type:'sedan', seg:'LUXURY · GT', hex:'#E3A92C', name:'Sovereign', mono:'SO', maker:'Atlas Motor Co', year:'MY30', power:'402', zero:'4.7', price:'104'},
+    {id:'ev',  type:'ev',    seg:'EV · FUTURE', hex:'#7C54E8', name:'Ion',       mono:'IO', maker:'Atlas Motor Co', year:'MY31', power:'456', zero:'3.9', price:'58'},
+    {id:'pic', type:'pickup',seg:'PICKUP',      hex:'#E07B27', name:'Brute',     mono:'BR', maker:'Atlas Motor Co', year:'MY32', power:'395', zero:'6.1', price:'46'},
+  ]; }
+  get CATALOG(){ return [
+    {type:'citycar',  label:'City Car',    seg:'A-SEGMENT',  hex:'#2E9E5B'},
+    {type:'wagon',    label:'Estate',      seg:'WAGON',      hex:'#2F6FE0'},
+    {type:'crossover',label:'Coupe-SUV',   seg:'CROSSOVER',  hex:'#7C54E8'},
+    {type:'minivan',  label:'Minivan',     seg:'PEOPLE MOVER',hex:'#2E9E5B'},
+    {type:'supercar', label:'Supercar',    seg:'HYPERCAR',   hex:'#E5392F'},
+    {type:'offroad',  label:'Off-Roader',  seg:'4X4',        hex:'#E07B27'},
+  ]; }
+  bodyFromLabel(l){ return ({'Hatchback':'hatch','SUV / crossover':'suv','Sports coupe':'coupe','Grand tourer':'sedan','EV':'ev','Pickup':'pickup'})[l]||'coupe'; }
+  demoHex(){ const t=this.bodyFromLabel(this.props.demoBody||'Sports coupe'); const m=this.MODELS.find(x=>x.type===t); return m?m.hex:'#E5392F'; }
+
+  renderVals(){
+    const showLabels = this.props.showLabels !== false;
+    const demoType = this.bodyFromLabel(this.props.demoBody||'Sports coupe');
+    const demoLabel = this.props.demoBody||'Sports coupe';
+    const count = this.clamp(Math.round(this.props.lineupCount||6),2,6);
+    const models = this.MODELS.map(m=>{ const d=this.derive(m.hex); return Object.assign({},m,{
+      car:{__html:this.stageSVG(m.type,m.hex,m.id)},
+      tagBg:this.hexA(m.hex,0.16), tagBorder:this.hexA(m.hex,0.55), tagText:d.top,
+      badgeBg:m.hex, badgeText: this.lum(m.hex)>0.55?'#16130a':'#ffffff',
+    }); });
+    const recolorStrip = this.MODELS.map(m=>({ hex:m.hex, car:{__html:this.stageSVG(demoType,m.hex,'rc'+m.id)} }));
+    const catalog = this.CATALOG.map((c,i)=>({ label:c.label, seg:c.seg, hex:c.hex,
+      car:{__html:this.stageSVG(c.type,c.hex,'cat'+i)}, dot:c.hex }));
+    return {
+      models, showLabels, demoLabel, catalog,
+      recolorStrip,
+      lineupCount: count,
+      lineup:{__html:this.lineup(this.MODELS.slice(0,count))},
+      recipeRows:{__html:this.recipeRows()},
+    };
+  }
+}
+CarArt.prototype.BODIES = {
+  // ECONOMY — tiny supermini hatch: very short, tall cabin, steep tailgate close behind rear wheel
+  hatch: { rearEnd:74, frontEnd:226, sill:100, rw:100, fw:198, wr:16, archR:17.5, y1:50,
+    top:'M74,100 L70,78 C69,65 74,59 88,54 L120,50 L150,50 C161,50 168,53 179,67 L198,74 C211,75 221,81 223,89 L226,97 L226,100',
+    rim:'M70,73 C70,63 75,57 88,54 L120,50 L150,50 C162,50 169,53 180,68 L200,74 C213,76 222,82 224,90',
+    win:'M93,55 L120,52 L150,52 C159,52 165,55 175,67 L100,70 Z',
+    pillar:'M124,52 L124,69',
+    belt:76, dnose:222, dtail:74, doors:[148], handle:[160,73], mirror:[95,57],
+    hl:[225,77,11,6], tl:[72,72,7,12], intake:[222,98,12,5] },
+
+  // FAMILY — crossover SUV: tall, HIGH beltline (small glass = chunky, not a van), short tall hood, cladding
+  suv: { rearEnd:60, frontEnd:250, sill:95, rw:84, fw:238, wr:18.5, archR:20, y1:43,
+    top:'M60,95 L58,58 C58,48 66,43 82,43 L172,42 C188,43 198,47 210,61 L228,69 C242,71 250,75 250,83 L250,95',
+    rim:'M58,50 C58,46 67,43 82,43 L172,42 C189,43 199,48 212,62 L229,70',
+    win:'M84,49 L168,48 C176,48 182,51 193,63 L84,64 Z',
+    pillar:'M118,49 L118,63 M156,48 L156,63',
+    belt:68, dnose:246, dtail:64, doors:[118,156], handle:[152,66], mirror:[86,53],
+    hl:[250,65,12,9], tl:[60,58,7,14], intake:[246,91,16,6],
+    extra:(d,b,self)=>`<line x1="82" y1="41" x2="172" y2="41" stroke="${d.bot}" stroke-width="2" opacity="0.5" stroke-linecap="round"/>`
+      +`<rect x="66" y="84" width="118" height="6" rx="2" fill="#15171c" opacity="0.7"/>`
+      +self.cladding(b,d) },
+
+  // PERFORMANCE — quality bar: low, long hood, fastback, wide stance
+  coupe: { rearEnd:46, frontEnd:313, sill:100, rw:90, fw:270, wr:17, archR:18.5, y1:62,
+    top:'M46,100 L46,92 C48,86 54,84 66,83 C122,74 154,68 182,66 C200,65 210,67 224,76 C240,86 252,91 272,93 L298,95 C308,95 312,98 313,101 L313,100',
+    rim:'M50,88 C56,85 66,83 66,83 C122,74 154,68 182,66 C200,65 210,67 224,76 C240,86 252,91 272,93 L298,95 C308,95 312,98 313,101',
+    win:'M84,86 C116,79 146,73 174,71 C190,70 198,72 208,79 L124,85 Z',
+    pillar:'M124,84 L150,68',
+    belt:87, dnose:305, dtail:52, doors:[152], handle:[164,85], mirror:[86,74],
+    hl:[313,84,16,6], tl:[46,83,8,9], intake:[311,99,18,6] },
+
+  // LUXURY — three-box GT sedan: distinct trunk deck, clear notch, long & low
+  sedan: { rearEnd:50, frontEnd:301, sill:100, rw:90, fw:264, wr:16.5, archR:18, y1:60,
+    top:'M50,100 L50,89 L104,86 C120,85 127,79 137,68 L188,61 C205,60 214,62 224,72 C236,81 248,86 268,88 L294,90 C300,90 301,93 301,98 L301,100',
+    rim:'M52,88 L104,85 C121,84 128,78 138,67 L188,61 C206,60 215,62 226,73 C238,82 250,87 268,89 L295,90 C300,90 301,93 301,97',
+    win:'M112,83 C124,82 131,76 140,66 L186,62 C199,61 207,63 214,71 L150,75 Z',
+    pillar:'M150,75 L186,62 M150,75 L150,84',
+    belt:86, dnose:296, dtail:48, doors:[150,210], handle:[162,84], mirror:[124,69],
+    hl:[301,85,13,6], tl:[50,83,9,8], intake:[298,99,15,5] },
+
+  // EV — smooth one-box, closed nose, minimal, full-width lamp bars
+  ev: { rearEnd:48, frontEnd:304, sill:100, rw:88, fw:262, wr:16.5, archR:18, y1:55,
+    top:'M48,100 L47,86 C48,66 70,57 108,55 C158,51 214,52 252,61 C284,68 300,79 303,89 L304,97 L304,100',
+    rim:'M50,72 C54,61 72,55 108,55 C158,51 214,52 252,61 C284,68 300,78 304,89',
+    win:'M70,65 C110,58 164,56 214,61 C230,63 238,66 245,73 L72,75 Z',
+    pillar:'M154,56 L154,74',
+    belt:87, dnose:300, dtail:54, doors:[152], handle:[162,85], mirror:[88,61],
+    hl:[304,85,16,4], tl:[48,85,11,4], intake:[300,99,12,4] },
+
+  // PICKUP — real bed (side wall + rail + tailgate) + clear cab, rugged, high ride
+  pickup: { rearEnd:44, frontEnd:308, sill:96, rw:88, fw:250, wr:18, archR:19.5, y1:46,
+    top:'M44,96 L44,70 L158,70 L166,66 L174,49 L222,47 C234,48 240,52 246,63 L260,70 L300,73 C307,73 308,76 308,83 L308,96',
+    rim:'M44,70 L158,70 L166,66 L174,49 L222,47 C234,48 240,52 246,63 L260,70 L300,73 C307,73 308,76 308,83',
+    win:'M178,53 L218,51 C226,51 230,54 237,63 L178,64 Z',
+    pillar:'M200,52 L200,64',
+    belt:80, dnose:300, dtail:50, doors:[210], handle:[200,78], mirror:[180,55],
+    hl:[308,76,12,7], tl:[44,72,8,12], intake:[304,94,16,6],
+    extra:(d,b,self)=>`<line x1="50" y1="72.5" x2="156" y2="72.5" stroke="${d.bot}" stroke-width="2.4" opacity="0.55" stroke-linecap="round"/>`
+      +`<line x1="162" y1="70" x2="162" y2="95" stroke="${d.bot}" stroke-width="1.4" opacity="0.5"/>`
+      +`<line x1="48" y1="78" x2="48" y2="94" stroke="${d.bot}" stroke-width="1.2" opacity="0.45"/>`
+      +`<line x1="66" y1="82" x2="152" y2="82" stroke="${d.rim}" stroke-width="1" opacity="0.38"/>`
+      +self.cladding(b,d) },
+
+  // ---- EXTENDED CATALOG (more silhouettes for variety in the game) ----
+
+  // WAGON / ESTATE — sedan front, long roof to an upright tailgate
+  wagon: { rearEnd:44, frontEnd:300, sill:100, rw:84, fw:262, wr:16.5, archR:18, y1:57,
+    top:'M44,100 L44,72 C44,62 50,58 64,57 L176,56 C194,56 204,58 214,68 C226,77 240,83 262,86 L292,88 C299,88 300,91 300,96 L300,100',
+    rim:'M44,72 C44,62 50,58 64,57 L176,56 C194,56 204,58 214,68 C226,77 240,83 262,86 L292,88 C299,88 300,91 300,96',
+    win:'M68,62 L174,58 C184,58 189,61 198,69 L68,67 Z',
+    pillar:'M108,60 L108,67 M168,58 L168,68',
+    belt:70, dnose:296, dtail:48, doors:[108,168], handle:[150,68], mirror:[70,60],
+    hl:[300,84,12,6], tl:[44,70,8,13], intake:[296,98,14,5] },
+
+  // MINIVAN — tall one-box, low beltline (big glass), long sliding-door greenhouse
+  minivan: { rearEnd:42, frontEnd:288, sill:98, rw:82, fw:250, wr:17, archR:18.5, y1:48,
+    top:'M42,98 L42,58 C42,51 48,48 60,48 L206,47 C222,48 232,52 244,66 L260,76 C272,77 286,78 286,84 L286,98',
+    rim:'M42,58 C42,51 48,48 60,48 L206,47 C222,48 232,52 244,66 L260,76 C272,77 286,78 286,84',
+    win:'M58,53 L204,52 C214,52 220,55 234,68 L58,71 Z',
+    pillar:'M100,53 L100,70 M150,52 L150,69 M200,52 L200,68',
+    belt:72, dnose:282, dtail:48, doors:[100,200], handle:[160,71], mirror:[60,52],
+    hl:[286,72,11,7], tl:[42,58,7,15], intake:[282,96,16,6] },
+
+  // SUPERCAR — ultra-low long wedge, cabin pushed forward, side intake + lip
+  supercar: { rearEnd:44, frontEnd:321, sill:102, rw:86, fw:282, wr:17.5, archR:19, y1:78,
+    top:'M44,102 L44,96 C46,90 52,88 66,88 C120,82 150,73 176,69 C188,67 196,68 206,75 C232,85 258,91 286,94 L306,96 C316,96 320,99 321,102 L321,102',
+    rim:'M48,90 C54,88 66,88 66,88 C120,82 150,73 176,69 C188,67 196,68 206,75 C232,85 258,91 286,94 L306,96 C316,96 320,99 321,102',
+    win:'M88,90 C120,82 146,74 172,70 C184,69 190,71 198,77 L122,88 Z',
+    pillar:'M122,87 L150,72',
+    belt:91, dnose:312, dtail:50, doors:[150], handle:[162,89], mirror:[90,77],
+    hl:[321,87,18,5], tl:[44,87,9,8], intake:[319,101,20,7],
+    extra:(d,b)=>`<path d="M214,92 L236,90 L232,98 L214,98 Z" fill="#0c0d10" opacity="0.6"/>`
+      +`<path d="M60,87 L92,86 L86,82 L66,83 Z" fill="${d.bot}" opacity="0.7"/>` },
+
+  // OFF-ROADER — boxy 4x4: flat roof, near-vertical glass, roof rack, very high ride, cladding
+  offroad: { rearEnd:46, frontEnd:300, sill:92, rw:88, fw:240, wr:19.5, archR:21.5, y1:42,
+    top:'M46,92 L46,43 L208,43 C214,43 217,45 219,58 L226,64 L296,66 C300,66 300,68 300,72 L300,92',
+    rim:'M46,43 L208,43 C214,43 217,45 219,58 L226,64 L296,66 C300,66 300,68 300,72',
+    win:'M62,49 L202,49 L202,61 L62,61 Z',
+    pillar:'M104,49 L104,61 M150,49 L150,61 M196,49 L196,61',
+    belt:64, dnose:294, dtail:52, doors:[104,150,196], handle:[170,63], mirror:[64,50],
+    hl:[300,62,13,9], tl:[46,52,8,16], intake:[296,88,18,8],
+    extra:(d,b,self)=>`<line x1="46" y1="40" x2="208" y2="40" stroke="#15171c" stroke-width="3" stroke-linecap="round"/>`
+      +`<line x1="70" y1="40" x2="70" y2="43" stroke="#15171c" stroke-width="2"/><line x1="120" y1="40" x2="120" y2="43" stroke="#15171c" stroke-width="2"/><line x1="180" y1="40" x2="180" y2="43" stroke="#15171c" stroke-width="2"/>`
+      +`<rect x="58" y="84" width="186" height="6" rx="2" fill="#15171c" opacity="0.7"/>`
+      +self.cladding(b,d) },
+
+  // COUPE-SUV — tall crossover front, fastback roof sloping to the rear, cladding
+  crossover: { rearEnd:52, frontEnd:252, sill:95, rw:86, fw:240, wr:18.5, archR:20, y1:46,
+    top:'M52,95 L52,72 C54,60 70,52 110,49 L160,46 C176,46 190,49 206,60 L226,68 C240,70 250,74 250,82 L250,95',
+    rim:'M54,66 C58,58 72,52 110,49 L160,46 C176,46 190,49 206,60 L226,68',
+    win:'M86,58 L160,50 C172,50 180,53 196,63 L86,65 Z',
+    pillar:'M120,55 L120,64 M160,50 L160,64',
+    belt:67, dnose:246, dtail:58, doors:[120,170], handle:[152,66], mirror:[88,53],
+    hl:[250,64,12,8], tl:[52,60,7,13], intake:[246,91,16,6],
+    extra:(d,b,self)=>self.cladding(b,d) },
+
+  // CITY CAR — micro/kei: ultra-short, very upright, tall cabin, tiny wheels
+  citycar: { rearEnd:82, frontEnd:219, sill:100, rw:104, fw:192, wr:15.5, archR:17, y1:49,
+    top:'M82,100 L80,72 C79,58 84,52 100,50 L152,49 C162,49 168,53 178,70 L196,76 C208,77 215,82 217,90 L219,97 L219,100',
+    rim:'M80,72 C79,58 84,52 100,50 L152,49 C162,49 168,53 178,70 L196,76 C208,77 215,82 217,90',
+    win:'M104,55 L152,52 C161,52 167,55 177,70 L112,72 Z',
+    pillar:'M138,53 L138,71',
+    belt:76, dnose:215, dtail:82, doors:[140], handle:[156,73], mirror:[106,57],
+    hl:[218,78,10,6], tl:[80,73,7,12], intake:[215,98,11,5] },
+};
+
+var ART = new CarArt();
 
 /* =========================================================================
    MODEL YEAR — Phase 1 (the playable engine).
@@ -453,17 +805,17 @@ var CONFIG = {
 /* ---- segments (base pool / margin / capacity value, with car-fantasy copy) ---- */
 var SEGMENTS = [
   { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.20, capValue:10,
-    invest:"cheap commuters and fleet rentals", defender:"toyo", color:"#12a14b", tint:"#e3f5ea", sq:"🟩" },
+    invest:"cheap commuters and fleet rentals", defender:"toyo", color:"#2E9E5B", tint:"#e4f3ea", sq:"🟩", body:"hatch" },
   { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.26, capValue:13,
-    invest:"three-row haulers for the school run", defender:"wolfsburg", color:"#1f6dff", tint:"#e6efff", sq:"🟦" },
+    invest:"three-row haulers for the school run", defender:"wolfsburg", color:"#2F6FE0", tint:"#e6eefc", sq:"🟦", body:"crossover" },
   { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.30, capValue:15,
-    invest:"naturally aspirated heroes and track specials", defender:"maranello", color:"#df3a30", tint:"#fde6e3", sq:"🟥" },
+    invest:"naturally aspirated heroes and track specials", defender:"maranello", color:"#E5392F", tint:"#fce6e4", sq:"🟥", body:"coupe" },
   { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.46, capValue:17,
-    invest:"leather, badges and quiet money", defender:"stuttgart", color:"#c79200", tint:"#f7eccc", sq:"🟨" },
+    invest:"leather, badges and quiet money", defender:"stuttgart", color:"#E3A92C", tint:"#f8eed1", sq:"🟨", body:"sedan" },
   { id:"ev",          name:"EV / Future",    emoji:"⚡", basePool:30,  baseMargin:0.30, capValue:18,
-    invest:"the electric bet that keeps getting bigger", defender:"paloalto", color:"#7c3aed", tint:"#efe6fd", sq:"🟪" },
+    invest:"the electric bet that keeps getting bigger", defender:"paloalto", color:"#7C54E8", tint:"#ece6fb", sq:"🟪", body:"ev" },
   { id:"pickup",      name:"Pickup / Truck", emoji:"🛻", basePool:70,  baseMargin:0.36, capValue:14,
-    invest:"full-size trucks that run on cheap gas", defender:"dearborn", color:"#e8730c", tint:"#fce8d6", sq:"🟧" },
+    invest:"full-size trucks that run on cheap gas", defender:"dearborn", color:"#E07B27", tint:"#fbe9d8", sq:"🟧", body:"pickup" },
 ];
 var SEG_IDS = SEGMENTS.map(function(s){return s.id;});
 function segMeta(id){ for(var i=0;i<SEGMENTS.length;i++) if(SEGMENTS[i].id===id) return SEGMENTS[i]; }
@@ -631,6 +983,7 @@ function createState(seed){
     lastRank:null, rankMove:0,   // for the standings ticker
     identity:"balanced",         // cosmetic house style (Pass 6); display only, no math
     valHistory:[],               // per-year player valuation for the sparkline (UI path only)
+    launches:[],                 // car models the player launches across the decade (Pass 7; UI path only)
   };
 }
 function player(state){ return state.entities[0]; }
@@ -956,6 +1309,64 @@ function saveDaily(n,rec){ lsSet("my_daily_"+n, JSON.stringify(rec)); }
 function loadStreak(){ try{ var v=JSON.parse(lsGet("my_streak")); return (v&&typeof v.count==="number")?v:{count:0,lastDay:null}; }catch(e){ return {count:0,lastDay:null}; } }
 function bumpStreak(n){ var st=loadStreak(); if(st.lastDay===n) return st; st.count=(st.lastDay===(n-1))?(st.count+1):1; st.lastDay=n; lsSet("my_streak",JSON.stringify(st)); return st; }
 
+/* ---- Pass 7: car art integration (display only; cars are cosmetic over the build action) ---- */
+// Seed-deterministic model names + specs, flavoured per segment. No real trademarks.
+var MODEL_NAMES = {
+  economy:    ["Sprout","Pip","Dart","Cricket","Wren","Pebble","Scout","Echo"],
+  family:     ["Summit","Harbor","Meridian","Aspen","Haven","Crossing","Trailhead","Vista"],
+  performance:["Vello","Blaze","Apex","Strato","Vipera","Comet","Falco","Razor"],
+  luxury:     ["Sovereign","Regalia","Empire","Aurelia","Marque","Vanguard","Noble","Crown"],
+  ev:         ["Ion","Volt","Lumen","Flux","Nova","Pulse","Helix","Arc"],
+  pickup:     ["Brute","Boulder","Mesa","Anvil","Workhorse","Forge","Ridge","Sierra"],
+};
+var MODEL_SPEC = {
+  economy:    { power:[101,138], zero:[8.6,11.2], price:[16,24] },
+  family:     { power:[205,278], zero:[6.6,8.5],  price:[32,46] },
+  performance:{ power:[404,648], zero:[2.9,4.2],  price:[72,124] },
+  luxury:     { power:[352,458], zero:[4.2,5.5],  price:[92,162] },
+  ev:         { power:[402,520], zero:[3.2,4.6],  price:[51,73] },
+  pickup:     { power:[362,418], zero:[6.0,7.2],  price:[41,61], tow:[9000,13000] },
+};
+// Build a deterministic model identity for a launch in a segment in a given year.
+function modelIdentity(state, segId, y){
+  var seg=segMeta(segId), rng=rngFromSeed(state.seed+"|model|"+segId+"|"+y);
+  var pool=MODEL_NAMES[segId]||["Mark"], name=pool[Math.floor(rng()*pool.length)];
+  var sp=MODEL_SPEC[segId], power=Math.round(sp.power[0]+rng()*(sp.power[1]-sp.power[0]));
+  var zero=(sp.zero[0]+rng()*(sp.zero[1]-sp.zero[0])).toFixed(1);
+  var price=Math.round(sp.price[0]+rng()*(sp.price[1]-sp.price[0]));
+  var specs=[power+" hp"];
+  if(segId==="pickup"){ var tow=Math.round((sp.tow[0]+rng()*(sp.tow[1]-sp.tow[0]))/100)*100; specs.push(tow.toLocaleString()+" lb tow"); }
+  else if(segId==="ev"){ specs.push(zero+"s 0–60"); specs.push("instant torque"); }
+  else { specs.push(zero+"s 0–60"); }
+  specs.push("$"+price+"k");
+  return { seg:segId, body:seg.body, livery:seg.color, name:name, specs:specs, power:power, zero:zero, price:price, year:y };
+}
+// The player's primary launch for a resolved year: the segment that got the largest build (>0).
+function primaryLaunch(state, plannedMap, y){
+  var big=null,bu=0; SEG_IDS.forEach(function(s){ var u=(plannedMap&&plannedMap[s])||0; if(u>bu){bu=u;big=s;} });
+  if(!big) return null;
+  var m=modelIdentity(state,big,y); m.units=bu; return m;
+}
+// One unique SVG id namespace per car instance currently in the DOM (avoids gradient-id collisions).
+var ART_UID=0; function nextUid(p){ ART_UID++; return (p||"c")+ART_UID; }
+// Inline car (no studio/reflection) wrapped in a cropped <svg>; for the many small board cards.
+function carInline(body, livery, uid){
+  return '<svg class="caro" viewBox="14 38 312 86" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+ART.carArt(body,livery,uid)+'</svg>';
+}
+// The player's distinct-segment range (one representative — the biggest build — per segment), for the garage lineup.
+function garageModels(state){
+  var byseg={};
+  (state.launches||[]).forEach(function(m){ if(!byseg[m.seg] || m.units>byseg[m.seg].units) byseg[m.seg]=m; });
+  // order by SEG_IDS so the spectrum reads left-to-right consistently
+  return SEG_IDS.map(function(s){ return byseg[s]; }).filter(Boolean).slice(0,6);
+}
+// The flagship: the launch with the biggest single build (ties -> earliest). Falls back to first launch.
+function flagshipModel(state){
+  var L=state.launches||[]; if(!L.length) return null;
+  var best=L[0]; L.forEach(function(m){ if(m.units>best.units || (m.units===best.units && m.year<best.year)) best=m; });
+  return best;
+}
+
 function render(){
   var s=App.state, root=App.root, fresh=!!App.freshView;   // fresh = real phase change, not a stepper re-render
   root.innerHTML="";
@@ -1233,7 +1644,8 @@ function turnView(){
     var underWar = (s.pending[seg.id]||1) < 1;
     var rowCls = "seg" + (underWar&&App.freshView?" warhit":"") + (goodSeg===seg.id?" pulse-once":"");
     list.appendChild(el("div",{class:rowCls,style:"--seg:"+seg.color+";--seg-tint:"+seg.tint},[
-      el("div",{class:"top"},[
+      el("div",{class:"seghead"},[
+        el("div",{class:"segcar",html:carInline(seg.body, seg.color, nextUid("b"))}),
         el("div",{class:"name"},[ el("span",{class:"emoji",text:seg.emoji}), seg.name ]),
         el("div",{class:"arrow "+arr.cls+(App.freshView?" pulse-once":"")},[ arr.ch, el("span",{class:"dl",text:"demand"}) ]),
       ]),
@@ -1377,6 +1789,10 @@ function runYear(){
     if(u>0){ p.cash -= u*CONFIG.capacityCostPerUnit; }
   });
   p.posture=s.playerPosture;
+  // a launch = the segment that got this year's largest build; cosmetic, derived from s.planned (UI only)
+  var launch=primaryLaunch(s, s.planned, s.yearIndex);
+  s._lastLaunch=launch;
+  if(launch) s.launches.push(launch);
   var res=resolveYear(s);
   s.lastResult=res;
   s.valHistory.push(valuation(p));                                         // sparkline point (UI only; headless ignores valHistory)
@@ -1392,6 +1808,18 @@ function resultView(){
   var s=App.state, res=s.lastResult, y=s.yearIndex;
   var profit=res.profit;
   var wrap=el("div",{class:"result"},[]);
+
+  // launch reveal — the Two Seats "card" beat: the car you just launched rises in as a studio card
+  var launch=s._lastLaunch;
+  if(launch){
+    var lseg=segMeta(launch.seg), luid=nextUid("launch");
+    wrap.appendChild(el("div",{class:"launchcard"+(App.freshView?" car-rise":""),style:"--seg:"+launch.livery+";--seg-tint:"+lseg.tint},[
+      el("div",{class:"lc-k",text:"New for model year "+(y+1)+" · "+lseg.name}),
+      el("div",{class:"lc-stage",html:ART.stageSVG(launch.body,launch.livery,luid)}),
+      el("div",{class:"lc-name"},[ el("span",{class:"lc-model",text:launch.name}), el("span",{class:"lc-maker",text:playerLabel(s)}) ]),
+      el("div",{class:"lc-specs"}, launch.specs.map(function(sp){ return el("span",{class:"lc-spec",text:sp}); })),
+    ]));
+  }
 
   var late = y>=CONFIG.turns-3;   // closing years: snappier, more aggressive count-up
   var heroV=el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(0)});
@@ -1500,8 +1928,9 @@ function endView(){
   var squares = segPath(s);
   if(!s.isPractice && !App.savedThisGame){
     App.savedThisGame=true;
-    saveDaily(s.dailyNumber, { value:bd.total, rank:rank, grade:grade.g, path:squares, n:s.entities.length });
-    bumpStreak(s.dailyNumber);
+    // record only the FIRST official result for the day; a later replay must not overwrite the locked grade/value/path
+    if(!loadDaily(s.dailyNumber)) saveDaily(s.dailyNumber, { value:bd.total, rank:rank, grade:grade.g, path:squares, n:s.entities.length });
+    bumpStreak(s.dailyNumber);   // bumpStreak is itself idempotent per day (guards on lastDay)
   }
   var streak=loadStreak();
 
@@ -1543,6 +1972,17 @@ function endView(){
 
   // everything else fades in after the reveal
   var rest=el("div",{class:"endrest"});
+  // the garage — the player's whole decade of models lined up, a spectrum of liveries (the payoff)
+  var garage=garageModels(s);
+  if(garage.length){
+    // strip the module's width="100%" so the CSS fixed height drives sizing (cars stay legible; wide rows scroll)
+    var lineupHtml=ART.lineup(garage.map(function(m){ return {type:m.body, hex:m.livery}; })).replace('width="100%"','');
+    rest.appendChild(el("div",{class:"garage"},[
+      el("div",{class:"garage-k",text:"Your garage · "+garage.length+(garage.length===1?" model":" models")+" built across the decade"}),
+      el("div",{class:"garage-stage",html:lineupHtml}),
+      garage.length>3 ? el("div",{class:"garage-hint",text:"← swipe the garage →"}) : null,
+    ]));
+  }
   // photo finish — you vs the rival who edged you (or the runner-up if you won)
   if(photoRival) rest.appendChild(photoFinish(playerLabel(s), bd.total, photoRival));
   var par=s._par || computePar(s.seed);
@@ -1577,6 +2017,13 @@ function endView(){
   var sentence = parts.join(", "); sentence = sentence.charAt(0).toUpperCase()+sentence.slice(1);
   var line3 = playerLabel(s)+". "+sentence+".";
   var shareText = line1+"\n"+squares+"\n"+line3+"\n"+CONFIG.shareUrl;
+  // the flagship rides the share card: the player's biggest launch, featured above the copyable grid
+  var flag=flagshipModel(s);
+  if(flag) rest.appendChild(el("div",{class:"flagcard",style:"--seg:"+flag.livery},[
+    el("div",{class:"fc-k",text:"Flagship"}),
+    el("div",{class:"fc-stage",html:ART.stageSVG(flag.body, flag.livery, nextUid("flag"))}),
+    el("div",{class:"fc-name"},[ el("span",{class:"fc-model",text:flag.name}), el("span",{class:"fc-maker",text:playerLabel(s)}) ]),
+  ]));
   rest.appendChild(el("div",{class:"share",text:shareText}));
   rest.appendChild(el("div",{class:"actions"},[
     el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
