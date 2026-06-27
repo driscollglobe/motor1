@@ -293,6 +293,80 @@
   .floatchip{ position:absolute; font-family:var(--mono); font-weight:700; font-size:13px; color:var(--blue-deep);
     pointer-events:none; z-index:5; animation:my-floatchip .75s ease-out forwards }
   .countflash-up{ color:var(--green)!important } .countflash-down{ color:var(--red)!important }
+  .cta-glow-fast{ animation:my-glow 1.15s ease-in-out infinite }
+  .cta-glow-faster{ animation:my-glow .7s ease-in-out infinite }
+  .warhit{ animation:my-flash-red .9s ease-out, my-shake .42s ease-out }
+
+  /* ============ Pass 6: identity, color, distribution (presentation only) ============ */
+  /* segment colour identity — left border, icon badge and your-share pill all carry the hue */
+  .seg{ border-left:4px solid var(--seg,var(--line)); }
+  .seg .name .emoji{ display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    border-radius:6px;background:var(--seg-tint,var(--panel2));font-size:14px;line-height:1 }
+  .seg .pill.you b{ color:var(--seg,var(--text)) }
+  .seg .battle{ display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap }
+  .seg .owner{ font-family:var(--mono);font-size:10.5px;color:var(--muted);display:inline-flex;align-items:center;gap:3px }
+  .seg .owner b{ color:var(--text);font-weight:600 }
+  .seg .threat{ font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    border-radius:4px;padding:2px 6px;border:1px solid var(--line);margin-left:auto }
+  .threat.low{ color:var(--faint);background:var(--panel2) }
+  .threat.watch{ color:#9a6a00;background:#fbf0d6;border-color:#f0d99a }
+  .threat.war{ color:var(--red);background:#fde6e3;border-color:#f3c3bd }
+  /* louder demand read — the arrow is now the loudest element on the row */
+  .seg .arrow{ font-size:16px;font-weight:700;letter-spacing:-1px;display:inline-flex;align-items:baseline;gap:2px }
+  .seg .arrow .dl{ font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.85;margin-left:3px }
+  /* value-dominant status cluster */
+  .valgauge{ background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:9px;
+    padding:9px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;box-shadow:var(--shadow);margin-bottom:6px }
+  .valgauge .k{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint) }
+  .valgauge .v{ font-family:var(--mono);font-size:27px;font-weight:600;color:var(--blue);line-height:1 }
+  .cluster3{ display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px }
+  /* value sparkline */
+  .sparkwrap{ position:relative;margin-bottom:10px }
+  .spark{ display:flex;align-items:flex-end;gap:3px;height:40px;padding:18px 10px 8px;
+    background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow) }
+  .spark .sb{ flex:1;background:var(--panel2);border-radius:2px 2px 0 0;min-height:3px }
+  .spark .sb.on{ background:#bcd3ff }
+  .spark .sb.cur{ background:var(--blue) }
+  .sparklab{ position:absolute;top:6px;left:12px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint) }
+  /* today's briefing */
+  .brief{ background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin:16px 0 4px;box-shadow:var(--shadow) }
+  .brief .bk{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:7px }
+  .brief .bmood{ font-size:14px;line-height:1.46;color:var(--text) }
+  .brief .brow{ display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line) }
+  .brief .blab{ color:var(--faint);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase }
+  .brief .bval{ font-size:13px;font-weight:600;text-align:right }
+  .brief .bval .num{ color:var(--blue-deep) }
+  /* identity picker */
+  .idpick{ margin:16px 0 2px }
+  .idgrid{ display:flex;flex-wrap:wrap;gap:6px }
+  .idbtn{ flex:1 1 30%;min-width:104px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px;text-align:left;box-shadow:var(--shadow) }
+  .idbtn .il{ font-family:var(--display);font-weight:600;font-size:13px;line-height:1.1 }
+  .idbtn .ib{ font-size:10px;color:var(--muted);line-height:1.25;margin-top:2px }
+  .idbtn.on{ border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue) }
+  .idbtn.on .il{ color:var(--blue-deep) }
+  /* streak chip + completed banner */
+  .streak{ display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue-deep);
+    background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:20px;padding:3px 11px }
+  .donebanner{ display:flex;align-items:center;gap:10px;background:#e7f6ee;border:1px solid #b6e2c8;border-radius:9px;
+    padding:10px 12px;margin:0 0 4px;font-size:12.5px;color:#0c6b34;line-height:1.35 }
+  .donebanner b{ font-weight:700 }
+  /* pre-run warning */
+  .prewarn{ background:#fbf0d6;border:1px solid #f0d99a;border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:12px;color:#7a5500;line-height:1.42 }
+  .prewarn b{ color:#5e4200;font-weight:700 }
+  .prewarn .pwh{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#9a6a00;margin-bottom:3px }
+  /* finale: grade colours + photo finish */
+  .gbadge2.gold,.gbadge.gold{ border-color:#c79200;color:#7a5b00;background:#f7eccc }
+  .gbadge2.bluegrade,.gbadge.bluegrade{ border-color:var(--blue);color:var(--blue);background:var(--blue-tint) }
+  .gbadge2.redgrade,.gbadge.redgrade{ border-color:var(--red);color:var(--red);background:#fdecea }
+  .verdict .vco{ font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:3px }
+  .photo{ margin-top:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;box-shadow:var(--shadow) }
+  .photo .ph{ font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:8px }
+  .photo .pbar{ display:flex;align-items:center;gap:8px;margin-top:6px }
+  .photo .pname{ width:96px;flex:none;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+  .photo .ptrack{ flex:1;height:14px;background:var(--panel2);border-radius:7px;overflow:hidden }
+  .photo .pfill{ height:100%;border-radius:7px }
+  .photo .pfill.you{ background:var(--blue) } .photo .pfill.them{ background:var(--muted) }
+  .photo .pval{ font-family:var(--mono);font-size:11px;font-weight:600;width:56px;text-align:right;flex:none }
 
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -379,22 +453,48 @@ var CONFIG = {
 /* ---- segments (base pool / margin / capacity value, with car-fantasy copy) ---- */
 var SEGMENTS = [
   { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.20, capValue:10,
-    invest:"cheap commuters and fleet rentals", defender:"toyo" },
+    invest:"cheap commuters and fleet rentals", defender:"toyo", color:"#12a14b", tint:"#e3f5ea", sq:"🟩" },
   { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.26, capValue:13,
-    invest:"three-row haulers for the school run", defender:"wolfsburg" },
+    invest:"three-row haulers for the school run", defender:"wolfsburg", color:"#1f6dff", tint:"#e6efff", sq:"🟦" },
   { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.30, capValue:15,
-    invest:"naturally aspirated heroes and track specials", defender:"maranello" },
+    invest:"naturally aspirated heroes and track specials", defender:"maranello", color:"#df3a30", tint:"#fde6e3", sq:"🟥" },
   { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.46, capValue:17,
-    invest:"leather, badges and quiet money", defender:"stuttgart" },
+    invest:"leather, badges and quiet money", defender:"stuttgart", color:"#c79200", tint:"#f7eccc", sq:"🟨" },
   { id:"ev",          name:"EV / Future",    emoji:"⚡", basePool:30,  baseMargin:0.30, capValue:18,
-    invest:"the electric bet that keeps getting bigger", defender:"paloalto" },
+    invest:"the electric bet that keeps getting bigger", defender:"paloalto", color:"#7c3aed", tint:"#efe6fd", sq:"🟪" },
   { id:"pickup",      name:"Pickup / Truck", emoji:"🛻", basePool:70,  baseMargin:0.36, capValue:14,
-    invest:"full-size trucks that run on cheap gas", defender:"dearborn" },
+    invest:"full-size trucks that run on cheap gas", defender:"dearborn", color:"#e8730c", tint:"#fce8d6", sq:"🟧" },
 ];
 var SEG_IDS = SEGMENTS.map(function(s){return s.id;});
 function segMeta(id){ for(var i=0;i<SEGMENTS.length;i++) if(SEGMENTS[i].id===id) return SEGMENTS[i]; }
 // article + short noun for the price-war note ("Heartland Haulers starts a truck price war.")
 var WAR_PHRASE = { economy:"an economy", family:"an SUV", performance:"a performance", luxury:"a luxury", ev:"an EV", pickup:"a truck" };
+var SQ_NONE = "⬛";   // a model year with no build (harvest / sat out) on the share card
+
+// Cosmetic company identity (Pass 6). Pure flavour — picked before Year 1, used only in
+// the finale headline and the share text. Must NOT touch any game math.
+var IDENTITIES = [
+  { id:"volume",   label:"Volume Shark",     blurb:"Move metal. Win on numbers." },
+  { id:"ev",       label:"EV Prophet",       blurb:"The future is electric — get there first." },
+  { id:"truck",    label:"Truck Baron",      blurb:"Big trucks, bigger margins." },
+  { id:"badge",    label:"Badge Snob",       blurb:"Fewer cars, fatter badges." },
+  { id:"balanced", label:"Balanced Operator",blurb:"Read the road, spread the risk." },
+];
+function identityMeta(id){ for(var i=0;i<IDENTITIES.length;i++) if(IDENTITIES[i].id===id) return IDENTITIES[i]; return null; }
+
+// Briefing mood copy, keyed by the seed's dominant era event. Tendency only — never names
+// which years — so the forecast game (which event lands next) stays intact.
+var BRIEF_MOOD = {
+  oil_shock:  "Word in the trade rags is the oil patch is restless. This could be a decade that punishes anything thirsty and rewards the cheap and the electric.",
+  boom:       "Cheap gas and easy money are in the air. Smells like a decade that pays for horsepower, badges and big trucks.",
+  recession:  "The bankers look nervous. This has the makings of a belt-tightening decade where the cheap commuter quietly wins.",
+  ev_subsidy: "Washington's mood is green, and the chargers are going in. The plug-in bet might finally pay off this decade.",
+  suv_craze:  "Every driveway wants a three-row crossover. A family-hauler decade is brewing — and hatchbacks are out of fashion.",
+  crisis:     "Supply chatter is grim and the lines keep jamming. This could be a decade where building anything gets expensive.",
+  tariff:     "Trade talk is turning hostile. Import-heavy lanes may carry a cost premium for years.",
+  quiet:      "No one's calling a clear trend. A decade that rewards whoever simply reads each road best.",
+  _default:   "A wide-open decade. Read each year and place your bets a step ahead of the pack.",
+};
 
 /* ---- rivals: real makers worn lightly. One keeps its real hometown (Maranello);
    the rest are IP-safe cultural winks (flag + behavior tell still point at who they are).
@@ -502,7 +602,7 @@ function buildScenario(seed){
       forecastEvent.push(others[Math.floor(rng()*others.length)]);
     }
   }
-  return { seed:seed, events:events, severities:severities, forecastTrue:forecastTrue, forecastEvent:forecastEvent };
+  return { seed:seed, events:events, severities:severities, forecastTrue:forecastTrue, forecastEvent:forecastEvent, era:[eraA,eraB] };
 }
 
 /* ============================ state ============================ */
@@ -529,6 +629,8 @@ function createState(seed){
     pending:pending, yearIndex:0, history:[], playerPosture:"standard",
     planned:{}, phase:"intro", lastResult:null,
     lastRank:null, rankMove:0,   // for the standings ticker
+    identity:"balanced",         // cosmetic house style (Pass 6); display only, no math
+    valHistory:[],               // per-year player valuation for the sparkline (UI path only)
   };
 }
 function player(state){ return state.entities[0]; }
@@ -732,11 +834,6 @@ function el(tag,props,kids){
   kids.forEach(function(c){ if(c==null||c===false) return; n.appendChild(typeof c==="string"?document.createTextNode(c):c); });
   return n;
 }
-function arrowFor(mult){
-  if(mult>1.05) return {ch:"▲",cls:"green"};
-  if(mult<0.95) return {ch:"▼",cls:"red"};
-  return {ch:"▬",cls:"muted"};
-}
 
 /* ============================ app / rendering ============================ */
 var App = { state:null, root:null };
@@ -744,7 +841,7 @@ var App = { state:null, root:null };
 function pad2(n){ return n<10?"0"+n:""+n; }
 function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }  // YYYYMMDD, same for everyone today
 function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
-function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); App.prevStats=null; App.prevBudget=null; App.prevNem=null; }
+function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); App.prevStats=null; App.prevBudget=null; App.prevNem=null; App.savedThisGame=false; App.recallFlash=false; }
 function newSeed(){ return "practice|"+Math.floor(Math.random()*1e9); }
 
 /* ---- Pass 5 motion helpers (transform/opacity only; reduced-motion safe) ---- */
@@ -791,6 +888,74 @@ function staggerIn(view, opts){
   if(list){ var j=0; [].forEach.call(list.children,function(seg){ seg.classList.add("anim-up"); seg.style.animationDelay=((i+ j)*0+ (3*step)+(j*step))+"ms"; j++; }); }
 }
 
+/* ---- Pass 6 helpers (display only; never touch game math) ---- */
+// The player's display name from the cosmetic identity (falls back to the neutral name).
+function playerLabel(state){ var m=identityMeta(state.identity); return m?(m.label+" Motors"):"Your company"; }
+// Grade colour family for the finale badge: S/A gold, B/C blue, D/F red.
+function gradeColorClass(g){ return (g==="S"||g==="A")?"gold":(g==="B"||g==="C")?"bluegrade":"redgrade"; }
+// Louder demand read: one chevron for a nudge, two for a real swing; colour by direction.
+function loudArrow(mult){
+  var big=Math.abs(mult-1)>0.18;
+  if(mult>1.05) return { ch: big?"▲▲":"▲", cls:"green" };
+  if(mult<0.95) return { ch: big?"▼▼":"▼", cls:"red" };
+  return { ch:"▬", cls:"muted" };
+}
+// The decade of bets: each model year's largest build as a coloured square (⬛ = harvested/none).
+// Encodes the PLAYER'S PATH, so two cards on the same daily visibly differ (the Wordle principle).
+function segPath(state){
+  return state.history.map(function(h){
+    var big=null,bu=0;
+    SEG_IDS.forEach(function(s){ var u=(h.seg[s]&&h.seg[s].alloc)||0; if(u>bu){bu=u;big=s;} });
+    return big ? segMeta(big).sq : SQ_NONE;
+  }).join("");
+}
+// Today's Briefing: market mood (era tendency), one rival to watch, and the line to beat.
+function briefingFor(state){
+  if(!state._par) state._par=computePar(state.seed);
+  var era=state.scenario.era||[];
+  var moodKey=era[0]||state.scenario.events[0];
+  var mood=BRIEF_MOOD[moodKey]||BRIEF_MOOD._default;
+  var bestSeg=SEG_IDS[0],bm=-1;
+  SEG_IDS.forEach(function(sg){ var m=eventMultiplier(moodKey,"medium",sg); if(m>bm){bm=m;bestSeg=sg;} });
+  var def=rivalMeta(segMeta(bestSeg).defender);
+  return { mood:mood, rival:def, seg:segMeta(bestSeg), par:state._par };
+}
+// A 10-tick valuation arc from valHistory (resolved years) + the live current value.
+function sparkline(state){
+  var vals=state.valHistory.slice(), cur=valuation(player(state));
+  var all=vals.concat([cur]).map(function(v){ return Math.max(0,v); });
+  var mx=Math.max.apply(null,[1].concat(all));
+  var bars=el("div",{class:"spark"});
+  for(var i=0;i<CONFIG.turns;i++){
+    var known=i<vals.length, isCur=(i===vals.length);
+    var v = known ? vals[i] : (isCur?cur:null);
+    var h = v==null ? 12 : Math.max(6, Math.round(Math.max(0,v)/mx*100));
+    bars.appendChild(el("div",{class:(v==null?"sb":isCur?"sb cur":"sb on"),style:"height:"+h+"%"}));
+  }
+  return el("div",{class:"sparkwrap"},[ el("div",{class:"sparklab",text:"Company value · 10-year arc"}), bars ]);
+}
+// Two-bar photo finish: you vs the rival who edged you (or the runner-up if you won).
+function photoFinish(youName, youVal, them){
+  var themVal=valuation(them), mx=Math.max(1,youVal,themVal);
+  function w(v){ return Math.max(4,Math.round(Math.max(0,v)/mx*100)); }
+  return el("div",{class:"photo"},[
+    el("div",{class:"ph",text:"Photo finish"}),
+    el("div",{class:"pbar"},[ el("div",{class:"pname",text:youName}),
+      el("div",{class:"ptrack"},[ el("div",{class:"pfill you",style:"width:"+w(youVal)+"%"}) ]),
+      el("div",{class:"pval",text:fmtMoney(youVal)}) ]),
+    el("div",{class:"pbar"},[ el("div",{class:"pname",text:(them.flag?them.flag+" ":"")+them.name}),
+      el("div",{class:"ptrack"},[ el("div",{class:"pfill them",style:"width:"+w(themVal)+"%"}) ]),
+      el("div",{class:"pval",text:fmtMoney(themVal)}) ]),
+  ]);
+}
+// Casual daily lock + streak (localStorage). Integrity only — never hard-blocks replay.
+function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ window.localStorage.setItem(k,v); }catch(e){} }
+function loadDaily(n){ try{ return JSON.parse(lsGet("my_daily_"+n)); }catch(e){ return null; } }
+function saveDaily(n,rec){ lsSet("my_daily_"+n, JSON.stringify(rec)); }
+function loadStreak(){ try{ var v=JSON.parse(lsGet("my_streak")); return (v&&typeof v.count==="number")?v:{count:0,lastDay:null}; }catch(e){ return {count:0,lastDay:null}; } }
+function bumpStreak(n){ var st=loadStreak(); if(st.lastDay===n) return st; st.count=(st.lastDay===(n-1))?(st.count+1):1; st.lastDay=n; lsSet("my_streak",JSON.stringify(st)); return st; }
+
 function render(){
   var s=App.state, root=App.root, fresh=!!App.freshView;   // fresh = real phase change, not a stepper re-render
   root.innerHTML="";
@@ -833,22 +998,54 @@ function motor1Logo(){
   return a;
 }
 
-function introView(){
-  return el("div",{class:"intro"},[
-    el("div",{class:"big"},[ "Run an automaker for ", el("span",{class:"yr",text:"10 model years"}), "." ]),
-    el("div",{class:"lede",text:"New scenario, ten model years, about two minutes. Put your money across the market while the legends — from Maranello to Silicon Sparks — fight you for the same buyers. Highest company valuation wins."}),
-    el("div",{class:"sacred"},[
-      el("div",{class:"s"},[ el("b",{text:"Contested — "}), "your revenue is a slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
-      el("div",{class:"s"},[ el("b",{text:"Telegraphed — "}), "dominate a segment and its owner starts a price war next year. You're warned before it bites." ]),
-      el("div",{class:"s"},[ el("b",{text:"Forecast — "}), "a vague signal arrives a year ahead. Most are real, some are bait. Reading them is the game." ]),
-    ]),
-    el("button",{class:"btn primary",style:"margin-top:16px",text:(App.state.isPractice?"Start practice run":("Play daily #"+App.state.dailyNumber)),onclick:function(){ beginTurn(); }}),
-    el("div",{class:"actions",style:"margin-top:8px"},[
-      el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
-    ]),
-    el("button",{class:"helplink",text:"New here? How to play →",onclick:helpOpen}),
-    el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}),
+function briefCard(state){
+  var b=briefingFor(state);
+  return el("div",{class:"brief"},[
+    el("div",{class:"bk",text:"Today's briefing · Daily #"+state.dailyNumber}),
+    el("div",{class:"bmood",text:b.mood}),
+    el("div",{class:"brow"},[ el("span",{class:"blab",text:"Rival to watch"}),
+      el("span",{class:"bval",text:b.rival.flag+" "+b.rival.city}) ]),
+    el("div",{class:"brow"},[ el("span",{class:"blab",text:"The line to beat"}),
+      el("span",{class:"bval bnums"},[ "Par ", el("span",{class:"num",text:fmtMoney(b.par.par)}), "  ·  Top 10% ", el("span",{class:"num",text:fmtMoney(b.par.top10)}) ]) ]),
   ]);
+}
+function identityPicker(state){
+  var grid=el("div",{class:"idgrid"});
+  IDENTITIES.forEach(function(it){
+    grid.appendChild(el("div",{class:"idbtn"+(state.identity===it.id?" on":""),role:"button",tabindex:"0",
+      "aria-pressed":(state.identity===it.id?"true":"false"),
+      onclick:function(){ state.identity=it.id; render(); },
+      onkeydown:function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); state.identity=it.id; render(); } }},[
+      el("div",{class:"il",text:it.label}),
+      el("div",{class:"ib",text:it.blurb}),
+    ]));
+  });
+  return el("div",{class:"idpick"},[ el("div",{class:"seclbl",text:"Pick your house style"}), grid ]);
+}
+function introView(){
+  var s=App.state, streak=loadStreak();
+  var done = !s.isPractice ? loadDaily(s.dailyNumber) : null;
+  var wrap=el("div",{class:"intro"},[]);
+  if(streak.count>0 && !s.isPractice) wrap.appendChild(el("span",{class:"streak",text:"🔥 "+streak.count+"-day streak"}));
+  if(done) wrap.appendChild(el("div",{class:"donebanner"},[ el("span",{text:"✅"}),
+    el("span",{},[ el("b",{text:"Today's daily is in the books — "}), "you finished grade "+done.grade+", valued "+fmtMoney(done.value)+". Replay all you like; it won't change your streak." ]) ]));
+  wrap.appendChild(el("div",{class:"big"},[ "Run an automaker for ", el("span",{class:"yr",text:"10 model years"}), "." ]));
+  wrap.appendChild(el("div",{class:"lede",text:"New scenario, ten model years, about two minutes. Put your money across the market while the legends — from Maranello to Silicon Sparks — fight you for the same buyers. Highest company valuation wins."}));
+  wrap.appendChild(briefCard(s));
+  wrap.appendChild(identityPicker(s));
+  wrap.appendChild(el("div",{class:"sacred"},[
+    el("div",{class:"s"},[ el("b",{text:"Contested — "}), "your revenue is a slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
+    el("div",{class:"s"},[ el("b",{text:"Telegraphed — "}), "dominate a segment and its owner starts a price war next year. You're warned before it bites." ]),
+    el("div",{class:"s"},[ el("b",{text:"Forecast — "}), "a vague signal arrives a year ahead. Most are real, some are bait. Reading them is the game." ]),
+  ]));
+  wrap.appendChild(el("button",{class:"btn primary",style:"margin-top:16px",
+    text:(s.isPractice?"Start practice run":(done?"Replay daily #"+s.dailyNumber:("Play daily #"+s.dailyNumber))),onclick:function(){ beginTurn(); }}));
+  wrap.appendChild(el("div",{class:"actions",style:"margin-top:8px"},[
+    el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
+  ]));
+  wrap.appendChild(el("button",{class:"helplink",text:"New here? How to play →",onclick:helpOpen}));
+  wrap.appendChild(el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}));
+  return wrap;
 }
 
 function helpStep(n,t,b){
@@ -889,16 +1086,22 @@ function statusCluster(){
   var s=App.state, p=player(s);
   var cash=p.cash, val=valuation(p);
   var prev=App.prevStats||{cash:cash,value:val};
+  var late = s.yearIndex>=CONFIG.turns-3;   // snappier numbers in the closing years
+  var ms = late?380:600;
   var cashV=el("div",{class:"v num",text:fmtMoney(prev.cash)});
   var valV =el("div",{class:"v num",text:fmtMoney(prev.value)});
-  animateCount(cashV, prev.cash, cash, 600, fmtMoney);
-  animateCount(valV,  prev.value, val, 600, fmtMoney);
+  animateCount(valV,  prev.value, val, ms, fmtMoney);
+  animateCount(cashV, prev.cash, cash, ms, fmtMoney);
   App.prevStats={cash:cash,value:val};
-  return el("div",{class:"cluster"},[
-    gauge("Year",(s.yearIndex+1)+" / "+CONFIG.turns,"year"),
-    gaugeNode("Cash",cashV),
-    gaugeNode("Value",valV),
-    gauge("Rank","#"+playerRank(s)+" / "+s.entities.length),
+  var flash = App.recallFlash ? " flash-red" : ""; App.recallFlash=false;   // a recall last year flashes the scoreboard red
+  // Value is the dominant gauge; Year / Cash / Rank ride below it.
+  return el("div",{},[
+    el("div",{class:"valgauge"+flash},[ el("div",{class:"k",text:"Company value"}), valV ]),
+    el("div",{class:"cluster3"},[
+      gauge("Year",(s.yearIndex+1)+" / "+CONFIG.turns,"year"),
+      gaugeNode("Cash",cashV),
+      gauge("Rank","#"+playerRank(s)+" / "+s.entities.length),
+    ]),
   ]);
 }
 function gauge(k,v,cls){
@@ -928,12 +1131,12 @@ function forecastBeat(state,y){
   var prev=state.history[y-1];
   // the player's biggest build last year (it opens this year)
   var bigSeg=null,bigU=0; if(prev){ SEG_IDS.forEach(function(sg){ var u=prev.seg[sg].alloc||0; if(u>bigU){bigU=u;bigSeg=sg;} }); }
-  if(!bigSeg) return { tone:"flat", text:"You sat out last year's build. The "+evName+" lands with your lineup unchanged." };
+  if(!bigSeg) return { tone:"flat", seg:null, text:"You sat out last year's build. The "+evName+" lands with your lineup unchanged." };
   var m=eventMultiplier(actual,sev,bigSeg), nm=segMeta(bigSeg).name;
   var calledIt = state.scenario.forecastTrue[y-1];
-  if(m>1.08) return { tone:"good", text:"Your new "+nm+" capacity opens right as the "+evName+" hits"+(calledIt?" — you called it":"")+". Perfect timing." };
-  if(m<0.92) return { tone:"bad", text:"Your fresh "+nm+" line opens into the teeth of the "+evName+". Brutal timing." };
-  return { tone:"flat", text:"Your "+nm+" build comes online into a "+evName+" that barely moves it." };
+  if(m>1.08) return { tone:"good", seg:bigSeg, text:"Your new "+nm+" capacity opens right as the "+evName+" hits"+(calledIt?" — you called it":"")+". Perfect timing." };
+  if(m<0.92) return { tone:"bad", seg:bigSeg, text:"Your fresh "+nm+" line opens into the teeth of the "+evName+". Brutal timing." };
+  return { tone:"flat", seg:bigSeg, text:"Your "+nm+" build comes online into a "+evName+" that barely moves it." };
 }
 function nemesisBanner(state,y){
   var nem=nemesisFor(state); if(!nem) return null;
@@ -956,7 +1159,8 @@ function standingsTicker(state){
   var r=state.lastRank||playerRank(state), mv=state.rankMove||0;
   var word = mv>0 ? "▲ Climbed to" : mv<0 ? "▼ Slipped to" : "Holding";
   var cls = mv>0 ? "up" : mv<0 ? "down" : "flat";
-  return el("span",{class:"tick "+cls,text:word+" P"+r+" of "+state.entities.length});
+  var nudge = (mv>0 && App.freshView) ? " nudge-up" : "";   // live overtake gives the ticker a little hop
+  return el("span",{class:"tick "+cls+nudge,style:"display:inline-block",text:word+" P"+r+" of "+state.entities.length});
 }
 
 function capitalRemaining(){
@@ -972,6 +1176,7 @@ function turnView(){
 
   var wrap=el("div",{},[]);
   wrap.appendChild(statusCluster());
+  wrap.appendChild(sparkline(s));   // the 10-year valuation arc fills in as the decade resolves
 
   // standings ticker + named-nemesis head-to-head (D + C)
   var nb=nemesisBanner(s,y);
@@ -980,6 +1185,7 @@ function turnView(){
   // forecast-resolution beat: did last year's bet pay off? (D)
   var beat=forecastBeat(s,y);
   if(beat){ wrap.appendChild(el("div",{class:"beat "+beat.tone},[ el("span",{class:"beat-ic",text: beat.tone==="good"?"✅":beat.tone==="bad"?"⚠️":"•"}), beat.text ])); }
+  var goodSeg = (beat && beat.tone==="good" && App.freshView) ? beat.seg : null;   // pulse the card that drove the good call
 
   // 1+2. reveal current event (the outcome of last year's forecast), pools already include it
   wrap.appendChild(el("div",{class:"event"+(App.freshView?" anim-stamp":"")},[
@@ -997,14 +1203,13 @@ function turnView(){
   if(p.budgetStreak>=2) wrap.appendChild(el("div",{class:"beat bad"},[ el("span",{class:"beat-ic",text:"⚠️"}),
     "You've run Budget "+p.budgetStreak+" years straight — corners are being cut, and recall risk is climbing." ]));
 
-  // 3. the board: a compact row per segment + inline allocation
+  // 3. the board: a coloured battlefield row per segment + inline allocation
   var list=el("div",{class:"seglist"});
   SEGMENTS.forEach(function(seg){
-    var pool=demandPool(s,seg.id,y);
     var evMult=eventMultiplier(s.scenario.events[y],s.scenario.severities[y],seg.id);
     var drift = seg.id==="ev" ? (1+y*CONFIG.secularDriftEV) : 1;
     var mult = evMult*drift*(s.pending[seg.id]||1);
-    var arr=arrowFor(mult);
+    var arr=loudArrow(mult);   // louder demand read: 1 chevron for a nudge, 2 for a real swing
 
     // current share estimate (uses current capacities before this year's resolve)
     var sumEff=0; s.entities.forEach(function(e){ sumEff+=effectiveCapacity(e,seg.id); });
@@ -1019,16 +1224,27 @@ function turnView(){
     var cost=planned*CONFIG.capacityCostPerUnit;
     var canAdd = capitalRemaining() >= CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit;
 
+    // battlefield read: who owns this turf + the live threat level (mirrors resolveYear's triggers)
+    var owner=rivalMeta(seg.defender);
+    var dominate = yourShare > CONFIG.dominanceThreshold;
+    var alarm = planned > CONFIG.rivalAlarmBuildUnits;
+    var threat = dominate ? {cls:"war",label:"Price-war risk"} : alarm ? {cls:"watch",label:"Watchlist"} : {cls:"low",label:"Low"};
+
     var underWar = (s.pending[seg.id]||1) < 1;
-    list.appendChild(el("div",{class:"seg"+(underWar&&App.freshView?" flash-red":"")},[
+    var rowCls = "seg" + (underWar&&App.freshView?" warhit":"") + (goodSeg===seg.id?" pulse-once":"");
+    list.appendChild(el("div",{class:rowCls,style:"--seg:"+seg.color+";--seg-tint:"+seg.tint},[
       el("div",{class:"top"},[
         el("div",{class:"name"},[ el("span",{class:"emoji",text:seg.emoji}), seg.name ]),
-        el("div",{class:"arrow "+arr.cls+(App.freshView?" pulse-once":"")},[ arr.ch+" demand" ]),
+        el("div",{class:"arrow "+arr.cls+(App.freshView?" pulse-once":"")},[ arr.ch, el("span",{class:"dl",text:"demand"}) ]),
       ]),
       el("div",{class:"mid"},[
-        el("span",{class:"pill"},[ "you ", el("b",{text:pct(yourShare)}) ]),
+        el("span",{class:"pill you"},[ "you ", el("b",{text:pct(yourShare)}) ]),
         el("span",{class:"pill"},[ "capacity ", el("b",{text:String(Math.round(p.capacity[seg.id]||0))}) ]),
         el("div",{class:"rivchips"},chips),
+      ]),
+      el("div",{class:"battle"},[
+        el("span",{class:"owner"},[ "Turf: ", el("b",{text:owner.city}), " "+owner.flag ]),
+        el("span",{class:"threat "+threat.cls,text:threat.label}),
       ]),
       el("div",{class:"alloc"},[
         el("div",{class:"blurb",text:"Build "+seg.invest+"."}),
@@ -1082,18 +1298,31 @@ function turnView(){
     ]));
   }
 
+  // pre-run watchlist warnings: a big build into a rival's turf may provoke a price war next year
+  SEG_IDS.forEach(function(sid){
+    if((s.planned[sid]||0) > CONFIG.rivalAlarmBuildUnits){
+      var seg=segMeta(sid), def=rivalMeta(seg.defender);
+      wrap.appendChild(el("div",{class:"prewarn"},[
+        el("span",{class:"pwh",text:"Before you run"}),
+        el("b",{text:def.city}), " is watching your "+seg.name+" build. A push this big may trigger a price war next year.",
+      ]));
+    }
+  });
+
   // 5/7. run bar — the remaining budget ticks down live as you allocate
   var rem=capitalRemaining();
   var fromBudget = (App.prevBudget==null) ? rem : App.prevBudget;
   var remNode=el("span",{text:fmtMoney(fromBudget)});
   animateCount(remNode, fromBudget, rem, 350, fmtMoney);
   App.prevBudget=rem;
+  // escalating urgency: the run button's glow quickens in the closing years, fastest in the amplified finale
+  var glowCls = y>=CONFIG.turns-1 ? "cta-glow-faster" : (y>=CONFIG.turns-3 ? "cta-glow-fast" : "cta-glow");
   wrap.appendChild(el("div",{class:"runbar"},[
     el("div",{class:"capreadout"},[
       el("span",{class:"muted",text:"Investment budget"}),
       el("span",{class:"big "+(rem<0?"red":"accent")},[ remNode, " of "+fmtMoney(p.cash)+" left" ]),
     ]),
-    el("button",{class:"btn primary cta-glow",text:"Run the model year ▸",onclick:launchYear}),
+    el("button",{class:"btn primary "+glowCls,text:"Run the model year ▸",onclick:launchYear}),
   ]));
 
   return wrap;
@@ -1150,6 +1379,8 @@ function runYear(){
   p.posture=s.playerPosture;
   var res=resolveYear(s);
   s.lastResult=res;
+  s.valHistory.push(valuation(p));                                         // sparkline point (UI only; headless ignores valHistory)
+  if(res.personal && res.personal.type==="recall") App.recallFlash=true;   // a recall flashes the scoreboard red next turn
   if(s.yearIndex >= CONFIG.turns-1){ activatePending(s); s.phase="end"; }  // final builds count as asset value
   else s.phase="result";
   App.freshView=true;
@@ -1162,8 +1393,9 @@ function resultView(){
   var profit=res.profit;
   var wrap=el("div",{class:"result"},[]);
 
+  var late = y>=CONFIG.turns-3;   // closing years: snappier, more aggressive count-up
   var heroV=el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(0)});
-  animateCount(heroV, 0, profit, 650, fmtSigned);   // the year's profit/loss counts up
+  animateCount(heroV, 0, profit, late?420:650, fmtSigned);   // the year's profit/loss counts up
   wrap.appendChild(el("div",{class:"hero"},[
     el("div",{class:"heroK",text:"Model year "+(y+1)+" result"}),
     heroV,
@@ -1174,14 +1406,14 @@ function resultView(){
 
   // personal event (recall / viral) — the most dramatic beat, lead with it
   if(res.personal && res.personal.type==="recall"){
-    notes.appendChild(el("div",{class:"note warn"},[ el("span",{class:"nh",text:"Recall"}),
+    notes.appendChild(el("div",{class:"note warn"+(App.freshView?" shake":"")},[ el("span",{class:"nh",text:"Recall"}),
       "Cutting corners caught up with you — a recall hammers your brand and costs "+fmtMoney(Math.abs(res.personal.cashDelta))+". Quality isn't free." ]));
   } else if(res.personal && res.personal.type==="viral"){
     notes.appendChild(el("div",{class:"note good"},[ el("span",{class:"nh",text:"Breakout"}),
       "One of your cars goes viral — the badge is suddenly everywhere and your brand spikes." ]));
   }
 
-  // best / worst segment this year (computed, never faked)
+  // best / worst segment this year (computed, never faked) — written as business headlines
   var best=null,worst=null;
   SEG_IDS.forEach(function(seg){
     var sp=res.segProfit[seg]; if(!sp) return;
@@ -1189,18 +1421,19 @@ function resultView(){
     if(best===null || sp.profit>res.segProfit[best].profit) best=seg;
     if(worst===null || sp.profit<res.segProfit[worst].profit) worst=seg;
   });
-  if(best!==null){
+  if(best!==null && res.segProfit[best].profit>0){
     var bm=segMeta(best), bp=res.segProfit[best];
-    notes.appendChild(el("div",{class:"note good"},[
-      el("span",{class:"nh",text:"Best line"}),
-      bm.emoji+" "+bm.name+" carried you — "+pct(bp.share)+" of the pool, "+fmtSigned(bp.profit)+".",
-    ]));
+    var bmult=eventMultiplier(s.scenario.events[y],s.scenario.severities[y],best);
+    var bhead, bbody;
+    if(best==="ev" && bmult>1.2){ bhead="EV bet pays"; bbody="Your EV bet opened a year early — "+pct(bp.share)+" of the pool and "+fmtSigned(bp.profit)+"."; }
+    else { bhead="Sold out"; bbody="Dealers can't keep your "+bm.name+" on the lot — "+pct(bp.share)+" of the pool, "+fmtSigned(bp.profit)+"."; }
+    notes.appendChild(el("div",{class:"note good"},[ el("span",{class:"nh",text:bhead}), bm.emoji+" "+bbody ]));
   }
   if(worst!==null && worst!==best && res.segProfit[worst].profit<0){
     var wm=segMeta(worst), wp=res.segProfit[worst];
     notes.appendChild(el("div",{class:"note warn"},[
-      el("span",{class:"nh",text:"Dead weight"}),
-      wm.emoji+" "+wm.name+" bled "+fmtMoney(wp.profit)+" — too much steel chasing too little demand.",
+      el("span",{class:"nh",text:"Dead steel"}),
+      wm.emoji+" "+wm.name+" is dead steel on the balance sheet — it bled "+fmtMoney(wp.profit)+" against running costs.",
     ]));
   }
 
@@ -1257,6 +1490,21 @@ function endView(){
             : ("So close — "+nem.name+" edged you by "+fmtMoney(nv-bd.total)+".");
   var story=storyBeat(s);
 
+  // the rivals directly above and below the player in the final order (for the share line + photo finish)
+  var pIdx=0; for(var ii=0;ii<ranked.length;ii++){ if(ranked[ii].e.isPlayer){ pIdx=ii; break; } }
+  var above = pIdx>0 ? ranked[pIdx-1].e : null;
+  var below = pIdx<ranked.length-1 ? ranked[pIdx+1].e : null;
+  var photoRival = above || (ranked[1] ? ranked[1].e : null);   // who edged you — or the runner-up if you won
+
+  // daily lock + streak (official daily only, once per game; never hard-blocks replay)
+  var squares = segPath(s);
+  if(!s.isPractice && !App.savedThisGame){
+    App.savedThisGame=true;
+    saveDaily(s.dailyNumber, { value:bd.total, rank:rank, grade:grade.g, path:squares, n:s.entities.length });
+    bumpStreak(s.dailyNumber);
+  }
+  var streak=loadStreak();
+
   var wrap=el("div",{class:"end"},[]);
   wrap.appendChild(el("div",{class:"endhead"},[
     el("div",{class:"k",text:"🏁 Final standings · Daily #"+s.dailyNumber}),
@@ -1285,7 +1533,8 @@ function endView(){
   // verdict — grade + nemesis headline + final valuation
   var finalvalNode=el("div",{class:"finalval num",text:"$0"});
   var verdict=el("div",{class:"verdict"},[
-    el("div",{class:"gbadge2 "+grade.cls,text:grade.g}),
+    el("div",{class:"gbadge2 "+gradeColorClass(grade.g),text:grade.g}),
+    el("div",{class:"vco",text:playerLabel(s)}),
     el("div",{class:"headline",text:headline}),
     el("div",{class:"vsub",text:"Ranked #"+rank+" of "+s.entities.length+" · "+gradeBlurb(grade.g)}),
     finalvalNode,
@@ -1294,7 +1543,9 @@ function endView(){
 
   // everything else fades in after the reveal
   var rest=el("div",{class:"endrest"});
-  var par=computePar(s.seed);
+  // photo finish — you vs the rival who edged you (or the runner-up if you won)
+  if(photoRival) rest.appendChild(photoFinish(playerLabel(s), bd.total, photoRival));
+  var par=s._par || computePar(s.seed);
   var botsBeaten=par.vals.filter(function(v){return v<bd.total;}).length;
   var vsPar=Math.round((bd.total-par.par)/Math.max(1,Math.abs(par.par))*100);
   rest.appendChild(el("div",{class:"parbox"},[
@@ -1315,10 +1566,17 @@ function endView(){
   ]));
   rest.appendChild(el("div",{class:"story",text:story}));
 
-  var strip=s.scenario.events.map(function(e){ return CONFIG.emoji[e]; }).join("");
-  var medalTop = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
-  var nemLine = rank===1 ? "won the decade outright" : ahead ? ("ran down "+nem.name+" "+nem.flag) : ("lost to "+nem.name+" "+nem.flag+" at the line");
-  var shareText = "🏭 Model Year #"+s.dailyNumber+" · "+fmtMoney(bd.total)+" · "+medalTop+" of "+s.entities.length+"\n"+strip+"  "+nemLine;
+  if(streak.count>0 && !s.isPractice) rest.appendChild(el("div",{style:"text-align:center;margin-top:14px"},[
+    el("span",{class:"streak",text:"🔥 "+streak.count+"-day streak"}) ]));
+
+  // Share card: encodes the PLAYER'S decade of bets (Wordle-style), so two cards differ run to run.
+  var line1 = "🏭 MODEL YEAR #"+s.dailyNumber+"  ·  "+fmtMoney(bd.total)+"  ·  P"+rank+" of "+s.entities.length;
+  var parts=[];
+  if(rank===1){ parts.push("Won the decade outright"); if(below) parts.push(fmtMoney(bd.total-valuation(below))+" clear of "+below.name); }
+  else { if(below) parts.push("ran down "+below.name); if(above) parts.push("lost to "+above.name+" by "+fmtMoney(valuation(above)-bd.total)); }
+  var sentence = parts.join(", "); sentence = sentence.charAt(0).toUpperCase()+sentence.slice(1);
+  var line3 = playerLabel(s)+". "+sentence+".";
+  var shareText = line1+"\n"+squares+"\n"+line3+"\n"+CONFIG.shareUrl;
   rest.appendChild(el("div",{class:"share",text:shareText}));
   rest.appendChild(el("div",{class:"actions"},[
     el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
@@ -1377,7 +1635,8 @@ function gradeBlurb(g){
 }
 function copyShare(text,btn){
   var done=function(){ var t=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=t;},1400); };
-  var full=text+"\n"+location.href;
+  // swap the display URL for the live one; fall back to appending it if the placeholder isn't present
+  var full = text.indexOf(CONFIG.shareUrl)>=0 ? text.replace(CONFIG.shareUrl, location.href) : (text+"\n"+location.href);
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(done,done);
   else done();
 }
