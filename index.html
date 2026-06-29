@@ -3,17 +3,18 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Model Year — a daily car-industry game</title>
+<title>Higher — a daily car-value game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root{
-    /* Motor1.com light theme */
+    /* Motor1.com light theme (matches the other Motor1 dailies) */
     --bg:#e9edf2; --panel:#ffffff; --panel2:#f1f5f9; --line:#dde4ec;
     --text:#13181e; --muted:#5b6672; --faint:#909aa6;
     --blue:#1f6dff; --blue-deep:#0a4fc4; --blue-tint:#eaf1ff;
-    --green:#12a14b; --red:#df3a30; --ink:#ffffff;
+    --amber:#e07b27; --amber-tint:#fbe9d8;
+    --green:#12a14b; --green-tint:#e7f6ee; --red:#df3a30; --ink:#ffffff;
     --display:"Oswald",system-ui,sans-serif;
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -23,389 +24,146 @@
   html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-  #app{max-width:460px;margin:0 auto;padding:12px 12px 40px;min-height:100vh}
+  #app{max-width:460px;margin:0 auto;padding:12px 12px 32px;min-height:100vh}
   .display{font-family:var(--display);text-transform:uppercase;letter-spacing:.02em}
   .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
-  .muted{color:var(--muted)} .faint{color:var(--faint)}
-  .green{color:var(--green)} .red{color:var(--red)} .accent{color:var(--blue)} .blue{color:var(--blue)}
+  .muted{color:var(--muted)} .faint{color:var(--faint)} .green{color:var(--green)} .red{color:var(--red)} .blue{color:var(--blue)}
   button{font-family:var(--sans);cursor:pointer;border:0;color:inherit;background:none}
   button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  .row{display:flex;align-items:center;gap:8px}
-  .spread{justify-content:space-between}
-  .stack{display:flex;flex-direction:column}
-  .grow{flex:1}
 
-  /* topbar + motor1 logo */
+  /* topbar */
   .topbar{display:flex;align-items:center;justify-content:space-between;
     padding:4px 2px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
   .m1{display:inline-flex;align-items:center;gap:1px;text-decoration:none;color:var(--text);
     font-family:var(--sans);font-weight:800;font-size:23px;letter-spacing:-.02em;line-height:1}
   .m1 svg{width:25px;height:25px;display:block;margin:0 0 1px 0}
   .m1 .com{font-size:13px;font-weight:700;align-self:flex-end;margin-bottom:3px;letter-spacing:0}
-  .topright{display:flex;align-items:center;gap:10px}
-  .helpbtn{flex:none;width:25px;height:25px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);
-    color:var(--muted);font-weight:700;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
-  .helpbtn:hover{border-color:var(--blue);color:var(--blue)}
   .gamechip{text-align:right;line-height:1}
-  .gamechip .gn{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.04em;color:var(--text)}
+  .gamechip .gn{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--text)}
   .gamechip .gd{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);margin-top:2px}
 
-  /* status cluster */
-  .cluster{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-  .gauge{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;text-align:center;box-shadow:var(--shadow)}
-  .gauge .k{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
-  .gauge .v{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:2px;line-height:1}
-  .gauge.year .v{color:var(--blue)}
+  /* progress + streak bar */
+  .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .pips{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+  .pip{width:14px;height:6px;border-radius:3px;background:var(--line)}
+  .pip.win{background:var(--green)} .pip.miss{background:var(--red)} .pip.now{background:var(--blue)}
+  .streakchip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;font-weight:600;
+    color:var(--blue-deep);background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:20px;padding:4px 11px;flex:none}
+  .streakchip.hot{color:#b3460a;background:#fdeede;border-color:#f3cda3}
 
-  /* standings ticker + nemesis head-to-head */
-  .statusbar{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
-  .tick{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em}
-  .tick.up{color:var(--green)} .tick.down{color:var(--red)} .tick.flat{color:var(--muted)}
-  .nemesis{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
-    border-left:3px solid var(--red);border-radius:8px;padding:8px 11px;box-shadow:var(--shadow)}
-  .ne-callout{flex-basis:100%;margin-top:5px;padding-top:5px;border-top:1px solid var(--line);font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.02em}
-  .ne-callout.good{color:var(--green)} .ne-callout.bad{color:var(--red)}
-  .nemesis.ahead{border-left-color:var(--green)}
-  .nemesis .ne-ic{font-family:var(--mono);font-weight:700}
-  .nemesis.behind .ne-ic{color:var(--red)} .nemesis.ahead .ne-ic{color:var(--green)}
-  .nemesis .ne-txt{font-size:12.5px;flex:1;line-height:1.3} .nemesis .ne-txt b{font-weight:700}
-  .nemesis .ne-left{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;text-align:right;flex:none}
-  /* forecast-resolution beat */
-  .beat{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;border-radius:8px;padding:9px 11px;margin-bottom:10px}
-  .beat .beat-ic{flex:none}
-  .beat.good{background:#e7f6ee;color:#0c6b34;border:1px solid #b6e2c8}
-  .beat.bad{background:#fdecea;color:#a52218;border:1px solid #f3c3bd}
-  .beat.flat{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+  /* prompt */
+  .prompt{text-align:center;margin:2px 0 12px}
+  .prompt .q{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.01em}
+  .prompt .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
 
-  /* event banner */
-  .event{background:var(--panel);border:1px solid var(--line);
-    border-left:4px solid var(--blue);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:var(--shadow)}
-  .event .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-family:var(--mono)}
-  .event .ttl{font-family:var(--display);font-weight:600;font-size:17px;margin:2px 0 3px}
-  .event .body{font-size:13px;color:var(--muted);line-height:1.35}
+  /* the two cars */
+  .ring{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;position:relative}
+  .vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+    width:34px;height:34px;border-radius:50%;background:var(--text);color:#fff;font-family:var(--display);font-weight:700;
+    font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(20,33,61,.25)}
+  .car{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--side,var(--blue));border-radius:12px;
+    padding:13px 12px 14px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;min-height:150px;width:100%;
+    transition:transform .12s ease, box-shadow .12s ease}
+  .car.tap{cursor:pointer}
+  .car.tap:active{transform:scale(.98)}
+  .car .yr{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
+  .car .mk{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--side,var(--blue));text-transform:uppercase;letter-spacing:.08em;margin-top:5px}
+  .car .md{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.08;margin-top:3px;letter-spacing:.005em}
+  .car .badge{margin-top:auto;align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;
+    color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:3px 7px;margin-top:12px}
+  .car .taphint{margin-top:11px;font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--side,var(--blue));text-align:center;border-top:1px dashed var(--line);padding-top:9px}
+  .car.left{--side:var(--blue)} .car.right{--side:var(--amber)}
 
-  /* delayed-capacity hint */
-  .buildhint{background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:8px;padding:8px 11px;
-    font-size:12px;color:var(--blue-deep);line-height:1.35;margin-bottom:10px}
-  .buildhint b{color:var(--blue-deep)}
-  /* segment list */
-  .seglist{display:flex;flex-direction:column;gap:8px}
-  .opensnext{margin-top:7px;font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
-  .seg{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow)}
-  .seg .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .seg .name{font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px}
-  .seg .name .emoji{font-size:15px}
-  .seg .arrow{font-family:var(--mono);font-size:13px;font-weight:600}
-  .seg .mid{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
-  .pill{font-family:var(--mono);font-size:11px;color:var(--muted)}
-  .pill b{color:var(--text);font-weight:600}
-  .rivchips{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
-  .chip{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--blue-deep);
-    border:1px solid #cfe0ff;border-radius:4px;padding:1px 5px;background:var(--blue-tint)}
-  .chip.open{color:var(--faint);background:var(--panel2);border-color:var(--line)}
-  /* allocation stepper */
-  .alloc{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;
-    border-top:1px dashed var(--line);padding-top:8px}
-  .alloc .blurb{font-size:11px;color:var(--faint);line-height:1.3;flex:1}
-  .stepper{display:flex;align-items:center;gap:0;flex:none}
-  .stepper button{width:30px;height:30px;font-family:var(--mono);font-size:18px;font-weight:600;
-    background:var(--panel2);border:1px solid var(--line);color:var(--text);line-height:1}
-  .stepper button:first-child{border-radius:6px 0 0 6px}
-  .stepper button:last-child{border-radius:0 6px 6px 0}
-  .stepper button:not(:disabled):active{background:var(--blue-tint);color:var(--blue-deep)}
-  .stepper button:disabled{color:var(--faint);cursor:default}
-  .stepper .qty{min-width:52px;text-align:center;font-family:var(--mono);font-size:12px;
-    background:var(--panel2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-    height:30px;display:flex;flex-direction:column;justify-content:center;line-height:1.1}
-  .stepper .qty .u{font-size:12px;font-weight:600}
-  .stepper .qty .c{font-size:9px;color:var(--blue)}
+  /* reveal state */
+  .car .rating{font-family:var(--mono);font-weight:600;font-size:30px;line-height:1;margin-top:10px}
+  .car .rk{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:9px}
+  .car.win{border-color:var(--green);box-shadow:0 0 0 2px var(--green) inset, 0 6px 18px rgba(18,161,75,.18)}
+  .car.win .rating{color:var(--green)}
+  .car.lose{opacity:.55}
+  .car .crown{align-self:flex-start;font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.08em;
+    color:#fff;background:var(--green);border-radius:5px;padding:2px 8px;margin-top:10px}
+  .car .est{font-family:var(--mono);font-size:9px;color:var(--faint);margin-left:5px}
 
-  /* posture */
-  .posture{margin-top:14px}
-  .seclbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
-    font-family:var(--mono);margin-bottom:6px}
-  .seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .pbtn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;box-shadow:var(--shadow)}
-  .pbtn .pl{font-family:var(--display);font-weight:600;font-size:14px}
-  .pbtn .pd{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.25}
-  .pbtn.on{border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue)}
-  .pbtn.on .pl{color:var(--blue-deep)}
+  /* breakdown bars */
+  .breakdown{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px 13px;box-shadow:var(--shadow)}
+  .breakdown .bh{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .leg{display:inline-flex;gap:10px}
+  .leg span{display:inline-flex;align-items:center;gap:4px;font-size:9.5px}
+  .leg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .leg .la{background:var(--blue)} .leg .lb{background:var(--amber)}
+  .drow{margin-bottom:9px}
+  .drow:last-child{margin-bottom:0}
+  .drow .dl{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .bar{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+  .bar .track{flex:1;height:8px;background:var(--panel2);border-radius:5px;overflow:hidden}
+  .bar .fill{height:100%;width:0;border-radius:5px;transition:width .6s cubic-bezier(.2,.7,.2,1)}
+  .bar.a .fill{background:var(--blue)} .bar.b .fill{background:var(--amber)}
+  .bar .bv{font-family:var(--mono);font-size:10.5px;font-weight:600;width:24px;text-align:right;color:var(--muted)}
+  .bar.hi .bv{color:var(--text)} .bar.hi .fill{filter:saturate(1.15)}
 
-  /* forecast */
-  .forecast{margin-top:14px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:8px;padding:10px 12px}
-  .forecast .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-deep);font-family:var(--mono)}
-  .forecast .txt{font-size:13px;color:var(--text);margin-top:3px;font-style:italic}
-  .forecast .warn{font-size:12px;color:var(--red);margin-top:6px}
+  /* verdict */
+  .verdict{margin-top:13px;text-align:center;border-radius:12px;padding:13px 12px;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .verdict.right{background:var(--green-tint);border-color:#b6e2c8}
+  .verdict.wrong{background:#fdecea;border-color:#f3c3bd}
+  .verdict .vt{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.02em}
+  .verdict.right .vt{color:#0c6b34} .verdict.wrong .vt{color:#a52218}
+  .verdict .note{font-size:13px;color:var(--text);line-height:1.4;margin-top:4px}
+  .verdict .note b{font-weight:700}
 
-  /* run bar */
-  .runbar{position:sticky;bottom:0;margin:16px -12px -40px;padding:14px 12px 12px;
-    background:linear-gradient(180deg,rgba(233,237,242,0) 0,var(--bg) 18px);}
-  .capreadout{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;
-    font-family:var(--mono);font-size:12px}
-  .capreadout .big{font-size:17px;font-weight:600}
-  .btn{display:block;width:100%;text-align:center;border-radius:9px;padding:13px;
+  /* buttons */
+  .btn{display:block;width:100%;text-align:center;border-radius:10px;padding:14px;margin-top:12px;
     font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.03em;text-transform:uppercase}
   .btn.primary{background:var(--blue);color:var(--ink);box-shadow:0 2px 8px rgba(31,109,255,.32)}
   .btn.primary:active{filter:brightness(.94)}
-  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:13px;padding:11px;box-shadow:var(--shadow)}
-  .btn[disabled]{opacity:.45;cursor:default;box-shadow:none}
-  .actions{display:flex;gap:8px;margin-top:8px}
-  .actions .btn{margin:0}
+  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:13px;padding:12px;box-shadow:var(--shadow)}
 
-  /* result */
-  .result .hero{text-align:center;padding:18px 0 10px}
-  .result .heroK{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
-  .result .heroV{font-family:var(--mono);font-weight:600;font-size:46px;line-height:1;margin-top:4px}
-  .result .heroSub{font-size:13px;color:var(--muted);margin-top:6px}
-  .notes{margin-top:10px;display:flex;flex-direction:column;gap:7px}
-  .note{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;line-height:1.35;box-shadow:var(--shadow)}
-  .note.warn{border-left:3px solid var(--red)}
-  .note.good{border-left:3px solid var(--green)}
-  .note.rival{border-left:3px solid var(--blue)}
-  .note .nh{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
+  /* intro */
+  .intro{padding:14px 4px 4px}
+  .intro .big{font-family:var(--display);font-weight:700;font-size:38px;line-height:1.02;letter-spacing:.005em;text-wrap:balance}
+  .intro .big .hl{color:var(--blue)}
+  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:13px 0 4px;max-width:42ch}
+  .how{display:flex;flex-direction:column;gap:9px;margin:18px 0 6px;border-top:1px solid var(--line);padding-top:16px}
+  .how .h{display:flex;gap:11px;align-items:flex-start}
+  .how .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--mono);font-weight:600;
+    font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .how .t{font-size:13px;color:var(--text);line-height:1.42}
+  .how .t b{font-weight:700;color:var(--text)}
+  .statline{display:flex;gap:8px;margin:14px 0 2px}
+  .statbox{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 8px;text-align:center;box-shadow:var(--shadow)}
+  .statbox .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .statbox .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:3px;color:var(--blue-deep)}
+  .donebanner{display:flex;align-items:center;gap:10px;background:var(--green-tint);border:1px solid #b6e2c8;border-radius:9px;
+    padding:10px 12px;margin:0 0 12px;font-size:12.5px;color:#0c6b34;line-height:1.35}
+  .donebanner b{font-weight:700}
+  .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--faint);line-height:1.5}
 
-  /* intro / end */
-  .intro{padding:18px 4px 4px}
-  .intro .big{font-family:var(--display);font-weight:700;font-size:37px;line-height:1.04;letter-spacing:.005em;text-wrap:balance}
-  .intro .big .yr{color:var(--blue);white-space:nowrap}
-  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:14px 0 18px;max-width:42ch}
-  .sacred{display:flex;flex-direction:column;gap:11px;margin:0 0 4px;border-top:1px solid var(--line);padding-top:16px}
-  .sacred .s{font-size:13px;color:var(--text);line-height:1.45}
-  .sacred .s b{color:var(--blue);font-weight:700;letter-spacing:.01em}
-  .helplink{display:block;width:100%;text-align:center;margin-top:14px;font-size:13px;font-weight:600;color:var(--blue);background:none}
-  .helplink:hover{text-decoration:underline}
-
-  /* how to play */
-  .help{padding:6px 2px 4px}
-  .help-h h2{font-family:var(--display);font-weight:700;font-size:28px;margin:0 0 5px;letter-spacing:.01em}
-  .help-h p{font-size:13.5px;color:var(--muted);margin:0 0 6px;line-height:1.5}
-  .help .seclbl{margin-top:18px}
-  .help-step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
-  .help-step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;
-    font-family:var(--mono);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
-  .help-step .c .t{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.01em}
-  .help-step .c .b{font-size:13px;color:var(--muted);line-height:1.45;margin-top:2px}
-  .help-rule{display:flex;gap:11px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
-    border-radius:8px;padding:10px 12px;margin-bottom:7px;box-shadow:var(--shadow)}
-  .help-rule .ic{font-size:18px;flex:none;line-height:1.25}
-  .help-rule .t{font-family:var(--display);font-weight:600;font-size:14px}
-  .help-rule .b{font-size:12.5px;color:var(--muted);line-height:1.42;margin-top:1px}
-  .help-p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:5px 0 16px}
-  .help .btn.primary{margin-top:6px}
-
-  .end .grade{display:flex;align-items:center;gap:14px;justify-content:center;margin:6px 0 2px}
-  .end .gbadge{font-family:var(--display);font-weight:700;font-size:54px;width:84px;height:84px;
-    display:flex;align-items:center;justify-content:center;border-radius:14px;border:2px solid var(--blue);color:var(--blue);background:var(--blue-tint)}
-  .end .gbadge.s{border-color:var(--blue);color:var(--ink);background:var(--blue)}
-  .end .gbadge.f{border-color:var(--red);color:var(--red);background:#fdecea}
-  .end .rankline{font-family:var(--display);font-size:18px;font-weight:600}
-  /* par panel */
-  .parbox{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
-  .parhead{display:flex;align-items:baseline;justify-content:space-between;padding:10px 12px;background:var(--blue-tint);border-bottom:1px solid var(--line)}
-  .parhead .parbig{font-family:var(--mono);font-size:19px;font-weight:600}
-  .parhead .parsub{font-size:11px;color:var(--muted);font-family:var(--mono)}
-  .parrow{display:flex;justify-content:space-between;padding:7px 12px;font-family:var(--mono);font-size:12.5px;border-bottom:1px solid var(--line);color:var(--muted)}
-  .parrow:last-child{border-bottom:0}
-  .parrow.cleared{color:var(--text)} .parrow.cleared .num{color:var(--green);font-weight:600}
-  /* end-screen staged reveal */
-  .endhead{text-align:center;padding:6px 0 2px}
+  /* end / share */
+  .endhead{text-align:center;padding:8px 0 2px}
   .endhead .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-  .endhead .ttl{font-family:var(--display);font-weight:700;font-size:25px;letter-spacing:.02em;margin-top:2px}
-  .standings{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
-  .srow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--line);
-    opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .3s ease}
-  .srow:last-child{border-bottom:0}
-  .srow.in{opacity:1;transform:none}
-  .srow.you{background:var(--blue-tint)}
-  .srow .pos{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--faint);width:32px;flex:none;text-align:center}
-  .srow.you .pos{color:var(--blue-deep)}
-  .srow .who{flex:1;font-size:14px}
-  .srow.you .who{font-weight:700;color:var(--blue-deep)}
-  .srow .v{font-family:var(--mono);font-size:14px;font-weight:600}
-  .verdict{text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity .4s ease,transform .4s ease}
-  .verdict.in{opacity:1;transform:none}
-  .verdict .gbadge2{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:14px;
-    border:2px solid var(--blue);background:var(--blue-tint);color:var(--blue);font-family:var(--display);font-weight:700;font-size:38px;margin-bottom:8px}
-  .verdict .gbadge2.s{background:var(--blue);color:#fff}
-  .verdict .gbadge2.f{border-color:var(--red);color:var(--red);background:#fdecea}
-  .verdict .headline{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.22;margin:2px auto;max-width:30ch}
-  .verdict .vsub{font-size:12.5px;color:var(--muted);margin-top:2px}
-  .verdict .finalval{font-size:30px;font-weight:600;color:var(--blue);margin-top:8px}
-  .endrest{opacity:0;transition:opacity .5s ease;margin-top:16px}
-  .endrest.in{opacity:1}
-  .breakdown{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
-  .brow{display:flex;justify-content:space-between;padding:8px 12px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--line)}
-  .brow:last-child{border-bottom:0}
-  .brow.total{background:var(--panel2);font-weight:600}
-  .brow .neg{color:var(--red)}
-  .vs{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .vsbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow)}
-  .vsbox .h{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px}
-  .vsbox.beat .h{color:var(--green)} .vsbox.lost .h{color:var(--red)}
-  .vsbox .nm{font-size:12.5px;line-height:1.5}
-  .story{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:13px;line-height:1.4;box-shadow:var(--shadow)}
-  .share{margin-top:12px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:8px;padding:11px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;line-height:1.5}
+  .endhead .score{font-family:var(--mono);font-weight:600;font-size:52px;line-height:1;margin-top:4px;color:var(--blue)}
+  .endhead .ssub{font-size:13px;color:var(--muted);margin-top:4px}
+  .endhead .verdictline{font-family:var(--display);font-weight:600;font-size:18px;margin-top:8px;letter-spacing:.01em}
+  .endstats{display:flex;gap:8px;margin-top:14px}
+  .reviewlist{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+  .rev{display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--line);font-size:12.5px}
+  .rev:last-child{border-bottom:0}
+  .rev .ri{flex:none;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .rev .ri.w{background:var(--green)} .rev .ri.m{background:var(--red)}
+  .rev .rc{flex:1;line-height:1.3}
+  .rev .rc b{font-weight:600}
+  .rev .rg{font-family:var(--mono);font-size:11px;color:var(--faint);flex:none}
+  .share{margin-top:14px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:10px;padding:12px 13px;
+    font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.55;color:var(--text)}
 
-  /* debug */
-  .debug{margin-top:20px;border:1px solid #cfe0ff;border-radius:8px;padding:10px;background:var(--blue-tint);font-family:var(--mono);font-size:11px;line-height:1.5}
-  .debug h4{margin:0 0 6px;font-family:var(--display);color:var(--blue-deep);font-size:13px}
-  .debug table{width:100%;border-collapse:collapse}
-  .debug td{padding:1px 4px;border-bottom:1px solid #d4e2fb}
-  .debug .num{text-align:right}
-  .dbtn{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text)}
-
-  .foot{margin-top:20px;text-align:center;font-size:11px;color:var(--faint);line-height:1.4}
-  /* ============ Pass 5: motion & ceremony (transform/opacity only) ============ */
-  @keyframes my-up{ from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
-  @keyframes my-stamp{ 0%{opacity:0;transform:scale(.96)} 60%{opacity:1;transform:scale(1.04)} 100%{transform:scale(1)} }
-  @keyframes my-pulse{ 0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)} }
-  @keyframes my-flash-blue{ 0%{background:#dbe8ff} 100%{background:var(--panel)} }
-  @keyframes my-flash-red{ 0%{background:#fdded9} 100%{background:var(--panel)} }
-  @keyframes my-glow{ 0%,100%{box-shadow:0 2px 8px rgba(31,109,255,.3)} 50%{box-shadow:0 5px 20px rgba(31,109,255,.55)} }
-  @keyframes my-grade{ 0%{opacity:0;transform:scale(1.45)} 70%{opacity:1;transform:scale(.9)} 100%{transform:scale(1)} }
-  @keyframes my-slam{ 0%{opacity:0;transform:translateY(14px) scale(.98)} 100%{opacity:1;transform:none} }
-  @keyframes my-wipe{ from{transform:translateX(-110%)} to{transform:translateX(110%)} }
-  @keyframes my-nudge-up{ 0%{transform:translateY(0)} 35%{transform:translateY(-5px)} 100%{transform:translateY(0)} }
-  @keyframes my-shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
-  @keyframes my-floatchip{ 0%{opacity:0;transform:translateY(2px)} 25%{opacity:1} 100%{opacity:0;transform:translateY(-24px)} }
-
-  .anim-up{ animation:my-up .26s cubic-bezier(.2,.7,.2,1) both; }
-  .anim-stamp{ animation:my-stamp .3s ease-out both; }
-  .pulse-once{ animation:my-pulse .5s ease-out; }
-  .flash-blue{ animation:my-flash-blue .9s ease-out; }
-  .flash-red{ animation:my-flash-red .9s ease-out; }
-  .cta-glow{ animation:my-glow 1.9s ease-in-out infinite; }
-  .grade-stamp{ animation:my-grade .5s cubic-bezier(.2,.7,.2,1) both; }
-  .slam-in{ animation:my-slam .34s cubic-bezier(.2,.7,.2,1) both; }
-  .nudge-up{ animation:my-nudge-up .55s ease-out; }
-  .shake{ animation:my-shake .42s ease-out; }
-
-  .launch-wipe{ position:absolute; inset:0; overflow:hidden; border-radius:9px; pointer-events:none; z-index:2 }
-  .launch-wipe::after{ content:""; position:absolute; top:0; bottom:0; left:0; width:55%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent); animation:my-wipe .6s ease-in-out forwards }
-  .btn.depress{ transform:scale(.97) }
-
-  .checker-wipe{ position:relative; overflow:hidden }
-  .checker-wipe::after{ content:""; position:absolute; inset:0; pointer-events:none;
-    background-image:linear-gradient(45deg,rgba(0,0,0,.07) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.07) 75%),linear-gradient(45deg,rgba(0,0,0,.07) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.07) 75%);
-    background-size:16px 16px; background-position:0 0,8px 8px; transform:translateX(-110%); animation:my-wipe .75s ease-out .05s forwards }
-
-  .floatchip{ position:absolute; font-family:var(--mono); font-weight:700; font-size:13px; color:var(--blue-deep);
-    pointer-events:none; z-index:5; animation:my-floatchip .75s ease-out forwards }
-  .countflash-up{ color:var(--green)!important } .countflash-down{ color:var(--red)!important }
-  .cta-glow-fast{ animation:my-glow 1.15s ease-in-out infinite }
-  .cta-glow-faster{ animation:my-glow .7s ease-in-out infinite }
-  .warhit{ animation:my-flash-red .9s ease-out, my-shake .42s ease-out }
-
-  /* ============ Pass 6: identity, color, distribution (presentation only) ============ */
-  /* segment colour identity — left border, icon badge and your-share pill all carry the hue */
-  .seg{ border-left:4px solid var(--seg,var(--line)); }
-  .seg .name .emoji{ display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
-    border-radius:6px;background:var(--seg-tint,var(--panel2));font-size:14px;line-height:1 }
-  .seg .pill.you b{ color:var(--seg,var(--text)) }
-  .seg .battle{ display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap }
-  .seg .owner{ font-family:var(--mono);font-size:10.5px;color:var(--muted);display:inline-flex;align-items:center;gap:3px }
-  .seg .owner b{ color:var(--text);font-weight:600 }
-  .seg .threat{ font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
-    border-radius:4px;padding:2px 6px;border:1px solid var(--line);margin-left:auto }
-  .threat.low{ color:var(--faint);background:var(--panel2) }
-  .threat.watch{ color:#9a6a00;background:#fbf0d6;border-color:#f0d99a }
-  .threat.war{ color:var(--red);background:#fde6e3;border-color:#f3c3bd }
-  /* louder demand read — the arrow is now the loudest element on the row */
-  .seg .arrow{ font-size:16px;font-weight:700;letter-spacing:-1px;display:inline-flex;align-items:baseline;gap:2px }
-  .seg .arrow .dl{ font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.85;margin-left:3px }
-  /* value-dominant status cluster */
-  .valgauge{ background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:9px;
-    padding:9px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;box-shadow:var(--shadow);margin-bottom:6px }
-  .valgauge .k{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint) }
-  .valgauge .v{ font-family:var(--mono);font-size:27px;font-weight:600;color:var(--blue);line-height:1 }
-  .cluster3{ display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px }
-  /* value sparkline */
-  .sparkwrap{ position:relative;margin-bottom:10px }
-  .spark{ display:flex;align-items:flex-end;gap:3px;height:40px;padding:18px 10px 8px;
-    background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow) }
-  .spark .sb{ flex:1;background:var(--panel2);border-radius:2px 2px 0 0;min-height:3px }
-  .spark .sb.on{ background:#bcd3ff }
-  .spark .sb.cur{ background:var(--blue) }
-  .sparklab{ position:absolute;top:6px;left:12px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint) }
-  /* today's briefing */
-  .brief{ background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin:16px 0 4px;box-shadow:var(--shadow) }
-  .brief .bk{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:7px }
-  .brief .bmood{ font-size:14px;line-height:1.46;color:var(--text) }
-  .brief .brow{ display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line) }
-  .brief .blab{ color:var(--faint);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase }
-  .brief .bval{ font-size:13px;font-weight:600;text-align:right }
-  .brief .bval .num{ color:var(--blue-deep) }
-  /* identity picker */
-  .idpick{ margin:16px 0 2px }
-  .idgrid{ display:flex;flex-wrap:wrap;gap:6px }
-  .idbtn{ flex:1 1 30%;min-width:104px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px;text-align:left;box-shadow:var(--shadow) }
-  .idbtn .il{ font-family:var(--display);font-weight:600;font-size:13px;line-height:1.1 }
-  .idbtn .ib{ font-size:10px;color:var(--muted);line-height:1.25;margin-top:2px }
-  .idbtn.on{ border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue) }
-  .idbtn.on .il{ color:var(--blue-deep) }
-  /* streak chip + completed banner */
-  .streak{ display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue-deep);
-    background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:20px;padding:3px 11px }
-  .donebanner{ display:flex;align-items:center;gap:10px;background:#e7f6ee;border:1px solid #b6e2c8;border-radius:9px;
-    padding:10px 12px;margin:0 0 4px;font-size:12.5px;color:#0c6b34;line-height:1.35 }
-  .donebanner b{ font-weight:700 }
-  /* pre-run warning */
-  .prewarn{ background:#fbf0d6;border:1px solid #f0d99a;border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:12px;color:#7a5500;line-height:1.42 }
-  .prewarn b{ color:#5e4200;font-weight:700 }
-  .prewarn .pwh{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#9a6a00;margin-bottom:3px }
-  /* finale: grade colours + photo finish */
-  .gbadge2.gold,.gbadge.gold{ border-color:#c79200;color:#7a5b00;background:#f7eccc }
-  .gbadge2.bluegrade,.gbadge.bluegrade{ border-color:var(--blue);color:var(--blue);background:var(--blue-tint) }
-  .gbadge2.redgrade,.gbadge.redgrade{ border-color:var(--red);color:var(--red);background:#fdecea }
-  .verdict .vco{ font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:3px }
-  .photo{ margin-top:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;box-shadow:var(--shadow) }
-  .photo .ph{ font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:8px }
-  .photo .pbar{ display:flex;align-items:center;gap:8px;margin-top:6px }
-  .photo .pname{ width:96px;flex:none;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
-  .photo .ptrack{ flex:1;height:14px;background:var(--panel2);border-radius:7px;overflow:hidden }
-  .photo .pfill{ height:100%;border-radius:7px }
-  .photo .pfill.you{ background:var(--blue) } .photo .pfill.them{ background:var(--muted) }
-  .photo .pval{ font-family:var(--mono);font-size:11px;font-weight:600;width:56px;text-align:right;flex:none }
-
-  /* ============ Pass 7: car art (cars on screen; one livery palette across board/cards/garage/share) ============ */
-  @keyframes my-carrise{ 0%{opacity:0;transform:translateY(22px) scale(.96)} 100%{opacity:1;transform:none} }
-  .caro{ display:block;width:100%;height:auto }
-  /* louder livery board: thicker accent + livery-tinted header band carrying the inline car */
-  .seg{ border-left-width:6px;overflow:hidden }
-  .seghead{ display:flex;align-items:center;gap:10px;background:var(--seg-tint);margin:-9px -10px 8px;padding:7px 10px 6px;border-bottom:1px solid var(--line) }
-  .segcar{ width:90px;flex:none;border-radius:6px;overflow:hidden;background:linear-gradient(180deg,#1a1c20,#0d0e11);padding:2px 0 0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05) }
-  .seghead .name{ flex:1;min-width:0 }
-  .seghead .arrow{ flex:none }
-  /* launch reveal card (the "card beat") */
-  .launchcard{ background:linear-gradient(180deg,#15171c,#0c0d10);border:1px solid var(--line);border-top:3px solid var(--seg,var(--blue));
-    border-radius:12px;padding:12px 12px 14px;margin:0 0 14px;box-shadow:0 6px 20px rgba(13,14,16,.22);text-align:center }
-  .car-rise{ animation:my-carrise .5s cubic-bezier(.2,.7,.2,1) both }
-  .launchcard .lc-k{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#9aa3b0;margin-bottom:4px }
-  .launchcard .lc-stage{ border-radius:9px;overflow:hidden }
-  .launchcard .lc-name{ display:flex;align-items:baseline;justify-content:center;gap:9px;margin-top:9px;flex-wrap:wrap }
-  .launchcard .lc-model{ font-family:var(--display);font-weight:700;font-size:21px;color:#fff;letter-spacing:.02em }
-  .launchcard .lc-maker{ font-family:var(--mono);font-size:11px;color:#8b94a2;text-transform:uppercase;letter-spacing:.06em }
-  .launchcard .lc-specs{ display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:9px }
-  .launchcard .lc-spec{ font-family:var(--mono);font-size:11px;font-weight:600;color:#dfe4ea;background:rgba(255,255,255,.07);
-    border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:3px 8px }
-  /* finale garage + flagship */
-  .garage{ margin-bottom:14px }
-  .garage-k{ font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;text-align:center }
-  /* a swipeable garage: each car renders at a legible fixed height; >3 cars scroll horizontally instead of shrinking */
-  .garage-stage{ border-radius:12px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-    box-shadow:0 6px 20px rgba(13,14,16,.2);border:1px solid #0c0d10;background:#0c0d10 }
-  .garage-stage svg{ height:104px;width:auto;max-width:none;display:block }
-  .garage-hint{ font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:center;margin-top:5px }
-  .flagcard{ background:linear-gradient(180deg,#15171c,#0c0d10);border:1px solid var(--line);border-top:3px solid var(--seg,var(--blue));
-    border-radius:12px 12px 0 0;padding:11px 12px 12px;margin-top:12px;text-align:center }
-  .flagcard .fc-k{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9aa3b0;margin-bottom:4px }
-  .flagcard .fc-stage{ border-radius:9px;overflow:hidden }
-  .flagcard .fc-name{ display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap }
-  .flagcard .fc-model{ font-family:var(--display);font-weight:700;font-size:18px;color:#fff;letter-spacing:.02em }
-  .flagcard .fc-maker{ font-family:var(--mono);font-size:10.5px;color:#8b94a2;text-transform:uppercase;letter-spacing:.06em }
-  .flagcard + .share{ margin-top:0;border-top-left-radius:0;border-top-right-radius:0 }
-
+  /* motion */
+  @keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+  @keyframes flashwin{0%{box-shadow:0 0 0 2px var(--green) inset,0 0 0 6px rgba(18,161,75,.35)}100%{box-shadow:0 0 0 2px var(--green) inset,0 6px 18px rgba(18,161,75,.18)}}
+  @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .anim-up{animation:up .28s cubic-bezier(.2,.7,.2,1) both}
+  .anim-pop{animation:pop .34s cubic-bezier(.2,.7,.2,1) both}
+  .car.win.flash{animation:flashwin .6s ease-out}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -415,764 +173,218 @@
 (function(){
 "use strict";
 
-/* ===== Pass 7: CarArt module (embedded verbatim; parametric recolorable vehicle SVGs) ===== */
-/* ===========================================================================
-   MODEL YEAR :: CarArt  (parametric vehicle art, runtime-free)
-   Extracted from the Claude Design system, stripped of the Design runtime.
-   Pure vanilla JS, no dependencies. Generates premium recolorable car SVGs
-   from a single livery hex. Drop this whole block into the game's <script>.
-   =========================================================================== */
-class CarArt {
-  // ---------- color math ----------
-  clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-  hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
-  rgbToHex(r,g,b){ const f=x=>('0'+Math.round(this.clamp(x,0,255)).toString(16)).slice(-2); return '#'+f(r)+f(g)+f(b); }
-  hexToHsl(hex){ let [r,g,b]=this.hexToRgb(hex); r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b); let h=0,s=0,l=(mx+mn)/2; const d=mx-mn; if(d){ s=l>0.5?d/(2-mx-mn):d/(mx+mn); if(mx===r)h=((g-b)/d+(g<b?6:0)); else if(mx===g)h=(b-r)/d+2; else h=(r-g)/d+4; h*=60; } return [h,s*100,l*100]; }
-  hslToHex(h,s,l){ h=(h%360+360)%360; s=this.clamp(s,0,100)/100; l=this.clamp(l,0,100)/100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l); const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return this.rgbToHex(f(0)*255,f(8)*255,f(4)*255); }
-  mix(hex,hex2,t){ const a=this.hexToRgb(hex),b=this.hexToRgb(hex2); return this.rgbToHex(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t); }
-  hexA(hex,al){ const c=this.hexToRgb(hex); return 'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')'; }
-  lum(hex){ const c=this.hexToRgb(hex).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+/* =====================================================================
+   HIGHER — a daily Motor1 car-value game. Two cars; pick the one worth
+   more (higher composite rating); the reveal breaks it down into four
+   component bars. Single self-contained file, vanilla JS, no backend.
 
-  // THE RECIPE: one livery value -> everything
-  derive(hex){ const [h,s,l]=this.hexToHsl(hex); return {
-    top: this.hslToHex(h, s-8,  l+16),   // key-lit top stop
-    mid: hex,                            // true livery
-    bot: this.hslToHex(h, s+6,  l-22),   // shadowed lower body
-    rim: this.mix(hex,'#ffffff',0.78),   // near-white rim-light edge
-    cal: this.hslToHex(h, s+14, l+8),    // brake caliper accent
-  }; }
+   Data: every car name + sub-score lives in CARS (below). The composite
+   rating is value(sv)+performance(sp)+desirability(sd)+rarity(sr) read
+   through WEIGHTS so editorial can tune it — never hard-coded in logic.
+   Value (sv) is real (from price); sp/sd/sr are approximations (approx).
+   ===================================================================== */
 
-  // ---------- shared wheel (neutral alloy + livery caliper) ----------
-  wheel(cx,cy,r,cal,uid){
-    const ri=r*0.2, ro=r*0.66; let spk='';
-    for(let k=0;k<5;k++){ const a=(k*72-90)*Math.PI/180;
-      for(const dg of [-8,8]){ const aa=a+dg*Math.PI/180;
-        spk+=`<line x1="${(cx+Math.cos(aa)*ri).toFixed(1)}" y1="${(cy+Math.sin(aa)*ri).toFixed(1)}" x2="${(cx+Math.cos(aa)*ro).toFixed(1)}" y2="${(cy+Math.sin(aa)*ro).toFixed(1)}" stroke="url(#rm${uid})" stroke-width="${(r*0.085).toFixed(2)}" stroke-linecap="round"/>`; } }
-    const c0=32*Math.PI/180, c1=86*Math.PI/180, rc=r*0.5;
-    const cp=`M${(cx+Math.cos(c0)*rc).toFixed(1)},${(cy+Math.sin(c0)*rc).toFixed(1)} A${rc.toFixed(1)},${rc.toFixed(1)} 0 0 1 ${(cx+Math.cos(c1)*rc).toFixed(1)},${(cy+Math.sin(c1)*rc).toFixed(1)}`;
-    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#ti${uid})"/>`
-      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.8).toFixed(1)}" fill="#0d0e11"/>`
-      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.58).toFixed(1)}" fill="#2f3338"/>`
-      +`<path d="${cp}" stroke="${cal}" stroke-width="${(r*0.14).toFixed(2)}" fill="none" stroke-linecap="round"/>`
-      +spk
-      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.68).toFixed(1)}" fill="none" stroke="url(#rm${uid})" stroke-width="${(r*0.08).toFixed(2)}"/>`
-      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.21).toFixed(1)}" fill="url(#rm${uid})"/>`
-      +`<circle cx="${cx}" cy="${cy}" r="${(r*0.08).toFixed(1)}" fill="#1c1e22"/>`;
-  }
+var CARS=[
+  {yr:"1962",mk:"Ferrari",md:"250 GTO",cat:"Holy Grail",sv:91,sp:88,sd:100,sr:100,approx:true},
+  {yr:"1937",mk:"Bugatti",md:"Type 57SC Atlantic",cat:"Holy Grail",sv:85,sp:82,sd:100,sr:100,approx:true},
+  {yr:"1955",mk:"Mercedes-Benz",md:"300 SLR Uhlenhaut Coupe",cat:"Holy Grail",sv:100,sp:83,sd:100,sr:100,approx:true},
+  {yr:"1957",mk:"Ferrari",md:"335 S Scaglietti",cat:"Holy Grail",sv:84,sp:85,sd:100,sr:100,approx:true},
+  {yr:"1931",mk:"Bugatti",md:"Type 41 Royale",cat:"Holy Grail",sv:100,sp:83,sd:100,sr:100,approx:true},
+  {yr:"1932",mk:"Duesenberg",md:"Model J / SJ",cat:"Prewar / Classic",sv:53,sp:47,sd:74,sr:81,approx:true},
+  {yr:"1936",mk:"Mercedes-Benz",md:"540K Special Roadster",cat:"Prewar / Classic",sv:68,sp:47,sd:78,sr:86,approx:true},
+  {yr:"1930",mk:"Bentley",md:"8 Litre",cat:"Prewar / Classic",sv:52,sp:47,sd:76,sr:82,approx:true},
+  {yr:"1953",mk:"Jaguar",md:"C-Type / D-Type",cat:"Prewar / Classic",sv:72,sp:49,sd:80,sr:86,approx:true},
+  {yr:"1957",mk:"Mercedes-Benz",md:"300 SL Gullwing",cat:"1950s-60s Classic",sv:52,sp:62,sd:89,sr:73,approx:true},
+  {yr:"1955",mk:"Ford",md:"Thunderbird",cat:"1950s-60s Classic",sv:16,sp:59,sd:74,sr:61,approx:true},
+  {yr:"1957",mk:"Chevrolet",md:"Bel Air",cat:"1950s-60s Classic",sv:19,sp:59,sd:75,sr:62,approx:true},
+  {yr:"1959",mk:"Cadillac",md:"Eldorado Biarritz",cat:"1950s-60s Classic",sv:28,sp:59,sd:76,sr:63,approx:true},
+  {yr:"1961",mk:"Jaguar",md:"E-Type Series 1",cat:"1950s-60s Classic",sv:27,sp:59,sd:83,sr:64,approx:true},
+  {yr:"1957",mk:"BMW",md:"507",cat:"1950s-60s Classic",sv:56,sp:61,sd:83,sr:72,approx:true},
+  {yr:"1955",mk:"Porsche",md:"550 Spyder",cat:"1950s-60s Classic",sv:63,sp:60,sd:84,sr:73,approx:true},
+  {yr:"1963",mk:"Mercedes-Benz",md:"230 SL 'Pagoda'",cat:"1950s-60s Classic",sv:24,sp:60,sd:74,sr:62,approx:true},
+  {yr:"1967",mk:"Toyota",md:"2000GT",cat:"1950s-60s Classic",sv:46,sp:59,sd:82,sr:68,approx:true},
+  {yr:"1961",mk:"Aston Martin",md:"DB4 GT Zagato",cat:"1950s-60s Classic",sv:72,sp:63,sd:86,sr:76,approx:true},
+  {yr:"1964",mk:"Aston Martin",md:"DB5",cat:"1950s-60s Classic",sv:48,sp:59,sd:89,sr:72,approx:true},
+  {yr:"1964.5",mk:"Ford",md:"Mustang",cat:"American Muscle",sv:13,sp:78,sd:67,sr:42,approx:true},
+  {yr:"1965",mk:"Shelby",md:"GT350",cat:"American Muscle",sv:36,sp:78,sd:72,sr:48,approx:true},
+  {yr:"1967",mk:"Shelby",md:"GT500",cat:"American Muscle",sv:33,sp:77,sd:71,sr:47,approx:true},
+  {yr:"1968",mk:"Ford",md:"Mustang GT (390 Fastback)",cat:"American Muscle",sv:25,sp:76,sd:71,sr:46,approx:true},
+  {yr:"1969",mk:"Chevrolet",md:"Camaro ZL1",cat:"American Muscle",sv:42,sp:82,sd:73,sr:54,approx:true},
+  {yr:"1969",mk:"Chevrolet",md:"Camaro Z/28",cat:"American Muscle",sv:20,sp:77,sd:68,sr:44,approx:true},
+  {yr:"1970",mk:"Chevrolet",md:"Chevelle SS 454 LS6",cat:"American Muscle",sv:25,sp:77,sd:69,sr:47,approx:true},
+  {yr:"1970",mk:"Buick",md:"GSX Stage 1",cat:"American Muscle",sv:25,sp:78,sd:69,sr:46,approx:true},
+  {yr:"1970",mk:"Oldsmobile",md:"442 W-30",cat:"American Muscle",sv:22,sp:76,sd:68,sr:46,approx:true},
+  {yr:"1969",mk:"Pontiac",md:"GTO 'The Judge'",cat:"American Muscle",sv:23,sp:77,sd:69,sr:46,approx:true},
+  {yr:"1969",mk:"Dodge",md:"Charger R/T",cat:"American Muscle",sv:24,sp:77,sd:69,sr:46,approx:true},
+  {yr:"1969",mk:"Dodge",md:"Charger Daytona",cat:"American Muscle",sv:40,sp:79,sd:75,sr:53,approx:true},
+  {yr:"1970",mk:"Plymouth",md:"Superbird",cat:"American Muscle",sv:34,sp:81,sd:76,sr:52,approx:true},
+  {yr:"1971",mk:"Plymouth",md:"Hemi 'Cuda",cat:"American Muscle",sv:53,sp:83,sd:79,sr:59,approx:true},
+  {yr:"1970",mk:"Plymouth",md:"Road Runner",cat:"American Muscle",sv:19,sp:75,sd:69,sr:44,approx:true},
+  {yr:"1969",mk:"Plymouth",md:"GTX",cat:"American Muscle",sv:18,sp:76,sd:67,sr:45,approx:true},
+  {yr:"1987",mk:"Buick",md:"GNX",cat:"American Muscle",sv:28,sp:76,sd:72,sr:46,approx:true},
+  {yr:"1969",mk:"AMC",md:"AMX",cat:"American Muscle",sv:16,sp:78,sd:69,sr:42,approx:true},
+  {yr:"1970",mk:"Ford",md:"Torino Cobra",cat:"American Muscle",sv:18,sp:77,sd:68,sr:45,approx:true},
+  {yr:"1970",mk:"Chevrolet",md:"Nova SS 396",cat:"American Muscle",sv:17,sp:78,sd:68,sr:45,approx:true},
+  {yr:"1953",mk:"Chevrolet",md:"Corvette (C1)",cat:"Corvette",sv:31,sp:79,sd:75,sr:54,approx:true},
+  {yr:"1963",mk:"Chevrolet",md:"Corvette Sting Ray Split-Window",cat:"Corvette",sv:27,sp:78,sd:72,sr:51,approx:true},
+  {yr:"1967",mk:"Chevrolet",md:"Corvette L88 (C2)",cat:"Corvette",sv:53,sp:79,sd:79,sr:60,approx:true},
+  {yr:"1969",mk:"Chevrolet",md:"Corvette ZL1 (C3)",cat:"Corvette",sv:47,sp:81,sd:78,sr:61,approx:true},
+  {yr:"1990",mk:"Chevrolet",md:"Corvette ZR-1 (C4)",cat:"Corvette",sv:14,sp:75,sd:71,sr:47,approx:true},
+  {yr:"2019",mk:"Chevrolet",md:"Corvette ZR1 (C7)",cat:"Corvette",sv:26,sp:78,sd:73,sr:51,approx:true},
+  {yr:"1967",mk:"Ferrari",md:"275 GTB/4",cat:"Ferrari",sv:57,sp:91,sd:93,sr:82,approx:true},
+  {yr:"1969",mk:"Ferrari",md:"365 GTB/4 Daytona",cat:"Ferrari",sv:44,sp:92,sd:93,sr:82,approx:true},
+  {yr:"1985",mk:"Ferrari",md:"Testarossa",cat:"Ferrari",sv:26,sp:91,sd:87,sr:72,approx:true},
+  {yr:"1984",mk:"Ferrari",md:"288 GTO",cat:"Ferrari",sv:59,sp:91,sd:95,sr:83,approx:true},
+  {yr:"1987",mk:"Ferrari",md:"F40",cat:"Ferrari",sv:58,sp:93,sd:96,sr:84,approx:true},
+  {yr:"1995",mk:"Ferrari",md:"F50",cat:"Ferrari",sv:63,sp:93,sd:97,sr:87,approx:true},
+  {yr:"2002",mk:"Ferrari",md:"Enzo",cat:"Ferrari",sv:60,sp:94,sd:96,sr:88,approx:true},
+  {yr:"2013",mk:"Ferrari",md:"LaFerrari",cat:"Ferrari",sv:62,sp:95,sd:97,sr:87,approx:true},
+  {yr:"1971",mk:"Lamborghini",md:"Miura SV",cat:"Lamborghini",sv:57,sp:94,sd:96,sr:82,approx:true},
+  {yr:"1974",mk:"Lamborghini",md:"Countach",cat:"Lamborghini",sv:38,sp:90,sd:93,sr:76,approx:true},
+  {yr:"1990",mk:"Lamborghini",md:"Diablo",cat:"Lamborghini",sv:37,sp:89,sd:87,sr:75,approx:true},
+  {yr:"2011",mk:"Lamborghini",md:"Aventador",cat:"Lamborghini",sv:38,sp:93,sd:87,sr:71,approx:true},
+  {yr:"1973",mk:"Porsche",md:"911 Carrera RS 2.7",cat:"Porsche",sv:46,sp:89,sd:88,sr:72,approx:true},
+  {yr:"1987",mk:"Porsche",md:"959",cat:"Porsche",sv:52,sp:90,sd:92,sr:81,approx:true},
+  {yr:"1975",mk:"Porsche",md:"911 Turbo (930)",cat:"Porsche",sv:26,sp:88,sd:84,sr:69,approx:true},
+  {yr:"1996",mk:"Porsche",md:"911 Turbo (993)",cat:"Porsche",sv:33,sp:89,sd:84,sr:70,approx:true},
+  {yr:"2004",mk:"Porsche",md:"Carrera GT",cat:"Porsche",sv:53,sp:94,sd:92,sr:80,approx:true},
+  {yr:"2015",mk:"Porsche",md:"918 Spyder",cat:"Porsche",sv:53,sp:93,sd:92,sr:79,approx:true},
+  {yr:"1957",mk:"Porsche",md:"356 Speedster",cat:"Porsche",sv:37,sp:89,sd:87,sr:72,approx:true},
+  {yr:"2011",mk:"Porsche",md:"911 GT3 RS 4.0 (997)",cat:"Porsche",sv:40,sp:89,sd:87,sr:71,approx:true},
+  {yr:"1973",mk:"BMW",md:"3.0 CSL",cat:"European GT",sv:36,sp:82,sd:79,sr:70,approx:true},
+  {yr:"1980",mk:"BMW",md:"M1",cat:"European GT",sv:41,sp:81,sd:79,sr:73,approx:true},
+  {yr:"1988",mk:"BMW",md:"E30 M3",cat:"European GT",sv:22,sp:80,sd:75,sr:65,approx:true},
+  {yr:"2000",mk:"BMW",md:"Z8",cat:"European GT",sv:33,sp:83,sd:77,sr:71,approx:true},
+  {yr:"1972",mk:"De Tomaso",md:"Pantera",cat:"European GT",sv:22,sp:82,sd:77,sr:65,approx:true},
+  {yr:"1992",mk:"Bugatti",md:"EB110",cat:"European GT",sv:56,sp:85,sd:83,sr:77,approx:true},
+  {yr:"1994",mk:"McLaren",md:"F1",cat:"European GT",sv:79,sp:92,sd:96,sr:92,approx:true},
+  {yr:"1961",mk:"Maserati",md:"3500 GT",cat:"European GT",sv:29,sp:81,sd:77,sr:68,approx:true},
+  {yr:"1989",mk:"Nissan",md:"Skyline GT-R (R32)",cat:"JDM",sv:19,sp:86,sd:87,sr:50,approx:true},
+  {yr:"1999",mk:"Nissan",md:"Skyline GT-R (R34)",cat:"JDM",sv:36,sp:88,sd:90,sr:54,approx:true},
+  {yr:"1993",mk:"Toyota",md:"Supra Turbo (Mk IV / A80)",cat:"JDM",sv:24,sp:81,sd:84,sr:47,approx:true},
+  {yr:"1992",mk:"Mazda",md:"RX-7 (FD)",cat:"JDM",sv:16,sp:77,sd:78,sr:45,approx:true},
+  {yr:"1991",mk:"Acura/Honda",md:"NSX",cat:"JDM",sv:23,sp:81,sd:82,sr:48,approx:true},
+  {yr:"2000",mk:"Honda",md:"S2000",cat:"JDM",sv:13,sp:79,sd:76,sr:45,approx:true},
+  {yr:"1971",mk:"Datsun",md:"240Z",cat:"JDM",sv:16,sp:80,sd:79,sr:43,approx:true},
+  {yr:"1989",mk:"Mazda",md:"MX-5 Miata (NA)",cat:"JDM",sv:6,sp:78,sd:82,sr:34,approx:true},
+  {yr:"1992",mk:"Honda",md:"Civic / Integra Type R",cat:"JDM",sv:16,sp:77,sd:77,sr:43,approx:true},
+  {yr:"2002",mk:"Subaru",md:"Impreza WRX STI",cat:"JDM",sv:13,sp:80,sd:75,sr:42,approx:true},
+  {yr:"2009",mk:"Nissan",md:"GT-R (R35)",cat:"JDM",sv:22,sp:83,sd:84,sr:47,approx:true},
+  {yr:"1992",mk:"Mitsubishi",md:"3000GT VR-4 / GTO",cat:"JDM",sv:10,sp:79,sd:78,sr:42,approx:true},
+  {yr:"2005",mk:"Bugatti",md:"Veyron",cat:"Modern Hypercar",sv:53,sp:100,sd:92,sr:87,approx:true},
+  {yr:"2005",mk:"Ford",md:"GT",cat:"Modern Hypercar",sv:36,sp:95,sd:87,sr:79,approx:true},
+  {yr:"2017",mk:"Ford",md:"GT",cat:"Modern Hypercar",sv:49,sp:96,sd:90,sr:83,approx:true},
+  {yr:"1992",mk:"Dodge",md:"Viper RT/10",cat:"Modern Hypercar",sv:16,sp:94,sd:81,sr:71,approx:true},
+  {yr:"1996",mk:"Dodge",md:"Viper GTS",cat:"Modern Hypercar",sv:19,sp:93,sd:82,sr:73,approx:true},
+  {yr:"2003",mk:"Dodge",md:"Viper SRT-10",cat:"Modern Hypercar",sv:18,sp:92,sd:81,sr:73,approx:true},
+  {yr:"2017",mk:"Acura/Honda",md:"NSX (NC1)",cat:"Modern Hypercar",sv:26,sp:97,sd:90,sr:79,approx:true},
+  {yr:"2014",mk:"Porsche / Ferrari / McLaren",md:"918 / LaFerrari / P1",cat:"Modern Hypercar",sv:57,sp:100,sd:100,sr:98,approx:true},
+  {yr:"1991",mk:"GMC",md:"Syclone",cat:"Future Classic",sv:15,sp:69,sd:63,sr:50,approx:true},
+  {yr:"1987",mk:"Buick",md:"Regal Grand National",cat:"Future Classic",sv:15,sp:69,sd:63,sr:48,approx:true},
+  {yr:"1981",mk:"DeLorean",md:"DMC-12",cat:"Future Classic",sv:16,sp:64,sd:72,sr:49,approx:true},
+  {yr:"2006",mk:"Lexus",md:"LFA",cat:"Future Classic",sv:45,sp:77,sd:75,sr:60,approx:true},
+  {yr:"2020",mk:"Toyota",md:"GR Yaris / GR Corolla",cat:"Future Classic",sv:13,sp:68,sd:63,sr:50,approx:true},
+  {yr:"1963",mk:"Volkswagen",md:"21-Window Microbus",cat:"Future Classic",sv:26,sp:50,sd:73,sr:51,approx:true}
+];
 
-  bottom(b){ const a=b.archR, cy=100, dx=Math.sqrt(Math.max(1,a*a-(b.sill-cy)*(b.sill-cy)));
-    const fl=(b.fw+dx).toFixed(1), fr=(b.fw-dx).toFixed(1), rl=(b.rw+dx).toFixed(1), rr=(b.rw-dx).toFixed(1);
-    return `L${fl},${b.sill} A${a},${a} 0 0 0 ${fr},${b.sill} L${rl},${b.sill} A${a},${a} 0 0 0 ${rr},${b.sill} L${b.rearEnd},${b.sill} Z`; }
+// Editorial-tunable weights (sum ~1). Value-led because value is the real signal.
+var WEIGHTS = { value:0.40, performance:0.20, desirability:0.25, rarity:0.15 };
+var DIMS = [
+  { key:"sv", w:"value",        label:"Value" },
+  { key:"sp", w:"performance",  label:"Performance" },
+  { key:"sd", w:"desirability", label:"Desirability" },
+  { key:"sr", w:"rarity",       label:"Rarity" },
+];
+var N_MATCHUPS = 12;
+var SHARE_URL = "higher.motor1.com";
 
-  // ---------- one car, no stage (origin in 0..340 frame, hub y=100, ground y=118) ----------
-  carArt(type,hex,uid){
-    const d=this.derive(hex), b=this.BODIES[type];
-    const defs=`<defs>`
-      +`<linearGradient id="bg${uid}" x1="0" y1="${b.y1}" x2="0" y2="${b.sill+8}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${d.top}"/><stop offset="0.5" stop-color="${d.mid}"/><stop offset="0.86" stop-color="${d.mid}"/><stop offset="1" stop-color="${d.bot}"/></linearGradient>`
-      +`<linearGradient id="gl${uid}" x1="0" y1="${b.y1}" x2="0" y2="${b.sill}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#eef5fc"/><stop offset="0.4" stop-color="#aecae6"/><stop offset="0.52" stop-color="#5d83a6"/><stop offset="0.56" stop-color="#7ea4c6"/><stop offset="0.72" stop-color="#bdd6ec"/><stop offset="1" stop-color="#e7f1fa"/></linearGradient>`
-      +`<radialGradient id="ti${uid}" cx="0.4" cy="0.36" r="0.72"><stop offset="0" stop-color="#3a3e44"/><stop offset="1" stop-color="#101114"/></radialGradient>`
-      +`<radialGradient id="rm${uid}" cx="0.4" cy="0.34" r="0.85"><stop offset="0" stop-color="#f1f4f8"/><stop offset="0.55" stop-color="#b6bcc5"/><stop offset="1" stop-color="#6f757e"/></radialGradient>`
-      +`<linearGradient id="hl${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset="1" stop-color="#b6d0e8"/></linearGradient>`
-      +`<linearGradient id="tlg${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6a52"/><stop offset="1" stop-color="#9c1d18"/></linearGradient>`
-      +`<filter id="bl${uid}" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="2.4"/></filter>`
-      +this.wheelDefs(uid+'f')+this.wheelDefs(uid+'r')
-      +`</defs>`;
-    const body=`<path d="${b.top} ${this.bottom(b)}" fill="url(#bg${uid})"/>`;
-    const extra=b.extra?b.extra(d,b,this):'';
-    const sheen=`<path d="${b.rim}" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.12" filter="url(#bl${uid})"/>`;
-    const glass=`<path d="${b.win}" fill="url(#gl${uid})"/>`;
-    const pillar=b.pillar?`<path d="${b.pillar}" fill="none" stroke="${d.bot}" stroke-width="2.6" opacity="0.9" stroke-linecap="round"/>`:'';
-    const rim=`<path d="${b.rim}" fill="none" stroke="${d.rim}" stroke-width="1.4" opacity="0.95" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const detail=this.detailLayer(b,d,uid);
-    const wheels=this.wheel(b.fw,100,b.wr,d.cal,uid+'f')+this.wheel(b.rw,100,b.wr,d.cal,uid+'r');
-    return defs+body+sheen+extra+detail.body+glass+pillar+detail.top+rim+wheels;
-  }
-
-  // rugged dark wheel-arch cladding (SUV / pickup) — a thick arc hugging each arch
-  cladding(b,d){ const r=b.archR+2.5, cy=100, dx=Math.sqrt(Math.max(1,r*r-(b.sill-cy)*(b.sill-cy)));
-    const arc=(cx)=>`<path d="M${(cx-dx).toFixed(1)},${b.sill} A${r},${r} 0 0 1 ${(cx+dx).toFixed(1)},${b.sill}" fill="none" stroke="#15171c" stroke-width="5" opacity="0.85"/>`;
-    return arc(b.rw)+arc(b.fw); }
-
-  detailLayer(b,d,uid){
-    const dn=b.dnose, dt=b.dtail, by=b.belt;
-    let lo='', hi='';
-    // rocker / sill accent (between wheels)
-    lo+=`<line x1="${b.rw+b.archR}" y1="${b.sill-2}" x2="${b.fw-b.archR}" y2="${b.sill-2}" stroke="${d.bot}" stroke-width="3" opacity="0.5" stroke-linecap="round"/>`;
-    // character line (highlight) + lower crease (shadow)
-    lo+=`<path d="${b.belt2||('M'+dt+','+by+' L'+dn+','+(by-1.5))}" fill="none" stroke="${d.rim}" stroke-width="1.3" opacity="0.55" stroke-linecap="round"/>`;
-    lo+=`<line x1="${dt+8}" y1="${by+9}" x2="${dn-7}" y2="${by+8}" stroke="${d.bot}" stroke-width="1.1" opacity="0.4"/>`;
-    // door cut lines
-    (b.doors||[]).forEach(x=>{ lo+=`<line x1="${x}" y1="${by-7}" x2="${x}" y2="${b.sill-3}" stroke="${d.bot}" stroke-width="1" opacity="0.45"/>`; });
-    // door handle
-    if(b.handle){ lo+=`<line x1="${b.handle[0]-4.5}" y1="${b.handle[1]}" x2="${b.handle[0]+4.5}" y2="${b.handle[1]}" stroke="${d.bot}" stroke-width="2.2" opacity="0.85" stroke-linecap="round"/>`; }
-    // front fascia / intake
-    if(b.intake){ const [ix,iy,iw,ih]=b.intake; hi+=`<path d="M${ix},${iy} L${ix-iw},${iy} L${ix-iw+2},${iy+ih} L${ix-2},${iy+ih} Z" fill="#0c0d10" opacity="0.55"/>`; }
-    // headlight
-    if(b.hl){ const [x,y,w,h]=b.hl; hi+=`<path d="M${x},${y} L${x-w},${y+0.5} L${x-w+1},${y+h} L${x-1},${y+h-0.5} Z" fill="url(#hl${uid})" stroke="${d.bot}" stroke-width="0.5" opacity="0.95"/>`; }
-    // taillight
-    if(b.tl){ const [x,y,w,h]=b.tl; hi+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="#2a120f"/><rect x="${x+0.7}" y="${y+0.9}" width="${w-1.4}" height="${h-1.8}" rx="1.2" fill="url(#tlg${uid})" opacity="0.92"/>`; }
-    // side mirror (on A-pillar, points forward)
-    if(b.mirror){ const [mx,my]=b.mirror; hi+=`<path d="M${mx},${my} l7,-0.5 l1,4 l-7,1 z" fill="${d.mid}" stroke="${d.rim}" stroke-width="0.6"/><line x1="${mx}" y1="${my+1}" x2="${mx-3}" y2="${my+2}" stroke="${d.bot}" stroke-width="1.4"/>`; }
-    return { body:lo, top:hi };
-  }
-
-  // wheel uses ti/rm with uid+'f' / uid+'r' ids -> need defs per wheel; regenerate small defs
-  wheelDefs(uid){ return `<radialGradient id="ti${uid}" cx="0.4" cy="0.36" r="0.72"><stop offset="0" stop-color="#3a3e44"/><stop offset="1" stop-color="#101114"/></radialGradient><radialGradient id="rm${uid}" cx="0.4" cy="0.34" r="0.85"><stop offset="0" stop-color="#f1f4f8"/><stop offset="0.55" stop-color="#b6bcc5"/><stop offset="1" stop-color="#6f757e"/></radialGradient>`; }
-
-  // ---------- stage-wrapped single car (for cards & recolor strip) ----------
-  stageSVG(type,hex,uid){
-    const stDefs=`<defs><radialGradient id="st${uid}" cx="0.5" cy="0.4" r="0.72"><stop offset="0" stop-color="#2b303a"/><stop offset="0.55" stop-color="#15171c"/><stop offset="1" stop-color="#090a0c"/></radialGradient>`
-      +`<linearGradient id="fd${uid}" x1="0" y1="118" x2="0" y2="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0a0b0d" stop-opacity="0"/><stop offset="1" stop-color="#0a0b0d" stop-opacity="0.98"/></linearGradient></defs>`;
-    return `<svg viewBox="0 0 340 150" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`
-      +stDefs
-      +`<rect x="0" y="0" width="340" height="150" fill="url(#st${uid})"/>`
-      +`<ellipse cx="170" cy="119" rx="150" ry="8" fill="#000" opacity="0.45"/>`
-      +`<g transform="matrix(1 0 0 -1 0 237)" opacity="0.16">${this.carArt(type,hex,uid+'R')}</g>`
-      +`<rect x="0" y="118" width="340" height="32" fill="url(#fd${uid})"/>`
-      +this.carArt(type,hex,uid)
-      +`</svg>`;
-  }
-
-  // ---------- lineup ----------
-  lineup(list){
-    const pitch=300, n=list.length, W=40+n*pitch, H=150;
-    let shad='',refl='',cars='';
-    list.forEach((m,i)=>{ const tx=20+i*pitch; const uid='lp'+i;
-      shad+=`<ellipse cx="${tx+170}" cy="119" rx="146" ry="7" fill="#000" opacity="0.4"/>`;
-      refl+=`<g transform="translate(${tx},0)"><g transform="matrix(1 0 0 -1 0 237)" opacity="0.15">${this.carArt(m.type,m.hex,uid+'R')}</g></g>`;
-      cars+=`<g transform="translate(${tx},0)">${this.carArt(m.type,m.hex,uid)}</g>`;
-    });
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`
-      +`<defs><radialGradient id="stL" cx="0.5" cy="0.32" r="0.85"><stop offset="0" stop-color="#2b303a"/><stop offset="0.6" stop-color="#131519"/><stop offset="1" stop-color="#08090b"/></radialGradient>`
-      +`<linearGradient id="fdL" x1="0" y1="118" x2="0" y2="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0a0b0d" stop-opacity="0"/><stop offset="1" stop-color="#0a0b0d" stop-opacity="0.98"/></linearGradient></defs>`
-      +`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#stL)"/>`
-      +shad+refl
-      +`<rect x="0" y="118" width="${W}" height="32" fill="url(#fdL)"/>`
-      +cars
-      +`</svg>`;
-  }
-
-  recipeRows(){
-    const hex=this.demoHex(); const d=this.derive(hex);
-    const row=(k,note,col)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><span style="width:34px;height:18px;border-radius:4px;flex:none;background:${col};border:1px solid rgba(255,255,255,.1)"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#cfd3db;width:62px">${k}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7c828d">${note}</span></div>`;
-    return row('top','L +16 · S −8',d.top)+row('mid','= livery',d.mid)+row('bot','L −22 · S +6',d.bot)+row('rim','mix 78% white',d.rim)+row('caliper','L +8 · S +14',d.cal);
-  }
-
-  // ---------- data ----------
-  get MODELS(){ return [
-    {id:'eco', type:'hatch', seg:'ECONOMY',     hex:'#2E9E5B', name:'Sprout',    mono:'SP', maker:'Atlas Motor Co', year:'MY27', power:'109', zero:'9.6', price:'19'},
-    {id:'fam', type:'suv',   seg:'FAMILY · SUV',hex:'#2F6FE0', name:'Summit',    mono:'SU', maker:'Atlas Motor Co', year:'MY28', power:'248', zero:'7.2', price:'38'},
-    {id:'per', type:'coupe', seg:'PERFORMANCE', hex:'#E5392F', name:'Vello',     mono:'VE', maker:'Atlas Motor Co', year:'MY29', power:'503', zero:'3.6', price:'82'},
-    {id:'lux', type:'sedan', seg:'LUXURY · GT', hex:'#E3A92C', name:'Sovereign', mono:'SO', maker:'Atlas Motor Co', year:'MY30', power:'402', zero:'4.7', price:'104'},
-    {id:'ev',  type:'ev',    seg:'EV · FUTURE', hex:'#7C54E8', name:'Ion',       mono:'IO', maker:'Atlas Motor Co', year:'MY31', power:'456', zero:'3.9', price:'58'},
-    {id:'pic', type:'pickup',seg:'PICKUP',      hex:'#E07B27', name:'Brute',     mono:'BR', maker:'Atlas Motor Co', year:'MY32', power:'395', zero:'6.1', price:'46'},
-  ]; }
-  get CATALOG(){ return [
-    {type:'citycar',  label:'City Car',    seg:'A-SEGMENT',  hex:'#2E9E5B'},
-    {type:'wagon',    label:'Estate',      seg:'WAGON',      hex:'#2F6FE0'},
-    {type:'crossover',label:'Coupe-SUV',   seg:'CROSSOVER',  hex:'#7C54E8'},
-    {type:'minivan',  label:'Minivan',     seg:'PEOPLE MOVER',hex:'#2E9E5B'},
-    {type:'supercar', label:'Supercar',    seg:'HYPERCAR',   hex:'#E5392F'},
-    {type:'offroad',  label:'Off-Roader',  seg:'4X4',        hex:'#E07B27'},
-  ]; }
-  bodyFromLabel(l){ return ({'Hatchback':'hatch','SUV / crossover':'suv','Sports coupe':'coupe','Grand tourer':'sedan','EV':'ev','Pickup':'pickup'})[l]||'coupe'; }
-  demoHex(){ const t=this.bodyFromLabel(this.props.demoBody||'Sports coupe'); const m=this.MODELS.find(x=>x.type===t); return m?m.hex:'#E5392F'; }
-
-  renderVals(){
-    const showLabels = this.props.showLabels !== false;
-    const demoType = this.bodyFromLabel(this.props.demoBody||'Sports coupe');
-    const demoLabel = this.props.demoBody||'Sports coupe';
-    const count = this.clamp(Math.round(this.props.lineupCount||6),2,6);
-    const models = this.MODELS.map(m=>{ const d=this.derive(m.hex); return Object.assign({},m,{
-      car:{__html:this.stageSVG(m.type,m.hex,m.id)},
-      tagBg:this.hexA(m.hex,0.16), tagBorder:this.hexA(m.hex,0.55), tagText:d.top,
-      badgeBg:m.hex, badgeText: this.lum(m.hex)>0.55?'#16130a':'#ffffff',
-    }); });
-    const recolorStrip = this.MODELS.map(m=>({ hex:m.hex, car:{__html:this.stageSVG(demoType,m.hex,'rc'+m.id)} }));
-    const catalog = this.CATALOG.map((c,i)=>({ label:c.label, seg:c.seg, hex:c.hex,
-      car:{__html:this.stageSVG(c.type,c.hex,'cat'+i)}, dot:c.hex }));
-    return {
-      models, showLabels, demoLabel, catalog,
-      recolorStrip,
-      lineupCount: count,
-      lineup:{__html:this.lineup(this.MODELS.slice(0,count))},
-      recipeRows:{__html:this.recipeRows()},
-    };
-  }
+/* ---------------- rating (read from data through WEIGHTS) ---------------- */
+function ratingOf(c){
+  if(c._r!=null) return c._r;
+  var r = WEIGHTS.value*c.sv + WEIGHTS.performance*c.sp + WEIGHTS.desirability*c.sd + WEIGHTS.rarity*c.sr;
+  c._r = r; return r;
 }
-CarArt.prototype.BODIES = {
-  // ECONOMY — tiny supermini hatch: very short, tall cabin, steep tailgate close behind rear wheel
-  hatch: { rearEnd:74, frontEnd:226, sill:100, rw:100, fw:198, wr:16, archR:17.5, y1:50,
-    top:'M74,100 L70,78 C69,65 74,59 88,54 L120,50 L150,50 C161,50 168,53 179,67 L198,74 C211,75 221,81 223,89 L226,97 L226,100',
-    rim:'M70,73 C70,63 75,57 88,54 L120,50 L150,50 C162,50 169,53 180,68 L200,74 C213,76 222,82 224,90',
-    win:'M93,55 L120,52 L150,52 C159,52 165,55 175,67 L100,70 Z',
-    pillar:'M124,52 L124,69',
-    belt:76, dnose:222, dtail:74, doors:[148], handle:[160,73], mirror:[95,57],
-    hl:[225,77,11,6], tl:[72,72,7,12], intake:[222,98,12,5] },
+function fmtR(r){ return r.toFixed(1); }
 
-  // FAMILY — crossover SUV: tall, HIGH beltline (small glass = chunky, not a van), short tall hood, cladding
-  suv: { rearEnd:60, frontEnd:250, sill:95, rw:84, fw:238, wr:18.5, archR:20, y1:43,
-    top:'M60,95 L58,58 C58,48 66,43 82,43 L172,42 C188,43 198,47 210,61 L228,69 C242,71 250,75 250,83 L250,95',
-    rim:'M58,50 C58,46 67,43 82,43 L172,42 C189,43 199,48 212,62 L229,70',
-    win:'M84,49 L168,48 C176,48 182,51 193,63 L84,64 Z',
-    pillar:'M118,49 L118,63 M156,48 L156,63',
-    belt:68, dnose:246, dtail:64, doors:[118,156], handle:[152,66], mirror:[86,53],
-    hl:[250,65,12,9], tl:[60,58,7,14], intake:[246,91,16,6],
-    extra:(d,b,self)=>`<line x1="82" y1="41" x2="172" y2="41" stroke="${d.bot}" stroke-width="2" opacity="0.5" stroke-linecap="round"/>`
-      +`<rect x="66" y="84" width="118" height="6" rx="2" fill="#15171c" opacity="0.7"/>`
-      +self.cladding(b,d) },
-
-  // PERFORMANCE — quality bar: low, long hood, fastback, wide stance
-  coupe: { rearEnd:46, frontEnd:313, sill:100, rw:90, fw:270, wr:17, archR:18.5, y1:62,
-    top:'M46,100 L46,92 C48,86 54,84 66,83 C122,74 154,68 182,66 C200,65 210,67 224,76 C240,86 252,91 272,93 L298,95 C308,95 312,98 313,101 L313,100',
-    rim:'M50,88 C56,85 66,83 66,83 C122,74 154,68 182,66 C200,65 210,67 224,76 C240,86 252,91 272,93 L298,95 C308,95 312,98 313,101',
-    win:'M84,86 C116,79 146,73 174,71 C190,70 198,72 208,79 L124,85 Z',
-    pillar:'M124,84 L150,68',
-    belt:87, dnose:305, dtail:52, doors:[152], handle:[164,85], mirror:[86,74],
-    hl:[313,84,16,6], tl:[46,83,8,9], intake:[311,99,18,6] },
-
-  // LUXURY — three-box GT sedan: distinct trunk deck, clear notch, long & low
-  sedan: { rearEnd:50, frontEnd:301, sill:100, rw:90, fw:264, wr:16.5, archR:18, y1:60,
-    top:'M50,100 L50,89 L104,86 C120,85 127,79 137,68 L188,61 C205,60 214,62 224,72 C236,81 248,86 268,88 L294,90 C300,90 301,93 301,98 L301,100',
-    rim:'M52,88 L104,85 C121,84 128,78 138,67 L188,61 C206,60 215,62 226,73 C238,82 250,87 268,89 L295,90 C300,90 301,93 301,97',
-    win:'M112,83 C124,82 131,76 140,66 L186,62 C199,61 207,63 214,71 L150,75 Z',
-    pillar:'M150,75 L186,62 M150,75 L150,84',
-    belt:86, dnose:296, dtail:48, doors:[150,210], handle:[162,84], mirror:[124,69],
-    hl:[301,85,13,6], tl:[50,83,9,8], intake:[298,99,15,5] },
-
-  // EV — smooth one-box, closed nose, minimal, full-width lamp bars
-  ev: { rearEnd:48, frontEnd:304, sill:100, rw:88, fw:262, wr:16.5, archR:18, y1:55,
-    top:'M48,100 L47,86 C48,66 70,57 108,55 C158,51 214,52 252,61 C284,68 300,79 303,89 L304,97 L304,100',
-    rim:'M50,72 C54,61 72,55 108,55 C158,51 214,52 252,61 C284,68 300,78 304,89',
-    win:'M70,65 C110,58 164,56 214,61 C230,63 238,66 245,73 L72,75 Z',
-    pillar:'M154,56 L154,74',
-    belt:87, dnose:300, dtail:54, doors:[152], handle:[162,85], mirror:[88,61],
-    hl:[304,85,16,4], tl:[48,85,11,4], intake:[300,99,12,4] },
-
-  // PICKUP — real bed (side wall + rail + tailgate) + clear cab, rugged, high ride
-  pickup: { rearEnd:44, frontEnd:308, sill:96, rw:88, fw:250, wr:18, archR:19.5, y1:46,
-    top:'M44,96 L44,70 L158,70 L166,66 L174,49 L222,47 C234,48 240,52 246,63 L260,70 L300,73 C307,73 308,76 308,83 L308,96',
-    rim:'M44,70 L158,70 L166,66 L174,49 L222,47 C234,48 240,52 246,63 L260,70 L300,73 C307,73 308,76 308,83',
-    win:'M178,53 L218,51 C226,51 230,54 237,63 L178,64 Z',
-    pillar:'M200,52 L200,64',
-    belt:80, dnose:300, dtail:50, doors:[210], handle:[200,78], mirror:[180,55],
-    hl:[308,76,12,7], tl:[44,72,8,12], intake:[304,94,16,6],
-    extra:(d,b,self)=>`<line x1="50" y1="72.5" x2="156" y2="72.5" stroke="${d.bot}" stroke-width="2.4" opacity="0.55" stroke-linecap="round"/>`
-      +`<line x1="162" y1="70" x2="162" y2="95" stroke="${d.bot}" stroke-width="1.4" opacity="0.5"/>`
-      +`<line x1="48" y1="78" x2="48" y2="94" stroke="${d.bot}" stroke-width="1.2" opacity="0.45"/>`
-      +`<line x1="66" y1="82" x2="152" y2="82" stroke="${d.rim}" stroke-width="1" opacity="0.38"/>`
-      +self.cladding(b,d) },
-
-  // ---- EXTENDED CATALOG (more silhouettes for variety in the game) ----
-
-  // WAGON / ESTATE — sedan front, long roof to an upright tailgate
-  wagon: { rearEnd:44, frontEnd:300, sill:100, rw:84, fw:262, wr:16.5, archR:18, y1:57,
-    top:'M44,100 L44,72 C44,62 50,58 64,57 L176,56 C194,56 204,58 214,68 C226,77 240,83 262,86 L292,88 C299,88 300,91 300,96 L300,100',
-    rim:'M44,72 C44,62 50,58 64,57 L176,56 C194,56 204,58 214,68 C226,77 240,83 262,86 L292,88 C299,88 300,91 300,96',
-    win:'M68,62 L174,58 C184,58 189,61 198,69 L68,67 Z',
-    pillar:'M108,60 L108,67 M168,58 L168,68',
-    belt:70, dnose:296, dtail:48, doors:[108,168], handle:[150,68], mirror:[70,60],
-    hl:[300,84,12,6], tl:[44,70,8,13], intake:[296,98,14,5] },
-
-  // MINIVAN — tall one-box, low beltline (big glass), long sliding-door greenhouse
-  minivan: { rearEnd:42, frontEnd:288, sill:98, rw:82, fw:250, wr:17, archR:18.5, y1:48,
-    top:'M42,98 L42,58 C42,51 48,48 60,48 L206,47 C222,48 232,52 244,66 L260,76 C272,77 286,78 286,84 L286,98',
-    rim:'M42,58 C42,51 48,48 60,48 L206,47 C222,48 232,52 244,66 L260,76 C272,77 286,78 286,84',
-    win:'M58,53 L204,52 C214,52 220,55 234,68 L58,71 Z',
-    pillar:'M100,53 L100,70 M150,52 L150,69 M200,52 L200,68',
-    belt:72, dnose:282, dtail:48, doors:[100,200], handle:[160,71], mirror:[60,52],
-    hl:[286,72,11,7], tl:[42,58,7,15], intake:[282,96,16,6] },
-
-  // SUPERCAR — ultra-low long wedge, cabin pushed forward, side intake + lip
-  supercar: { rearEnd:44, frontEnd:321, sill:102, rw:86, fw:282, wr:17.5, archR:19, y1:78,
-    top:'M44,102 L44,96 C46,90 52,88 66,88 C120,82 150,73 176,69 C188,67 196,68 206,75 C232,85 258,91 286,94 L306,96 C316,96 320,99 321,102 L321,102',
-    rim:'M48,90 C54,88 66,88 66,88 C120,82 150,73 176,69 C188,67 196,68 206,75 C232,85 258,91 286,94 L306,96 C316,96 320,99 321,102',
-    win:'M88,90 C120,82 146,74 172,70 C184,69 190,71 198,77 L122,88 Z',
-    pillar:'M122,87 L150,72',
-    belt:91, dnose:312, dtail:50, doors:[150], handle:[162,89], mirror:[90,77],
-    hl:[321,87,18,5], tl:[44,87,9,8], intake:[319,101,20,7],
-    extra:(d,b)=>`<path d="M214,92 L236,90 L232,98 L214,98 Z" fill="#0c0d10" opacity="0.6"/>`
-      +`<path d="M60,87 L92,86 L86,82 L66,83 Z" fill="${d.bot}" opacity="0.7"/>` },
-
-  // OFF-ROADER — boxy 4x4: flat roof, near-vertical glass, roof rack, very high ride, cladding
-  offroad: { rearEnd:46, frontEnd:300, sill:92, rw:88, fw:240, wr:19.5, archR:21.5, y1:42,
-    top:'M46,92 L46,43 L208,43 C214,43 217,45 219,58 L226,64 L296,66 C300,66 300,68 300,72 L300,92',
-    rim:'M46,43 L208,43 C214,43 217,45 219,58 L226,64 L296,66 C300,66 300,68 300,72',
-    win:'M62,49 L202,49 L202,61 L62,61 Z',
-    pillar:'M104,49 L104,61 M150,49 L150,61 M196,49 L196,61',
-    belt:64, dnose:294, dtail:52, doors:[104,150,196], handle:[170,63], mirror:[64,50],
-    hl:[300,62,13,9], tl:[46,52,8,16], intake:[296,88,18,8],
-    extra:(d,b,self)=>`<line x1="46" y1="40" x2="208" y2="40" stroke="#15171c" stroke-width="3" stroke-linecap="round"/>`
-      +`<line x1="70" y1="40" x2="70" y2="43" stroke="#15171c" stroke-width="2"/><line x1="120" y1="40" x2="120" y2="43" stroke="#15171c" stroke-width="2"/><line x1="180" y1="40" x2="180" y2="43" stroke="#15171c" stroke-width="2"/>`
-      +`<rect x="58" y="84" width="186" height="6" rx="2" fill="#15171c" opacity="0.7"/>`
-      +self.cladding(b,d) },
-
-  // COUPE-SUV — tall crossover front, fastback roof sloping to the rear, cladding
-  crossover: { rearEnd:52, frontEnd:252, sill:95, rw:86, fw:240, wr:18.5, archR:20, y1:46,
-    top:'M52,95 L52,72 C54,60 70,52 110,49 L160,46 C176,46 190,49 206,60 L226,68 C240,70 250,74 250,82 L250,95',
-    rim:'M54,66 C58,58 72,52 110,49 L160,46 C176,46 190,49 206,60 L226,68',
-    win:'M86,58 L160,50 C172,50 180,53 196,63 L86,65 Z',
-    pillar:'M120,55 L120,64 M160,50 L160,64',
-    belt:67, dnose:246, dtail:58, doors:[120,170], handle:[152,66], mirror:[88,53],
-    hl:[250,64,12,8], tl:[52,60,7,13], intake:[246,91,16,6],
-    extra:(d,b,self)=>self.cladding(b,d) },
-
-  // CITY CAR — micro/kei: ultra-short, very upright, tall cabin, tiny wheels
-  citycar: { rearEnd:82, frontEnd:219, sill:100, rw:104, fw:192, wr:15.5, archR:17, y1:49,
-    top:'M82,100 L80,72 C79,58 84,52 100,50 L152,49 C162,49 168,53 178,70 L196,76 C208,77 215,82 217,90 L219,97 L219,100',
-    rim:'M80,72 C79,58 84,52 100,50 L152,49 C162,49 168,53 178,70 L196,76 C208,77 215,82 217,90',
-    win:'M104,55 L152,52 C161,52 167,55 177,70 L112,72 Z',
-    pillar:'M138,53 L138,71',
-    belt:76, dnose:215, dtail:82, doors:[140], handle:[156,73], mirror:[106,57],
-    hl:[218,78,10,6], tl:[80,73,7,12], intake:[215,98,11,5] },
-};
-
-var ART = new CarArt();
-
-/* =========================================================================
-   MODEL YEAR — Phase 1 (the playable engine).
-   Single self-contained page, vanilla JS, no backend. Every tunable number
-   lives in CONFIG. The three sacred mechanics are: contested share (revenue is
-   a slice of a shared pool), telegraphed rival reactions (a price war is warned
-   the year before it bites), and telegraphed events (a vague forecast a year
-   ahead, ~70% true). See section 6 of the brief for the exact math.
-   ========================================================================= */
-
-var CONFIG = {
-  debug: /[?&]debug=1\b/.test(location.search),
-  turns: 10,
-
-  /* starting state */
-  startCash: 5000,            // $M  (displays as $5.0B)
-  startBrand: 50,             // 0..100
-  startCapacity: { family: 30 },   // a small starting position in one mainstream segment
-
-  /* money / capacity economics */
-  poolUnit: 30,               // $M of demand per 1 point of base pool
-  capacityCostPerUnit: 20,    // $M to build one durable unit of capacity
-  opCostPerUnit: 1.6,         // $M/yr per unit — thin slices in crowded pools bleed against this
-  companyOverhead: 120,       // fixed $M/yr (idle hoarding bleeds against this)
-  debtInterestRate: 0.08,
-  capacityDecay: 0.12,        // capacity *= (1-this) every year — high enough that chasing a new segment each year bleeds, so commitment is rewarded (replaces Retool)
-  allocStepUnits: 5,          // +/- stepper increment
-  botMaxUnitsPerSeg: 20,      // par-bot guardrail: keep a bot's yearly build under the watchlist alarm
-
-  /* contested share + reactions */
-  dominanceThreshold: 0.38,   // player share above this provokes the home rival (high enough to let a committed niche owner exist)
-  priceCutPenalty: 0.12,      // shrinks that segment's pool NEXT year (1-this)
-  reactionCapacityBump: 0.20, // and the defender adds this fraction of capacity
-  rivalAlarmBuildUnits: 20,   // building more than this into a rival's home segment in one year alarms it
-  believerFrac: 0.60,         // forecast/reactive bots: fraction of cash poured into their single pick
-  believerCap: 21,            // ...capped at this many units/yr (just over the alarm so a believer's wrong bet draws a reaction and hurts)
-  brandFloorFactor: 0.8, brandFactorDiv: 250,   // brandFactor = 0.8 + brand/250
-
-  /* secular drift */
-  secularDriftEV: 0.16,       // EV pool grows: drift = 1 + yearIndex*this (the EV transition genuinely arrives late-game)
-
-  /* events — swings are large so anticipating the right one (and committing a year
-     early) pays, and a wrong forecast bet genuinely hurts */
-  forecastTrueChance: 0.70,
-  eraBias: 5,                 // per-seed: era events are (1+this)x as likely, giving each day a character
-  severityFactor: { mild: 0.85, medium: 1.45, severe: 2.15 },
-  severityWeights: { mild: 0.25, medium: 0.42, severe: 0.33 },
-  stakesCurve: 1.5,           // rising stakes: early years skew mild, the last years carry the biggest swings
-  finaleAmplifier: 1.60,      // the final model year's swing is amplified this much — the decade-definer (also pulls every bot under the 30% gate)
-
-  /* personal events — seed-deterministic, modest punctuation, applied to ALL entities */
-  recallProbPerBudgetYr: 0.05, recallMaxProb: 0.22, recallBrandHit: 12, recallCashHit: 80,   // cheaping out (Budget) catches up
-  viralProbPerPremiumYr: 0.015, viralMaxProb: 0.08, viralBrandFloor: 78, viralBonusProb: 0.0, viralBrandBump: 5,  // Premium can break out (kept small so it doesn't compound past the gate)
-
-  /* postures (one company-wide choice per year) */
-  postures: {
-    budget:   { label:"Budget",   appeal:1.25, marginMod:0.70, brandDelta:-3, blurb:"Chase volume, cut the sticker." },
-    standard: { label:"Standard", appeal:1.00, marginMod:1.00, brandDelta: 0, blurb:"Hold the line." },
-    premium:  { label:"Premium",  appeal:0.80, marginMod:1.35, brandDelta:+3, blurb:"Fewer cars, fatter margins, build the badge." },
-  },
-
-  /* valuation */
-  brandValue: 8,              // $M per brand point
-  idlePenaltyPerUnit: 4,      // capacity that ran at a loss last year drags valuation
-  /* rivals — capacity grows on a bounded deterministic schedule (no runaway compounding) */
-  rivalStartCash: 1500,
-  rivalHomeGrowth: 0.10,      // home-segment capacity grows this much per year
-  rivalOffGrowth: 0.025,      // off-segment capacity grows this much per year
-  homeBonusValue: 1.25,       // entrenchment multiplier in a rival's home segments
-
-  emoji: { oil_shock:"🛢️", boom:"📈", recession:"📉", ev_subsidy:"⚡", suv_craze:"🚙", crisis:"💥", tariff:"🚧", quiet:"🏁" },
-  shareUrl: "modelyear.motor1.com",
-};
-
-/* ---- segments (base pool / margin / capacity value, with car-fantasy copy) ---- */
-var SEGMENTS = [
-  { id:"economy",     name:"Economy",        emoji:"🚗", basePool:100, baseMargin:0.20, capValue:10,
-    invest:"cheap commuters and fleet rentals", defender:"toyo", color:"#2E9E5B", tint:"#e4f3ea", sq:"🟩", body:"hatch" },
-  { id:"family",      name:"Family / SUV",   emoji:"🚙", basePool:120, baseMargin:0.26, capValue:13,
-    invest:"three-row haulers for the school run", defender:"wolfsburg", color:"#2F6FE0", tint:"#e6eefc", sq:"🟦", body:"crossover" },
-  { id:"performance", name:"Performance",    emoji:"🏎️", basePool:45,  baseMargin:0.30, capValue:15,
-    invest:"naturally aspirated heroes and track specials", defender:"maranello", color:"#E5392F", tint:"#fce6e4", sq:"🟥", body:"coupe" },
-  { id:"luxury",      name:"Luxury",         emoji:"💎", basePool:50,  baseMargin:0.46, capValue:17,
-    invest:"leather, badges and quiet money", defender:"stuttgart", color:"#E3A92C", tint:"#f8eed1", sq:"🟨", body:"sedan" },
-  { id:"ev",          name:"EV / Future",    emoji:"⚡", basePool:30,  baseMargin:0.30, capValue:18,
-    invest:"the electric bet that keeps getting bigger", defender:"paloalto", color:"#7C54E8", tint:"#ece6fb", sq:"🟪", body:"ev" },
-  { id:"pickup",      name:"Pickup / Truck", emoji:"🛻", basePool:70,  baseMargin:0.36, capValue:14,
-    invest:"full-size trucks that run on cheap gas", defender:"dearborn", color:"#E07B27", tint:"#fbe9d8", sq:"🟧", body:"pickup" },
-];
-var SEG_IDS = SEGMENTS.map(function(s){return s.id;});
-function segMeta(id){ for(var i=0;i<SEGMENTS.length;i++) if(SEGMENTS[i].id===id) return SEGMENTS[i]; }
-// article + short noun for the price-war note ("Heartland Haulers starts a truck price war.")
-var WAR_PHRASE = { economy:"an economy", family:"an SUV", performance:"a performance", luxury:"a luxury", ev:"an EV", pickup:"a truck" };
-var SQ_NONE = "⬛";   // a model year with no build (harvest / sat out) on the share card
-
-// Cosmetic company identity (Pass 6). Pure flavour — picked before Year 1, used only in
-// the finale headline and the share text. Must NOT touch any game math.
-var IDENTITIES = [
-  { id:"volume",   label:"Volume Shark",     blurb:"Move metal. Win on numbers." },
-  { id:"ev",       label:"EV Prophet",       blurb:"The future is electric — get there first." },
-  { id:"truck",    label:"Truck Baron",      blurb:"Big trucks, bigger margins." },
-  { id:"badge",    label:"Badge Snob",       blurb:"Fewer cars, fatter badges." },
-  { id:"balanced", label:"Balanced Operator",blurb:"Read the road, spread the risk." },
-];
-function identityMeta(id){ for(var i=0;i<IDENTITIES.length;i++) if(IDENTITIES[i].id===id) return IDENTITIES[i]; return null; }
-
-// Briefing mood copy, keyed by the seed's dominant era event. Tendency only — never names
-// which years — so the forecast game (which event lands next) stays intact.
-var BRIEF_MOOD = {
-  oil_shock:  "Word in the trade rags is the oil patch is restless. This could be a decade that punishes anything thirsty and rewards the cheap and the electric.",
-  boom:       "Cheap gas and easy money are in the air. Smells like a decade that pays for horsepower, badges and big trucks.",
-  recession:  "The bankers look nervous. This has the makings of a belt-tightening decade where the cheap commuter quietly wins.",
-  ev_subsidy: "Washington's mood is green, and the chargers are going in. The plug-in bet might finally pay off this decade.",
-  suv_craze:  "Every driveway wants a three-row crossover. A family-hauler decade is brewing — and hatchbacks are out of fashion.",
-  crisis:     "Supply chatter is grim and the lines keep jamming. This could be a decade where building anything gets expensive.",
-  tariff:     "Trade talk is turning hostile. Import-heavy lanes may carry a cost premium for years.",
-  quiet:      "No one's calling a clear trend. A decade that rewards whoever simply reads each road best.",
-  _default:   "A wide-open decade. Read each year and place your bets a step ahead of the pack.",
-};
-
-/* ---- rivals: real makers worn lightly. One keeps its real hometown (Maranello);
-   the rest are IP-safe cultural winks (flag + behavior tell still point at who they are).
-   `city` holds the display name. Internal `id` is unchanged so game logic is untouched. ---- */
-var RIVALS = [
-  { id:"toyo",     city:"Kaizen Motors",     flag:"🇯🇵", short:"KAIZN", posture:"standard", brand:70,
-    tell:"Quality everywhere, never blinks.", home:["economy","family"],
-    capacity:{ economy:30, family:25, performance:2, luxury:3, ev:8, pickup:3 } },
-  { id:"wolfsburg",city:"People's Garage",   flag:"🇩🇪", short:"FOLK",  posture:"budget",   brand:55,
-    tell:"Volume giant, undercuts on price.", home:["family","economy"],
-    capacity:{ economy:22, family:28, performance:4, luxury:6, ev:6, pickup:2 } },
-  { id:"maranello",city:"Maranello",         flag:"🇮🇹", short:"MARA",  posture:"premium",  brand:88,
-    tell:"Red halo, builds one supercar.", home:["performance"],
-    capacity:{ economy:0, family:0, performance:18, luxury:4, ev:1, pickup:0 } },
-  { id:"stuttgart",city:"Überwerks",         flag:"🇩🇪", short:"WERK",  posture:"premium",  brand:82,
-    tell:"Engineered to intimidate.", home:["luxury","performance"],
-    capacity:{ economy:0, family:3, performance:14, luxury:22, ev:4, pickup:0 } },
-  { id:"paloalto", city:"Silicon Sparks",    flag:"🇺🇸", short:"SILI",  posture:"budget",   brand:66,
-    tell:"Bets the house on EV, cuts price.", home:["ev"],
-    capacity:{ economy:0, family:0, performance:3, luxury:3, ev:20, pickup:0 } },
-  { id:"dearborn", city:"Heartland Haulers",  flag:"🇺🇸", short:"HAUL",  posture:"standard", brand:60,
-    tell:"Truck dynasty defends its turf.", home:["pickup","family"],
-    capacity:{ economy:6, family:18, performance:2, luxury:0, ev:1, pickup:30 } },
-];
-function rivalMeta(id){ for(var i=0;i<RIVALS.length;i++) if(RIVALS[i].id===id) return RIVALS[i]; }
-
-/* ---- event deck: demand multipliers (at MEDIUM severity) + opCost effects ---- */
-var EVENTS = {
-  oil_shock:  { name:"Oil shock",        demand:{economy:1.25,family:0.95,performance:0.80,luxury:0.85,ev:1.30,pickup:0.60},
-    reveal:"Gas just punched through five bucks a gallon and every V8 on the lot turned into a boat anchor. Trucks crater, the cheap and the electric fly.",
-    forecast:"Tension building in the oil-producing regions." },
-  boom:       { name:"Cheap gas boom",   demand:{economy:0.85,family:1.05,performance:1.20,luxury:1.20,ev:0.95,pickup:1.30},
-    reveal:"Cheap gas, fat bonuses, and a showroom full of horsepower — buyers are signing for the loud, fast, and expensive. Trucks, supercars and luxury roar.",
-    forecast:"Analysts whisper about a coming spending boom." },
-  recession:  { name:"Recession",        demand:{economy:1.30,family:0.85,performance:0.75,luxury:0.60,ev:0.90,pickup:0.90},
-    reveal:"The credit taps slam shut and the luxury floor goes tomb-quiet. Suddenly everyone needs a cheap commuter, not a status symbol. Economy up, the badge stuff bleeds.",
-    forecast:"The yield curve inverts. Storm clouds gather." },
-  ev_subsidy: { name:"EV subsidy wave",  demand:{economy:0.95,family:0.95,performance:0.85,luxury:0.90,ev:1.80,pickup:0.85},
-    opcost:{economy:1.10,family:1.10,performance:1.10,luxury:1.10,pickup:1.10},
-    reveal:"Washington is cutting fat checks for anything with a plug, and the whole country wants a charger in the garage. EV demand goes vertical; gas burners get a cost bump.",
-    forecast:"Washington hints at a green incentive package." },
-  suv_craze:  { name:"SUV craze",        demand:{economy:0.80,family:1.50,performance:0.95,luxury:1.05,ev:0.95,pickup:1.10},
-    reveal:"Every household with a dog and a soccer schedule decided it needs a three-row crossover yesterday. Family lots clear out; nobody wants a hatchback.",
-    forecast:"Lifestyle magazines can't stop talking about crossovers." },
-  crisis:     { name:"Chip & lithium crunch", demand:{ev:0.92},
-    opcost:{economy:1.25,family:1.25,performance:1.25,luxury:1.25,ev:1.25,pickup:1.25},
-    reveal:"A chip-and-lithium crunch jams every assembly line on Earth. Building anything costs a fortune this year — and the battery cars hurt worst.",
-    forecast:"Supply chatter: critical parts may get scarce." },
-  tariff:     { name:"Tariff shock",     demand:{economy:0.95,family:0.97},
-    opcost:{economy:1.30,family:1.15},
-    reveal:"Fresh tariffs slap imported parts overnight, and the thin-margin cheap cars are suddenly expensive to screw together. Economy and family build costs jump.",
-    forecast:"Trade talks turn hostile on the evening news." },
-  quiet:      { name:"Quiet year",       demand:{},
-    reveal:"No shocks, no headlines, no excuses. Just a clean model year and whoever reads the road best.",
-    forecast:"Forecasters see a quiet year ahead." },
-};
-var EVENT_DECK = ["oil_shock","boom","recession","ev_subsidy","suv_craze","crisis","tariff","quiet"];
-
-/* ============================ helpers ============================ */
+/* ---------------- helpers ---------------- */
 function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 function hashString(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
 function mulberry32(seed){ var a=seed>>>0; return function(){ a|=0;a=(a+0x6d2b79f5)|0; var t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
-function rngFromSeed(s){ return mulberry32(hashString(s)); }
-function pickWeighted(rng,obj){ var total=0,k; for(k in obj) total+=obj[k]; var r=rng()*total; for(k in obj){ r-=obj[k]; if(r<=0) return k; } return k; }
+function pad2(n){ return n<10?"0"+n:""+n; }
+function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }
+function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
+function prefersReducedMotion(){ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
 
-// money in $M -> "$5.0B" / "$320M" / "-$1.2B"
-function fmtMoney(v){
-  var sign = v<0 ? "-" : "", a=Math.abs(v);
-  if(a>=1000) return sign+"$"+(a/1000).toFixed(1)+"B";
-  return sign+"$"+Math.round(a)+"M";
-}
-function fmtSigned(v){ return (v>=0?"+":"")+fmtMoney(v); }
-function pct(x){ return Math.round(x*100)+"%"; }
-
-/* ============================ scenario (seed-fixed) ============================ */
-// The whole day's run is decided here so it is identical for everyone on a seed.
-function buildScenario(seed){
-  var rng = rngFromSeed("scenario|"+seed);
-  // Each seed gets an "era": one or two events are far more likely this decade, so
-  // the day has a character (a truck era, an EV era, a recessionary decade). That is
-  // what lets a committed specialist win on the days that favor it, instead of a
-  // forecast-chaser winning every seed. Quiet is excluded as an era theme.
-  var themeDeck = EVENT_DECK.filter(function(e){ return e!=="quiet"; });
-  var eraA = themeDeck[Math.floor(rng()*themeDeck.length)];
-  var eraB = themeDeck[Math.floor(rng()*themeDeck.length)];
-  var weights = {}; EVENT_DECK.forEach(function(e){ weights[e]=1; });
-  weights[eraA] += CONFIG.eraBias; weights[eraB] += CONFIG.eraBias;
-  var events=[], severities=[];
-  var sw0=CONFIG.severityWeights;
-  for(var i=0;i<CONFIG.turns;i++){
-    events.push(pickWeighted(rng, weights));
-    // rising stakes: tilt the severity draw toward mild early, toward severe late (seed-deterministic)
-    var t = CONFIG.turns>1 ? i/(CONFIG.turns-1) : 1;
-    var sw = { mild: sw0.mild*(1+CONFIG.stakesCurve*(1-t)), medium: sw0.medium, severe: sw0.severe*(1+CONFIG.stakesCurve*t) };
-    severities.push(pickWeighted(rng, sw));
-  }
-  // forecast shown in year i is a hint about year i+1; ~70% true, else a red herring
-  var forecastTrue=[], forecastEvent=[];
-  for(i=0;i<CONFIG.turns-1;i++){
-    var truthful = rng() < CONFIG.forecastTrueChance;
-    forecastTrue.push(truthful);
-    if(truthful){ forecastEvent.push(events[i+1]); }
-    else {
-      var others = EVENT_DECK.filter(function(e){ return e!==events[i+1]; });
-      forecastEvent.push(others[Math.floor(rng()*others.length)]);
+/* ---------------- the daily matchup sequence (seeded, paced) ----------------
+   A deliberate dopamine curve: a couple of easy confidence-builders first,
+   then mostly close calls, with one mid-run gimme. We chase a gap-target
+   sequence and pick the nearest available pair to each target. Same seed ->
+   same cars in the same order on every device. */
+var GAP_TARGETS = [16, 11, 7, 4, 3, 2, 13, 3, 2, 5, 2, 1.5];
+function buildSequence(seed){
+  var rng = mulberry32(hashString("higher|"+seed));
+  var pool = CARS.map(function(c,i){ return { c:c, i:i, r:ratingOf(c) }; }).sort(function(a,b){ return a.r-b.r; });
+  var targets = GAP_TARGETS.map(function(t){ return Math.max(1, t + (rng()*3-1.5)); });
+  var used = new Array(pool.length); var seq=[];
+  targets.forEach(function(t){
+    var best=null, bestDelta=Infinity, ties=[];
+    for(var x=0;x<pool.length;x++){
+      if(used[x]) continue;
+      for(var y=x+1;y<pool.length;y++){
+        if(used[y]) continue;
+        var gap = pool[y].r - pool[x].r;       // sorted asc -> gap>=0
+        if(gap < 1) continue;                   // need a clear higher car (no coin-flips)
+        var delta = Math.abs(gap - t);
+        if(delta < bestDelta - 1e-9){ bestDelta=delta; ties=[[x,y]]; }
+        else if(delta < bestDelta + 0.25){ ties.push([x,y]); }
+      }
     }
-  }
-  return { seed:seed, events:events, severities:severities, forecastTrue:forecastTrue, forecastEvent:forecastEvent, era:[eraA,eraB] };
-}
-
-/* ============================ state ============================ */
-function freshEntities(){
-  var ents=[];
-  var player={ id:"player", isPlayer:true, name:"Your company", short:"YOU",
-    cash:CONFIG.startCash, brand:CONFIG.startBrand, posture:"standard",
-    capacity:{}, pendingCap:{}, home:[], lastSeg:{}, budgetStreak:0, premiumStreak:0 };
-  SEG_IDS.forEach(function(s){ player.capacity[s] = CONFIG.startCapacity[s]||0; player.pendingCap[s]=0; });
-  ents.push(player);
-  RIVALS.forEach(function(r){
-    var e={ id:r.id, isPlayer:false, name:r.city, short:r.short, flag:r.flag,
-      cash:CONFIG.rivalStartCash, brand:r.brand, posture:r.posture,
-      capacity:{}, pendingCap:{}, home:r.home.slice(), lastSeg:{}, budgetStreak:0, premiumStreak:0 };
-    SEG_IDS.forEach(function(s){ e.capacity[s] = r.capacity[s]||0; e.pendingCap[s]=0; });
-    ents.push(e);
+    if(!ties.length) return;
+    best = ties[Math.floor(rng()*ties.length)];  // seeded variety among near-equal pairs
+    used[best[0]]=true; used[best[1]]=true;
+    var lo=pool[best[0]], hi=pool[best[1]];
+    var flip = rng()<0.5;                          // randomize which side the higher car sits on
+    seq.push({ a: flip?hi:lo, b: flip?lo:hi });
   });
-  return ents;
-}
-function createState(seed){
-  var pending={}; SEG_IDS.forEach(function(s){ pending[s]=1; });
-  return {
-    seed:seed, scenario:buildScenario(seed), entities:freshEntities(),
-    pending:pending, yearIndex:0, history:[], playerPosture:"standard",
-    planned:{}, phase:"intro", lastResult:null,
-    lastRank:null, rankMove:0,   // for the standings ticker
-    identity:"balanced",         // cosmetic house style (Pass 6); display only, no math
-    valHistory:[],               // per-year player valuation for the sparkline (UI path only)
-    launches:[],                 // car models the player launches across the decade (Pass 7; UI path only)
-  };
-}
-function player(state){ return state.entities[0]; }
-
-// Delayed capacity: a year's build is bought into pendingCap and only comes online
-// at the START of the next model year. This is what makes the forecast matter — you
-// must commit a year ahead under uncertainty instead of reacting risk-free.
-function activatePending(state){
-  state.entities.forEach(function(e){
-    SEG_IDS.forEach(function(s){
-      if(e.pendingCap[s]){ e.capacity[s]=(e.capacity[s]||0)+e.pendingCap[s]; e.pendingCap[s]=0; }
-    });
-  });
+  return seq;
 }
 
-/* ============================ market math (section 6) ============================ */
-function eventMultiplier(eventId,severity,segId){
-  var def=EVENTS[eventId], base=(def.demand&&def.demand[segId]!=null)?def.demand[segId]:1;
-  return 1 + (base-1)*CONFIG.severityFactor[severity];
+/* ---------------- reveal note (computed, never faked) ---------------- */
+function decidingDim(win, lose){
+  // the dimension where the winner most out-earned the loser (weighted contribution)
+  var best=DIMS[0], bestC=-Infinity;
+  DIMS.forEach(function(d){ var c=(win[d.key]-lose[d.key])*WEIGHTS[d.w]; if(c>bestC){bestC=c;best=d;} });
+  return best;
 }
-function opCostMultiplier(eventId,severity,segId){
-  var def=EVENTS[eventId], base=(def.opcost&&def.opcost[segId]!=null)?def.opcost[segId]:1;
-  return 1 + (base-1)*CONFIG.severityFactor[severity];
-}
-function brandFactor(brand){ return CONFIG.brandFloorFactor + brand/CONFIG.brandFactorDiv; }
-function homeBonus(entity,segId){ return entity.home.indexOf(segId)>=0 ? CONFIG.homeBonusValue : 1; }
-function effectiveCapacity(entity,segId){
-  var ap=CONFIG.postures[entity.posture].appeal;
-  return (entity.capacity[segId]||0) * ap * brandFactor(entity.brand) * homeBonus(entity,segId);
-}
-
-// Demand pool for a segment this year. Sacred mechanic 1 lives in the share split below.
-function demandPool(state,segId,yearIndex){
-  var seg=segMeta(segId);
-  var ev=state.scenario.events[yearIndex], sev=state.scenario.severities[yearIndex];
-  var drift = segId==="ev" ? (1 + yearIndex*CONFIG.secularDriftEV) : 1;
-  var em = eventMultiplier(ev,sev,segId);
-  // the final model year is the decade-definer: amplify the SWING (deviation from 1), not the
-  // flat pool — so backing the right segment wins big and the wrong one craters (rewards commitment).
-  if(yearIndex===CONFIG.turns-1) em = 1 + (em-1)*CONFIG.finaleAmplifier;
-  return seg.basePool * CONFIG.poolUnit * em * drift * (state.pending[segId]||1);
+function revealNote(aw, bw){
+  var win = ratingOf(aw)>=ratingOf(bw)?aw:bw, lose = win===aw?bw:aw;
+  var gap = Math.abs(ratingOf(aw)-ratingOf(bw));
+  var d = decidingDim(win, lose);
+  var who = win.md;
+  if(gap < 1.0) return "Razor thin — "+fmtR(gap)+" apart. The "+who+" edged it on "+d.label.toLowerCase()+".";
+  if(gap < 3.0) return "Close one — "+fmtR(gap)+" apart. The "+who+" took it on "+d.label.toLowerCase()+".";
+  if(gap > 14)  return "Not close — the "+who+" runs away with it.";
+  return "The "+who+" took it on "+d.label.toLowerCase()+".";
 }
 
-// Rivals grow capacity on a bounded deterministic schedule (rule-based, seed-free):
-// faster in their home segments, slowly everywhere. Like the player, their build is
-// delayed — it goes into pendingCap and opens next year. They pay from cash so their
-// valuation stays honest for the final ranking.
-function rivalInvest(entity){
-  if(entity.isPlayer) return;
-  SEG_IDS.forEach(function(s){
-    var g = entity.home.indexOf(s)>=0 ? CONFIG.rivalHomeGrowth : CONFIG.rivalOffGrowth;
-    var add = (entity.capacity[s]||0)*g;
-    entity.pendingCap[s] = (entity.pendingCap[s]||0) + add;   // opens next year
-    entity.cash -= add*CONFIG.capacityCostPerUnit;
-  });
+/* ---------------- localStorage (casual integrity; never hard-blocks replay) ---------------- */
+function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ window.localStorage.setItem(k,v); }catch(e){} }
+function loadDaily(n){ try{ return JSON.parse(lsGet("higher_daily_"+n)); }catch(e){ return null; } }
+function saveDaily(n,rec){ lsSet("higher_daily_"+n, JSON.stringify(rec)); }
+function loadStats(){ try{ var v=JSON.parse(lsGet("higher_stats")); return (v&&typeof v.best==="number")?v:{best:0,played:0,lastDay:null}; }catch(e){ return {best:0,played:0,lastDay:null}; } }
+function saveStats(s){ lsSet("higher_stats", JSON.stringify(s)); }
+
+/* ---------------- app / state ---------------- */
+var App = { state:null, root:null };
+function newState(seed, practice){
+  return { seed:seed, daily:dailyNumber(), practice:!!practice, seq:buildSequence(seed),
+    idx:0, results:[], streak:0, best:0, phase:"intro", picked:null, revealed:false };
 }
+function setDaily(){ App.state = newState(todaySeed(), false); }
+function setPractice(){ App.state = newState("practice-"+Math.floor(Math.random()*1e9), true); }
 
-// Seed-deterministic personal event for one entity-year. Recall scales with a Budget
-// streak, viral with a Premium streak / high brand. Modest magnitude; applies to all
-// entities (bots included) so the daily stays comparable. Mutates the entity.
-function rollPersonalEvent(state,e,y){
-  var r=rngFromSeed(state.seed+"|pe|"+e.id+"|"+y)();
-  var recallP=Math.min(CONFIG.recallMaxProb, CONFIG.recallProbPerBudgetYr*(e.budgetStreak||0));
-  var viralP =Math.min(CONFIG.viralMaxProb, CONFIG.viralProbPerPremiumYr*(e.premiumStreak||0) + (e.brand>=CONFIG.viralBrandFloor?CONFIG.viralBonusProb:0));
-  if(r < recallP){ e.brand=clamp(e.brand-CONFIG.recallBrandHit,1,100); e.cash-=CONFIG.recallCashHit; return {type:"recall", cashDelta:-CONFIG.recallCashHit}; }
-  if(r > 1-viralP){ e.brand=clamp(e.brand+CONFIG.viralBrandBump,1,100); return {type:"viral", cashDelta:0}; }
-  return null;
-}
-
-// Resolve the model year at state.yearIndex. Player capacity/cash for this year's
-// build must already be applied by the caller. Mutates state; returns a summary.
-function resolveYear(state){
-  var y=state.yearIndex, ents=state.entities;
-  var ev=state.scenario.events[y], sev=state.scenario.severities[y];
-
-  // rivals build first (deterministic), then the market is contested
-  ents.forEach(rivalInvest);
-
-  var pools={}, sumEff={};
-  SEG_IDS.forEach(function(s){
-    pools[s]=demandPool(state,s,y);
-    var tot=0; ents.forEach(function(e){ tot+=effectiveCapacity(e,s); });
-    sumEff[s]=tot;
-  });
-
-  var playerProfit=0, playerSeg={}, playerPE=null;
-  ents.forEach(function(e){
-    var post=CONFIG.postures[e.posture], total=0;
-    e.lastSeg={};
-    SEG_IDS.forEach(function(s){
-      var seg=segMeta(s);
-      var share = sumEff[s]>0 ? effectiveCapacity(e,s)/sumEff[s] : 0;
-      var gross = share * pools[s];
-      var margin = seg.baseMargin * post.marginMod;
-      var opCost = (e.capacity[s]||0) * CONFIG.opCostPerUnit * opCostMultiplier(ev,sev,s);
-      var profit = gross*margin - opCost;
-      e.lastSeg[s] = { share:share, gross:gross, profit:profit, capacity:e.capacity[s]||0 };
-      total += profit;
-    });
-    var net = total - CONFIG.companyOverhead;   // debt is 0 in Phase 1
-    e.cash += net;
-    e.brand = clamp(e.brand + post.brandDelta, 1, 100);
-    // posture streaks + seed-deterministic personal event (recall / viral), all entities
-    e.budgetStreak  = (e.posture==="budget")  ? (e.budgetStreak||0)+1  : 0;
-    e.premiumStreak = (e.posture==="premium") ? (e.premiumStreak||0)+1 : 0;
-    var pe = rollPersonalEvent(state, e, y);
-    if(e.isPlayer){ playerProfit = net + (pe?pe.cashDelta:0); playerSeg=e.lastSeg; playerPE=pe; }
-  });
-
-  // Sacred mechanic 2: visible, telegraphed rival reactions. TWO triggers, both
-  // bite NEXT year (shrink that pool) and both are surfaced now as a market note:
-  //   - dominance: player share in a segment is above dominanceThreshold (price war)
-  //   - watchlist: player POURS new capacity (> rivalAlarmBuildUnits) into a rival's
-  //     home segment this year, even while still below the share threshold.
-  var notes=[], warnings=[], nextPending={};
-  SEG_IDS.forEach(function(s){ nextPending[s]=1; });
-  var pBuild = player(state).pendingCap;   // this year's player build (delayed), set by the caller
-  SEG_IDS.forEach(function(s){
-    var sh = playerSeg[s] ? playerSeg[s].share : 0;
-    var dominate = sh > CONFIG.dominanceThreshold;
-    var alarm = (pBuild[s]||0) > CONFIG.rivalAlarmBuildUnits;
-    if(!dominate && !alarm) return;
-    var seg=segMeta(s), def=rivalMeta(seg.defender), rivEnt=null;
-    for(var i=0;i<ents.length;i++) if(ents[i].id===seg.defender){ rivEnt=ents[i]; break; }
-    nextPending[s] = 1 - CONFIG.priceCutPenalty;
-    if(rivEnt) rivEnt.pendingCap[s] = (rivEnt.pendingCap[s]||0) + (rivEnt.capacity[s]||0)*CONFIG.reactionCapacityBump; // defends next year
-    if(dominate){
-      warnings.push({ seg:s, kind:"war",
-        text:def.city+" starts "+WAR_PHRASE[s]+" price war. Your "+seg.name+" profits get squeezed next year." });
-    } else {
-      warnings.push({ seg:s, kind:"watch",
-        text:def.city+" spots you tooling up in "+seg.name+" and is gearing up to defend. That pool tightens next year." });
-    }
-  });
-  state.pending = nextPending;
-
-  // capacity decay for everyone (replaces Retool)
-  ents.forEach(function(e){ SEG_IDS.forEach(function(s){ e.capacity[s] = (e.capacity[s]||0)*(1-CONFIG.capacityDecay); }); });
-
-  // record player history (drives the honest end screen)
-  var p=player(state);
-  var segLog={};
-  SEG_IDS.forEach(function(s){ segLog[s] = { capacity:p.lastSeg[s].capacity, share:p.lastSeg[s].share, profit:p.lastSeg[s].profit, alloc:(state.planned[s]||0) }; });
-  state.history.push({
-    year:y, event:ev, severity:sev, posture:p.posture,
-    profit:playerProfit, cashAfter:p.cash, brandAfter:p.brand, seg:segLog,
-    warnings:warnings.slice(),
-  });
-
-  return { profit:playerProfit, segProfit:playerSeg, notes:notes, warnings:warnings, pools:pools, personal:playerPE };
-}
-
-/* ============================ valuation / rank ============================ */
-function idlePenalty(entity){
-  var pen=0;
-  SEG_IDS.forEach(function(s){
-    if(entity.lastSeg[s] && entity.lastSeg[s].profit<0) pen += (entity.capacity[s]||0)*CONFIG.idlePenaltyPerUnit;
-  });
-  return pen;
-}
-function capacityValue(entity){
-  var v=0; SEG_IDS.forEach(function(s){ v += (entity.capacity[s]||0)*segMeta(s).capValue; }); return v;
-}
-function valuation(entity){
-  return entity.cash + capacityValue(entity) + entity.brand*CONFIG.brandValue - idlePenalty(entity);
-}
-function valuationBreakdown(entity){
-  return {
-    cash:entity.cash, capacity:capacityValue(entity), brand:entity.brand*CONFIG.brandValue,
-    idle:-idlePenalty(entity), total:valuation(entity),
-  };
-}
-function rankings(state){
-  return state.entities.map(function(e){ return { e:e, v:valuation(e) }; })
-    .sort(function(a,b){ return b.v-a.v; });
-}
-function playerRank(state){
-  var r=rankings(state); for(var i=0;i<r.length;i++) if(r[i].e.isPlayer) return i+1; return r.length;
-}
-function gradeFor(rank,total,fieldSize){
-  if(total<=0) return {g:"F",cls:"f"};
-  if(rank===1) return {g:"S",cls:"s"};
-  if(rank<=2) return {g:"A",cls:""};
-  if(rank<=3) return {g:"B",cls:""};
-  if(rank<=Math.ceil(fieldSize/2)) return {g:"C",cls:""};
-  return {g:"D",cls:""};
-}
-
-/* ============================ DOM helper ============================ */
+/* ---------------- DOM helper ---------------- */
 function el(tag,props,kids){
   props=props||{}; var n=document.createElement(tag);
   for(var k in props){ var v=props[k];
@@ -1187,215 +399,36 @@ function el(tag,props,kids){
   kids.forEach(function(c){ if(c==null||c===false) return; n.appendChild(typeof c==="string"?document.createTextNode(c):c); });
   return n;
 }
-
-/* ============================ app / rendering ============================ */
-var App = { state:null, root:null };
-
-function pad2(n){ return n<10?"0"+n:""+n; }
-function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }  // YYYYMMDD, same for everyone today
-function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
-function setSeed(seed,practice){ App.state = createState(seed); App.state.isPractice=!!practice; App.state.dailyNumber=dailyNumber(); App.prevStats=null; App.prevBudget=null; App.prevNem=null; App.savedThisGame=false; App.recallFlash=false; }
-function newSeed(){ return "practice|"+Math.floor(Math.random()*1e9); }
-
-/* ---- Pass 5 motion helpers (transform/opacity only; reduced-motion safe) ---- */
 function reduced(){ return prefersReducedMotion(); }
-// Tween a number from->to over ms with ease-out, writing fmt(value) each frame.
 function animateCount(node, from, to, ms, fmt){
   fmt = fmt || function(v){ return String(Math.round(v)); };
   if(!node) return;
   if(reduced() || ms<=0 || from===to){ node.textContent=fmt(to); return; }
   var t0=null, done=false;
   function finish(){ if(done) return; done=true; node.textContent=fmt(to); }
-  function step(ts){
-    if(done) return;
-    if(t0===null) t0=ts;
-    var t=Math.min(1,(ts-t0)/ms), e=1-Math.pow(1-t,3);
-    node.textContent=fmt(from+(to-from)*e);
-    if(t<1) requestAnimationFrame(step); else finish();
-  }
-  requestAnimationFrame(step);
-  setTimeout(finish, ms+80);   // safety net: guarantee the final value even if rAF is throttled
-}
-// FLIP: run doReorder() (which rearranges container's children), then slide each child
-// from its old position to its new one with a transform. Same nodes must persist.
-function flipReorder(container, doReorder){
-  if(reduced()){ doReorder(); return; }
-  var kids=[].slice.call(container.children), first=kids.map(function(k){ return k.getBoundingClientRect().top; });
-  doReorder();
-  var now=[].slice.call(container.children);
-  now.forEach(function(k){ var i=kids.indexOf(k); if(i<0) return; var dy=first[i]-k.getBoundingClientRect().top; if(!dy) return; k.style.transition="none"; k.style.transform="translateY("+dy+"px)"; });
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){
-    now.forEach(function(k){ k.style.transition="transform .5s cubic-bezier(.2,.7,.2,1)"; k.style.transform=""; });
-  }); });
-}
-// Apply staggered enter animation to a freshly mounted view's children.
-function staggerIn(view, opts){
-  if(reduced()||!view) return;
-  opts=opts||{};
-  var step=opts.step||40, i=0;
-  [].forEach.call(view.children, function(c){
-    if(c.classList.contains("event")) { i++; return; }    // the event banner stamps in on its own
-    c.classList.add("anim-up"); c.style.animationDelay=(i*step)+"ms"; i++;
-  });
-  var list=view.querySelector(".seglist");
-  if(list){ var j=0; [].forEach.call(list.children,function(seg){ seg.classList.add("anim-up"); seg.style.animationDelay=((i+ j)*0+ (3*step)+(j*step))+"ms"; j++; }); }
+  function step(ts){ if(done) return; if(t0===null) t0=ts; var t=Math.min(1,(ts-t0)/ms), e=1-Math.pow(1-t,3);
+    node.textContent=fmt(from+(to-from)*e); if(t<1) requestAnimationFrame(step); else finish(); }
+  requestAnimationFrame(step); setTimeout(finish, ms+80);
 }
 
-/* ---- Pass 6 helpers (display only; never touch game math) ---- */
-// The player's display name from the cosmetic identity (falls back to the neutral name).
-function playerLabel(state){ var m=identityMeta(state.identity); return m?(m.label+" Motors"):"Your company"; }
-// Grade colour family for the finale badge: S/A gold, B/C blue, D/F red.
-function gradeColorClass(g){ return (g==="S"||g==="A")?"gold":(g==="B"||g==="C")?"bluegrade":"redgrade"; }
-// Louder demand read: one chevron for a nudge, two for a real swing; colour by direction.
-function loudArrow(mult){
-  var big=Math.abs(mult-1)>0.18;
-  if(mult>1.05) return { ch: big?"▲▲":"▲", cls:"green" };
-  if(mult<0.95) return { ch: big?"▼▼":"▼", cls:"red" };
-  return { ch:"▬", cls:"muted" };
-}
-// The decade of bets: each model year's largest build as a coloured square (⬛ = harvested/none).
-// Encodes the PLAYER'S PATH, so two cards on the same daily visibly differ (the Wordle principle).
-function segPath(state){
-  return state.history.map(function(h){
-    var big=null,bu=0;
-    SEG_IDS.forEach(function(s){ var u=(h.seg[s]&&h.seg[s].alloc)||0; if(u>bu){bu=u;big=s;} });
-    return big ? segMeta(big).sq : SQ_NONE;
-  }).join("");
-}
-// Today's Briefing: market mood (era tendency), one rival to watch, and the line to beat.
-function briefingFor(state){
-  if(!state._par) state._par=computePar(state.seed);
-  var era=state.scenario.era||[];
-  var moodKey=era[0]||state.scenario.events[0];
-  var mood=BRIEF_MOOD[moodKey]||BRIEF_MOOD._default;
-  var bestSeg=SEG_IDS[0],bm=-1;
-  SEG_IDS.forEach(function(sg){ var m=eventMultiplier(moodKey,"medium",sg); if(m>bm){bm=m;bestSeg=sg;} });
-  var def=rivalMeta(segMeta(bestSeg).defender);
-  return { mood:mood, rival:def, seg:segMeta(bestSeg), par:state._par };
-}
-// A 10-tick valuation arc from valHistory (resolved years) + the live current value.
-function sparkline(state){
-  var vals=state.valHistory.slice(), cur=valuation(player(state));
-  var all=vals.concat([cur]).map(function(v){ return Math.max(0,v); });
-  var mx=Math.max.apply(null,[1].concat(all));
-  var bars=el("div",{class:"spark"});
-  for(var i=0;i<CONFIG.turns;i++){
-    var known=i<vals.length, isCur=(i===vals.length);
-    var v = known ? vals[i] : (isCur?cur:null);
-    var h = v==null ? 12 : Math.max(6, Math.round(Math.max(0,v)/mx*100));
-    bars.appendChild(el("div",{class:(v==null?"sb":isCur?"sb cur":"sb on"),style:"height:"+h+"%"}));
-  }
-  return el("div",{class:"sparkwrap"},[ el("div",{class:"sparklab",text:"Company value · 10-year arc"}), bars ]);
-}
-// Two-bar photo finish: you vs the rival who edged you (or the runner-up if you won).
-function photoFinish(youName, youVal, them){
-  var themVal=valuation(them), mx=Math.max(1,youVal,themVal);
-  function w(v){ return Math.max(4,Math.round(Math.max(0,v)/mx*100)); }
-  return el("div",{class:"photo"},[
-    el("div",{class:"ph",text:"Photo finish"}),
-    el("div",{class:"pbar"},[ el("div",{class:"pname",text:youName}),
-      el("div",{class:"ptrack"},[ el("div",{class:"pfill you",style:"width:"+w(youVal)+"%"}) ]),
-      el("div",{class:"pval",text:fmtMoney(youVal)}) ]),
-    el("div",{class:"pbar"},[ el("div",{class:"pname",text:(them.flag?them.flag+" ":"")+them.name}),
-      el("div",{class:"ptrack"},[ el("div",{class:"pfill them",style:"width:"+w(themVal)+"%"}) ]),
-      el("div",{class:"pval",text:fmtMoney(themVal)}) ]),
-  ]);
-}
-// Casual daily lock + streak (localStorage). Integrity only — never hard-blocks replay.
-function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
-function lsSet(k,v){ try{ window.localStorage.setItem(k,v); }catch(e){} }
-function loadDaily(n){ try{ return JSON.parse(lsGet("my_daily_"+n)); }catch(e){ return null; } }
-function saveDaily(n,rec){ lsSet("my_daily_"+n, JSON.stringify(rec)); }
-function loadStreak(){ try{ var v=JSON.parse(lsGet("my_streak")); return (v&&typeof v.count==="number")?v:{count:0,lastDay:null}; }catch(e){ return {count:0,lastDay:null}; } }
-function bumpStreak(n){ var st=loadStreak(); if(st.lastDay===n) return st; st.count=(st.lastDay===(n-1))?(st.count+1):1; st.lastDay=n; lsSet("my_streak",JSON.stringify(st)); return st; }
-
-/* ---- Pass 7: car art integration (display only; cars are cosmetic over the build action) ---- */
-// Seed-deterministic model names + specs, flavoured per segment. No real trademarks.
-var MODEL_NAMES = {
-  economy:    ["Sprout","Pip","Dart","Cricket","Wren","Pebble","Scout","Echo"],
-  family:     ["Summit","Harbor","Meridian","Aspen","Haven","Crossing","Trailhead","Vista"],
-  performance:["Vello","Blaze","Apex","Strato","Vipera","Comet","Falco","Razor"],
-  luxury:     ["Sovereign","Regalia","Empire","Aurelia","Marque","Vanguard","Noble","Crown"],
-  ev:         ["Ion","Volt","Lumen","Flux","Nova","Pulse","Helix","Arc"],
-  pickup:     ["Brute","Boulder","Mesa","Anvil","Workhorse","Forge","Ridge","Sierra"],
-};
-var MODEL_SPEC = {
-  economy:    { power:[101,138], zero:[8.6,11.2], price:[16,24] },
-  family:     { power:[205,278], zero:[6.6,8.5],  price:[32,46] },
-  performance:{ power:[404,648], zero:[2.9,4.2],  price:[72,124] },
-  luxury:     { power:[352,458], zero:[4.2,5.5],  price:[92,162] },
-  ev:         { power:[402,520], zero:[3.2,4.6],  price:[51,73] },
-  pickup:     { power:[362,418], zero:[6.0,7.2],  price:[41,61], tow:[9000,13000] },
-};
-// Build a deterministic model identity for a launch in a segment in a given year.
-function modelIdentity(state, segId, y){
-  var seg=segMeta(segId), rng=rngFromSeed(state.seed+"|model|"+segId+"|"+y);
-  var pool=MODEL_NAMES[segId]||["Mark"], name=pool[Math.floor(rng()*pool.length)];
-  var sp=MODEL_SPEC[segId], power=Math.round(sp.power[0]+rng()*(sp.power[1]-sp.power[0]));
-  var zero=(sp.zero[0]+rng()*(sp.zero[1]-sp.zero[0])).toFixed(1);
-  var price=Math.round(sp.price[0]+rng()*(sp.price[1]-sp.price[0]));
-  var specs=[power+" hp"];
-  if(segId==="pickup"){ var tow=Math.round((sp.tow[0]+rng()*(sp.tow[1]-sp.tow[0]))/100)*100; specs.push(tow.toLocaleString()+" lb tow"); }
-  else if(segId==="ev"){ specs.push(zero+"s 0–60"); specs.push("instant torque"); }
-  else { specs.push(zero+"s 0–60"); }
-  specs.push("$"+price+"k");
-  return { seg:segId, body:seg.body, livery:seg.color, name:name, specs:specs, power:power, zero:zero, price:price, year:y };
-}
-// The player's primary launch for a resolved year: the segment that got the largest build (>0).
-function primaryLaunch(state, plannedMap, y){
-  var big=null,bu=0; SEG_IDS.forEach(function(s){ var u=(plannedMap&&plannedMap[s])||0; if(u>bu){bu=u;big=s;} });
-  if(!big) return null;
-  var m=modelIdentity(state,big,y); m.units=bu; return m;
-}
-// One unique SVG id namespace per car instance currently in the DOM (avoids gradient-id collisions).
-var ART_UID=0; function nextUid(p){ ART_UID++; return (p||"c")+ART_UID; }
-// Inline car (no studio/reflection) wrapped in a cropped <svg>; for the many small board cards.
-function carInline(body, livery, uid){
-  return '<svg class="caro" viewBox="14 38 312 86" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+ART.carArt(body,livery,uid)+'</svg>';
-}
-// The player's distinct-segment range (one representative — the biggest build — per segment), for the garage lineup.
-function garageModels(state){
-  var byseg={};
-  (state.launches||[]).forEach(function(m){ if(!byseg[m.seg] || m.units>byseg[m.seg].units) byseg[m.seg]=m; });
-  // order by SEG_IDS so the spectrum reads left-to-right consistently
-  return SEG_IDS.map(function(s){ return byseg[s]; }).filter(Boolean).slice(0,6);
-}
-// The flagship: the launch with the biggest single build (ties -> earliest). Falls back to first launch.
-function flagshipModel(state){
-  var L=state.launches||[]; if(!L.length) return null;
-  var best=L[0]; L.forEach(function(m){ if(m.units>best.units || (m.units===best.units && m.year<best.year)) best=m; });
-  return best;
-}
-
+/* ---------------- render ---------------- */
 function render(){
-  var s=App.state, root=App.root, fresh=!!App.freshView;   // fresh = real phase change, not a stepper re-render
+  var s=App.state, root=App.root, fresh=!!App.fresh;
   root.innerHTML="";
   root.appendChild(topbar());
-  var view=null;
-  if(s.phase==="help") view=helpView();
-  else if(s.phase==="intro") view=introView();
-  else if(s.phase==="turn") view=turnView();
-  else if(s.phase==="result") view=resultView();
-  else if(s.phase==="end") view=endView();
-  if(view){ root.appendChild(view); if(fresh && s.phase!=="end") staggerIn(view); }   // end runs its own choreography
-  if(CONFIG.debug && s.phase!=="help") root.appendChild(debugView());
-  App.freshView=false;
+  var view = s.phase==="intro"?introView() : s.phase==="end"?endView() : roundView();
+  root.appendChild(view);
+  if(fresh && s.phase!=="play"&&s.phase!=="reveal"){ [].forEach.call(view.children,function(c,i){ c.classList.add("anim-up"); c.style.animationDelay=(i*45)+"ms"; }); }
+  App.fresh=false;
 }
-// How to play is reachable from anywhere; it remembers the screen to return to.
-function helpOpen(){ var s=App.state; if(s.phase!=="help") s._return=s.phase; s.phase="help"; App.freshView=true; render(); window.scrollTo(0,0); }
-function helpClose(){ var s=App.state; s.phase=s._return||"intro"; App.freshView=true; render(); window.scrollTo(0,0); }
-
 function topbar(){
+  var s=App.state;
   return el("header",{class:"topbar"},[
     motor1Logo(),
-    el("div",{class:"topright"},[
-      el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"MODEL YEAR"}), el("span",{class:"gd",text: App.state.isPractice?"Practice":("Daily #"+App.state.dailyNumber)}) ]),
-      el("button",{class:"helpbtn","aria-label":"How to play",title:"How to play",onclick:helpOpen,text:"?"}),
-    ]),
+    el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"HIGHER"}),
+      el("span",{class:"gd",text: s.practice?"Practice":("Daily #"+s.daily)}) ]),
   ]);
 }
-// The motor1.com logo, recreated as inline SVG so the page stays self-contained:
-// lowercase "motor", the "1" inside a blue ring with the signature gap + dot, then ".com".
 function motor1Logo(){
   var a=el("a",{class:"m1",href:"#","aria-label":"motor1.com",onclick:function(e){e.preventDefault();}});
   a.innerHTML =
@@ -1409,922 +442,227 @@ function motor1Logo(){
   return a;
 }
 
-function briefCard(state){
-  var b=briefingFor(state);
-  return el("div",{class:"brief"},[
-    el("div",{class:"bk",text:"Today's briefing · Daily #"+state.dailyNumber}),
-    el("div",{class:"bmood",text:b.mood}),
-    el("div",{class:"brow"},[ el("span",{class:"blab",text:"Rival to watch"}),
-      el("span",{class:"bval",text:b.rival.flag+" "+b.rival.city}) ]),
-    el("div",{class:"brow"},[ el("span",{class:"blab",text:"The line to beat"}),
-      el("span",{class:"bval bnums"},[ "Par ", el("span",{class:"num",text:fmtMoney(b.par.par)}), "  ·  Top 10% ", el("span",{class:"num",text:fmtMoney(b.par.top10)}) ]) ]),
-  ]);
-}
-function identityPicker(state){
-  var grid=el("div",{class:"idgrid"});
-  IDENTITIES.forEach(function(it){
-    grid.appendChild(el("div",{class:"idbtn"+(state.identity===it.id?" on":""),role:"button",tabindex:"0",
-      "aria-pressed":(state.identity===it.id?"true":"false"),
-      onclick:function(){ state.identity=it.id; render(); },
-      onkeydown:function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); state.identity=it.id; render(); } }},[
-      el("div",{class:"il",text:it.label}),
-      el("div",{class:"ib",text:it.blurb}),
-    ]));
-  });
-  return el("div",{class:"idpick"},[ el("div",{class:"seclbl",text:"Pick your house style"}), grid ]);
-}
+/* ---------------- intro ---------------- */
 function introView(){
-  var s=App.state, streak=loadStreak();
-  var done = !s.isPractice ? loadDaily(s.dailyNumber) : null;
+  var s=App.state, stats=loadStats(), done = !s.practice ? loadDaily(s.daily) : null;
   var wrap=el("div",{class:"intro"},[]);
-  if(streak.count>0 && !s.isPractice) wrap.appendChild(el("span",{class:"streak",text:"🔥 "+streak.count+"-day streak"}));
   if(done) wrap.appendChild(el("div",{class:"donebanner"},[ el("span",{text:"✅"}),
-    el("span",{},[ el("b",{text:"Today's daily is in the books — "}), "you finished grade "+done.grade+", valued "+fmtMoney(done.value)+". Replay all you like; it won't change your streak." ]) ]));
-  wrap.appendChild(el("div",{class:"big"},[ "Run an automaker for ", el("span",{class:"yr",text:"10 model years"}), "." ]));
-  wrap.appendChild(el("div",{class:"lede",text:"New scenario, ten model years, about two minutes. Put your money across the market while the legends — from Maranello to Silicon Sparks — fight you for the same buyers. Highest company valuation wins."}));
-  wrap.appendChild(briefCard(s));
-  wrap.appendChild(identityPicker(s));
-  wrap.appendChild(el("div",{class:"sacred"},[
-    el("div",{class:"s"},[ el("b",{text:"Contested — "}), "your revenue is a slice of a shared pool, not a fixed reward. Pile into a crowded segment and you split a thin pie." ]),
-    el("div",{class:"s"},[ el("b",{text:"Telegraphed — "}), "dominate a segment and its owner starts a price war next year. You're warned before it bites." ]),
-    el("div",{class:"s"},[ el("b",{text:"Forecast — "}), "a vague signal arrives a year ahead. Most are real, some are bait. Reading them is the game." ]),
+    el("span",{},[ el("b",{text:"Today's done — "}), "you scored "+done.score+"/"+N_MATCHUPS+", best streak "+done.best+". Replay anytime; it won't change your record." ]) ]));
+  wrap.appendChild(el("div",{class:"big"},[ "Which car is ", el("span",{class:"hl",text:"worth more"}), "?" ]));
+  wrap.appendChild(el("div",{class:"lede",text:"Two cars, side by side. Tap the one with the higher value rating, then see the four-part breakdown. String together a streak. About two minutes."}));
+  wrap.appendChild(el("div",{class:"how"},[
+    howStep("1","Two cars face off. You get the year, make, model and class — but not the rating."),
+    howStep("2","Tap the one you think is worth more."),
+    howStep("3","See both ratings and the bars: value, performance, desirability, rarity. Right answer extends your streak; wrong resets it."),
   ]));
-  wrap.appendChild(el("button",{class:"btn primary",style:"margin-top:16px",
-    text:(s.isPractice?"Start practice run":(done?"Replay daily #"+s.dailyNumber:("Play daily #"+s.dailyNumber))),onclick:function(){ beginTurn(); }}));
-  wrap.appendChild(el("div",{class:"actions",style:"margin-top:8px"},[
-    el("button",{class:"btn ghost",text:"Practice run (random scenario)",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
+  wrap.appendChild(el("div",{class:"statline"},[
+    statBox("Best streak", stats.best||0),
+    statBox("Days played", stats.played||0),
+    statBox("Cars", CARS.length),
   ]));
-  wrap.appendChild(el("button",{class:"helplink",text:"New here? How to play →",onclick:helpOpen}));
-  wrap.appendChild(el("div",{class:"foot",text:"New scenario every day, same for everyone. A daily car-industry game for Motor1 — vanilla JS, no backend, no real brand names in play."}));
+  wrap.appendChild(el("button",{class:"btn primary",text:(done?"Replay daily #"+s.daily:"Play daily #"+s.daily),onclick:function(){ start(); }}));
+  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random cars)",onclick:function(){ setPractice(); start(); }}));
+  wrap.appendChild(el("div",{class:"foot",text:"New matchups every day, the same for everyone. A daily car game for Motor1 — value is real; performance, desirability and rarity are estimates for now."}));
   return wrap;
 }
+function howStep(n,t){ return el("div",{class:"h"},[ el("div",{class:"n",text:n}), el("div",{class:"t",text:t}) ]); }
+function statBox(k,v){ return el("div",{class:"statbox"},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:String(v)}) ]); }
 
-function helpStep(n,t,b){
-  return el("div",{class:"help-step"},[
-    el("div",{class:"n",text:n}),
-    el("div",{class:"c"},[ el("div",{class:"t",text:t}), el("div",{class:"b",text:b}) ]),
-  ]);
-}
-function helpRule(ic,t,b){
-  return el("div",{class:"help-rule"},[
-    el("div",{class:"ic",text:ic}),
-    el("div",{},[ el("div",{class:"t",text:t}), el("div",{class:"b",text:b}) ]),
-  ]);
-}
-function helpView(){
-  return el("div",{class:"help"},[
-    el("div",{class:"help-h"},[
-      el("h2",{class:"display",text:"How to play"}),
-      el("p",{text:"You run an automaker for ten model years. Read the market, place your bets a year early, and finish worth more than the legends. About two minutes a day."}),
-    ]),
-    el("div",{class:"seclbl",text:"Every model year"}),
-    helpStep("1","Read the market","An event hits — oil shock, EV boom, recession — and swings demand up or down in each segment. A vague forecast also hints at NEXT year. Most forecasts are real; about a third are bait."),
-    helpStep("2","Build capacity","Spend cash to build factory capacity in the segments you like. Here's the catch: what you build this year only opens NEXT year. You're betting on the forecast, not today's headline."),
-    helpStep("3","Pick a posture","One company-wide call for the year — Budget (more buyers, thin margins), Standard, or Premium (fewer sales, fat margins, grows your brand)."),
-    helpStep("4","Run the year","Profit lands, brand shifts, and rivals make their moves. Then on to the next model year."),
-    el("div",{class:"seclbl",text:"What to watch"}),
-    helpRule("⏳","Capacity opens a year late","Build for where the market is GOING, not where it is. A factory you start now produces next year — so the forecast is everything."),
-    helpRule("🥧","Revenue is a shared slice","Each segment is one demand pool split by capacity. Pile into a crowded segment and you split a thin pie; own a quiet one and it pays."),
-    helpRule("📣","Rivals fight back — with warning","Dominate a segment, or pour money into a rival's home turf, and they start a price war that thins that pool next year. You always get the warning first."),
-    helpRule("📉","Positions fade","Capacity decays a little every year. Keep reinvesting to hold a segment — or let a bad bet quietly melt away."),
-    el("div",{class:"seclbl",text:"Winning"}),
-    el("p",{class:"help-p",text:"After ten years your company is valued on cash + factory value + brand equity, minus drag from idle capacity. You're ranked against six rivals and the strategy bots: clear the bogey, beat par, and chase the top-10% line."}),
-    el("button",{class:"btn primary",text:"Got it — back",onclick:helpClose}),
-  ]);
-}
+function start(){ var s=App.state; s.phase="play"; s.idx=0; s.results=[]; s.streak=0; s.best=0; s.picked=null; s.revealed=false; App.fresh=true; render(); window.scrollTo(0,0); }
 
-function statusCluster(){
-  var s=App.state, p=player(s);
-  var cash=p.cash, val=valuation(p);
-  var prev=App.prevStats||{cash:cash,value:val};
-  var late = s.yearIndex>=CONFIG.turns-3;   // snappier numbers in the closing years
-  var ms = late?380:600;
-  var cashV=el("div",{class:"v num",text:fmtMoney(prev.cash)});
-  var valV =el("div",{class:"v num",text:fmtMoney(prev.value)});
-  animateCount(valV,  prev.value, val, ms, fmtMoney);
-  animateCount(cashV, prev.cash, cash, ms, fmtMoney);
-  App.prevStats={cash:cash,value:val};
-  var flash = App.recallFlash ? " flash-red" : ""; App.recallFlash=false;   // a recall last year flashes the scoreboard red
-  // Value is the dominant gauge; Year / Cash / Rank ride below it.
-  return el("div",{},[
-    el("div",{class:"valgauge"+flash},[ el("div",{class:"k",text:"Company value"}), valV ]),
-    el("div",{class:"cluster3"},[
-      gauge("Year",(s.yearIndex+1)+" / "+CONFIG.turns,"year"),
-      gaugeNode("Cash",cashV),
-      gauge("Rank","#"+playerRank(s)+" / "+s.entities.length),
-    ]),
-  ]);
+/* ---------------- a round (play + reveal share one view) ---------------- */
+function streakChip(){
+  var s=App.state, hot=s.streak>=3;
+  var label = s.streak>0 ? (hot?"🔥 ":"")+s.streak+" streak" : "no streak";
+  return el("div",{class:"streakchip"+(hot?" hot":""),text:label});
 }
-function gauge(k,v,cls){
-  return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:v}) ]);
+function pips(){
+  var s=App.state, row=el("div",{class:"pips"});
+  for(var i=0;i<N_MATCHUPS;i++){
+    var cls="pip";
+    if(i<s.results.length) cls += s.results[i].correct?" win":" miss";
+    else if(i===s.idx) cls += " now";
+    row.appendChild(el("div",{class:cls}));
+  }
+  return row;
 }
-function gaugeNode(k,vNode,cls){
-  return el("div",{class:"gauge "+(cls||"")},[ el("div",{class:"k",text:k}), vNode ]);
+function carCard(side, m, role){
+  // role: "tap" (play) or "reveal"
+  var c = side==="left"? m.a.c : m.b.c;
+  var isWin=null;
+  if(role==="reveal"){ var aw=ratingOf(m.a.c), bw=ratingOf(m.b.c); var thisR=ratingOf(c); var otherR= side==="left"?bw:aw; isWin = thisR>otherR; }
+  var cls="car "+side+(role==="tap"?" tap":"")+(role==="reveal"?(isWin?" win":" lose"):"");
+  var kids=[
+    el("div",{class:"yr",text:c.yr}),
+    el("div",{class:"mk",text:c.mk}),
+    el("div",{class:"md",text:c.md}),
+    el("div",{class:"badge",text:c.cat}),
+  ];
+  if(role==="tap"){
+    kids.push(el("div",{class:"taphint",text:"Tap if higher"}));
+  } else {
+    var rn=el("div",{class:"rating num",text:fmtR(0)});
+    kids.push(el("div",{class:"rk"},[ "Rating", c.approx?el("span",{class:"est",text:"est."}):null ]));
+    kids.push(rn);
+    if(isWin) kids.push(el("div",{class:"crown",text:"HIGHER ✓"}));
+    m["_rn_"+side]=rn;
+  }
+  var node=el("div",{class:cls, role: role==="tap"?"button":null, tabindex: role==="tap"?"0":null});
+  kids.forEach(function(k){ if(k) node.appendChild(k); });
+  if(role==="tap"){
+    var pick=function(){ choose(side); };
+    node.addEventListener("click", pick);
+    node.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } });
+  }
+  return node;
 }
-// The nemesis: the rival nearest the player in valuation, tiebreaking toward one whose
-// home is the player's strongest lane. Re-evaluated every year so the chase stays live.
-function nemesisFor(state){
-  var p=player(state), pv=valuation(p);
-  var strongest=SEG_IDS[0],mx=-1; SEG_IDS.forEach(function(sg){ if((p.capacity[sg]||0)>mx){mx=p.capacity[sg]||0;strongest=sg;} });
-  var best=null,bestScore=Infinity;
-  state.entities.forEach(function(e){
-    if(e.isPlayer) return;
-    var score=Math.abs(valuation(e)-pv) - (e.home.indexOf(strongest)>=0?0.001:0);  // tiny nudge toward a lane rival
-    if(score<bestScore){ bestScore=score; best=e; }
-  });
-  return best;
-}
-// One line before the board: did last year's bet pay off? Uses history + this year's event.
-function forecastBeat(state,y){
-  if(y<=0) return null;
-  var actual=state.scenario.events[y], sev=state.scenario.severities[y];
-  var evName=EVENTS[actual].name.toLowerCase();
-  var prev=state.history[y-1];
-  // the player's biggest build last year (it opens this year)
-  var bigSeg=null,bigU=0; if(prev){ SEG_IDS.forEach(function(sg){ var u=prev.seg[sg].alloc||0; if(u>bigU){bigU=u;bigSeg=sg;} }); }
-  if(!bigSeg) return { tone:"flat", seg:null, text:"You sat out last year's build. The "+evName+" lands with your lineup unchanged." };
-  var m=eventMultiplier(actual,sev,bigSeg), nm=segMeta(bigSeg).name;
-  var calledIt = state.scenario.forecastTrue[y-1];
-  if(m>1.08) return { tone:"good", seg:bigSeg, text:"Your new "+nm+" capacity opens right as the "+evName+" hits"+(calledIt?" — you called it":"")+". Perfect timing." };
-  if(m<0.92) return { tone:"bad", seg:bigSeg, text:"Your fresh "+nm+" line opens into the teeth of the "+evName+". Brutal timing." };
-  return { tone:"flat", seg:bigSeg, text:"Your "+nm+" build comes online into a "+evName+" that barely moves it." };
-}
-function nemesisBanner(state,y){
-  var nem=nemesisFor(state); if(!nem) return null;
-  var pv=valuation(player(state)), gap=valuation(nem)-pv, behind=gap>0;
-  var left=CONFIG.turns-(y+1);
-  var leftTxt = left<=0 ? "final year" : (left+(left===1?" year left":" years left"));
-  var prev=App.prevNem, sameNem=prev&&prev.id===nem.id, passed=sameNem&&(prev.behind!==behind);
-  var gapNode=el("b",{text:fmtMoney(Math.abs(gap))});
-  if(App.freshView && sameNem) animateCount(gapNode, Math.abs(prev.gap), Math.abs(gap), 600, fmtMoney);
-  App.prevNem={id:nem.id, gap:gap, behind:behind};
-  var banner=el("div",{class:"nemesis "+(behind?"behind":"ahead")+(passed&&App.freshView?" shake":"")},[
-    el("span",{class:"ne-ic",text:behind?"▼":"▲"}),
-    el("span",{class:"ne-txt"},[ (behind?"Chasing ":"Holding off "), el("b",{text:nem.name}), " "+nem.flag+" — ", gapNode, (behind?" behind":" ahead") ]),
-    el("span",{class:"ne-left",text:leftTxt}),
-  ]);
-  if(passed && App.freshView) banner.appendChild(el("div",{class:"ne-callout "+(behind?"bad":"good"),text:(behind?("⚑ "+nem.name+" just passed you"):("⚑ You passed "+nem.name))}));
-  return banner;
-}
-function standingsTicker(state){
-  var r=state.lastRank||playerRank(state), mv=state.rankMove||0;
-  var word = mv>0 ? "▲ Climbed to" : mv<0 ? "▼ Slipped to" : "Holding";
-  var cls = mv>0 ? "up" : mv<0 ? "down" : "flat";
-  var nudge = (mv>0 && App.freshView) ? " nudge-up" : "";   // live overtake gives the ticker a little hop
-  return el("span",{class:"tick "+cls+nudge,style:"display:inline-block",text:word+" P"+r+" of "+state.entities.length});
-}
-
-function capitalRemaining(){
-  var s=App.state, p=player(s), spent=0;
-  SEG_IDS.forEach(function(seg){ spent += (s.planned[seg]||0)*CONFIG.capacityCostPerUnit; });
-  return p.cash - spent;
-}
-
-function turnView(){
-  var s=App.state, p=player(s), y=s.yearIndex;
-  var ev=EVENTS[s.scenario.events[y]];
-  var openingLabel = y===0 ? "Opening conditions" : "This year";
-
+function roundView(){
+  var s=App.state, m=s.seq[s.idx], role = s.revealed?"reveal":"tap";
   var wrap=el("div",{},[]);
-  wrap.appendChild(statusCluster());
-  wrap.appendChild(sparkline(s));   // the 10-year valuation arc fills in as the decade resolves
+  wrap.appendChild(el("div",{class:"hud"},[ pips(), streakChip() ]));
+  wrap.appendChild(el("div",{class:"prompt"},[
+    el("div",{class:"q",text: s.revealed?"The reveal":"Which is worth more?"}),
+    el("div",{class:"sub",text:"Matchup "+(s.idx+1)+" of "+N_MATCHUPS}),
+  ]));
+  var ring=el("div",{class:"ring"},[ carCard("left",m,role), carCard("right",m,role), el("div",{class:"vs",text:"VS"}) ]);
+  wrap.appendChild(ring);
 
-  // standings ticker + named-nemesis head-to-head (D + C)
-  var nb=nemesisBanner(s,y);
-  if(nb){ var bar=el("div",{class:"statusbar"},[ standingsTicker(s), nb ]); wrap.appendChild(bar); }
+  if(!s.revealed) return wrap;
 
-  // forecast-resolution beat: did last year's bet pay off? (D)
-  var beat=forecastBeat(s,y);
-  if(beat){ wrap.appendChild(el("div",{class:"beat "+beat.tone},[ el("span",{class:"beat-ic",text: beat.tone==="good"?"✅":beat.tone==="bad"?"⚠️":"•"}), beat.text ])); }
-  var goodSeg = (beat && beat.tone==="good" && App.freshView) ? beat.seg : null;   // pulse the card that drove the good call
+  // --- reveal: count up ratings, breakdown bars, verdict ---
+  var ra=ratingOf(m.a.c), rb=ratingOf(m.b.c);
+  animateCount(m._rn_left,  0, ra, 650, fmtR);
+  animateCount(m._rn_right, 0, rb, 650, fmtR);
+  if(!reduced()){ var winCard=ring.querySelector(".car.win"); if(winCard) winCard.classList.add("flash"); }
 
-  // 1+2. reveal current event (the outcome of last year's forecast), pools already include it
-  wrap.appendChild(el("div",{class:"event"+(App.freshView?" anim-stamp":"")},[
-    el("div",{class:"lbl"},[ openingLabel+" · "+(y+1)+"/"+CONFIG.turns ]),
-    el("div",{class:"ttl"},[ CONFIG.emoji[s.scenario.events[y]]+" "+ev.name ]),
-    el("div",{class:"body",text:ev.reveal}),
+  wrap.appendChild(breakdownPanel(m));
+
+  var correct = s.results[s.idx].correct;
+  wrap.appendChild(el("div",{class:"verdict "+(correct?"right":"wrong")},[
+    el("div",{class:"vt"+(reduced()?"":" anim-pop"),text: correct?"Correct":"Nope"}),
+    el("div",{class:"note",html: revealNote(m.a.c, m.b.c) }),
+  ]));
+  var last = s.idx>=N_MATCHUPS-1;
+  wrap.appendChild(el("button",{class:"btn primary",text: last?"See your results ▸":"Next matchup ▸",onclick:function(){ next(); }}));
+  return wrap;
+}
+function breakdownPanel(m){
+  var panel=el("div",{class:"breakdown"},[
+    el("div",{class:"bh"},[ el("span",{text:"The breakdown"}),
+      el("span",{class:"leg"},[ el("span",{},[ el("i",{class:"la"}), m.a.c.md.length>10?m.a.c.md.slice(0,10)+"…":m.a.c.md ]),
+        el("span",{},[ el("i",{class:"lb"}), m.b.c.md.length>10?m.b.c.md.slice(0,10)+"…":m.b.c.md ]) ]) ]),
+  ]);
+  var fills=[];
+  DIMS.forEach(function(d){
+    var av=m.a.c[d.key], bv=m.b.c[d.key];
+    var fa=el("div",{class:"fill"}), fb=el("div",{class:"fill"});
+    fills.push([fa,av],[fb,bv]);
+    panel.appendChild(el("div",{class:"drow"},[
+      el("div",{class:"dl",text:d.label}),
+      el("div",{class:"bar a"+(av>=bv?" hi":"")},[ el("div",{class:"track"},[fa]), el("span",{class:"bv",text:String(av)}) ]),
+      el("div",{class:"bar b"+(bv>av?" hi":"")},[ el("div",{class:"track"},[fb]), el("span",{class:"bv",text:String(bv)}) ]),
+    ]));
+  });
+  // animate the bar fills in (width tween); reduced-motion sets final width immediately
+  if(reduced()){ fills.forEach(function(f){ f[0].style.width=f[1]+"%"; }); }
+  else { requestAnimationFrame(function(){ requestAnimationFrame(function(){ fills.forEach(function(f){ f[0].style.width=f[1]+"%"; }); }); }); }
+  return panel;
+}
+
+function choose(side){
+  var s=App.state; if(s.revealed) return;
+  var m=s.seq[s.idx];
+  var ra=ratingOf(m.a.c), rb=ratingOf(m.b.c);
+  var pickedHigher = side==="left" ? (ra>=rb) : (rb>=ra);
+  s.picked=side; s.revealed=true;
+  s.results[s.idx] = { correct:pickedHigher };
+  if(pickedHigher){ s.streak++; if(s.streak>s.best) s.best=s.streak; }
+  else { s.streak=0; }
+  s.phase="reveal";
+  render(); window.scrollTo(0,0);
+}
+function next(){
+  var s=App.state;
+  if(s.idx>=N_MATCHUPS-1){ finish(); return; }
+  s.idx++; s.revealed=false; s.picked=null; s.phase="play";
+  render(); window.scrollTo(0,0);
+}
+function finish(){
+  var s=App.state;
+  if(!s.practice){
+    var score=s.results.filter(function(r){return r.correct;}).length;
+    if(!loadDaily(s.daily)) saveDaily(s.daily, { score:score, best:s.best, strip: s.results.map(function(r){return r.correct?1:0;}) });
+    var st=loadStats();
+    if(st.lastDay!==s.daily){ st.played=(st.played||0)+1; st.lastDay=s.daily; }
+    if(s.best>(st.best||0)) st.best=s.best;
+    saveStats(st);
+  }
+  s.phase="end"; App.fresh=true; render(); window.scrollTo(0,0);
+}
+
+/* ---------------- end / share ---------------- */
+function scoreVerdict(score){
+  var p=score/N_MATCHUPS;
+  if(p>=0.92) return "Collector-grade. You know your metal.";
+  if(p>=0.75) return "Sharp eye.";
+  if(p>=0.5)  return "Respectable. The close ones are the skill.";
+  if(p>=0.25) return "The market humbles everyone.";
+  return "Rough day at auction.";
+}
+function endView(){
+  var s=App.state;
+  var score=s.results.filter(function(r){return r.correct;}).length;
+  var stats=loadStats();
+  var wrap=el("div",{class:"end"},[]);
+  wrap.appendChild(el("div",{class:"endhead"},[
+    el("div",{class:"k",text:(s.practice?"Practice run":"Daily #"+s.daily)+" · complete"}),
+    el("div",{class:"score num",text:score+"/"+N_MATCHUPS}),
+    el("div",{class:"ssub",text:"Best streak this run: "+s.best}),
+    el("div",{class:"verdictline",text:scoreVerdict(score)}),
+  ]));
+  wrap.appendChild(el("div",{class:"endstats"},[
+    statBox("This run", score+"/"+N_MATCHUPS),
+    statBox("Run streak", s.best),
+    statBox("All-time best", Math.max(stats.best||0, s.best)),
   ]));
 
-  // delayed-capacity reminder: what you build this year opens next year
-  wrap.appendChild(el("div",{class:"buildhint",html: y<CONFIG.turns-1
-    ? "🏗️ New capacity opens <b>next year</b> (model year "+(y+2)+") — you're building for the forecast, not this year's headline."
-    : "🏁 Final model year — new builds won't open in time to earn. They only add asset value at the buzzer." }));
-
-  // foreshadow recall risk when the player leans on Budget (E)
-  if(p.budgetStreak>=2) wrap.appendChild(el("div",{class:"beat bad"},[ el("span",{class:"beat-ic",text:"⚠️"}),
-    "You've run Budget "+p.budgetStreak+" years straight — corners are being cut, and recall risk is climbing." ]));
-
-  // 3. the board: a coloured battlefield row per segment + inline allocation
-  var list=el("div",{class:"seglist"});
-  SEGMENTS.forEach(function(seg){
-    var evMult=eventMultiplier(s.scenario.events[y],s.scenario.severities[y],seg.id);
-    var drift = seg.id==="ev" ? (1+y*CONFIG.secularDriftEV) : 1;
-    var mult = evMult*drift*(s.pending[seg.id]||1);
-    var arr=loudArrow(mult);   // louder demand read: 1 chevron for a nudge, 2 for a real swing
-
-    // current share estimate (uses current capacities before this year's resolve)
-    var sumEff=0; s.entities.forEach(function(e){ sumEff+=effectiveCapacity(e,seg.id); });
-    var yourShare = sumEff>0 ? effectiveCapacity(p,seg.id)/sumEff : 0;
-
-    // rivals present
-    var chips=[];
-    s.entities.forEach(function(e){ if(!e.isPlayer && (e.capacity[seg.id]||0) >= 3) chips.push(el("span",{class:"chip",text:e.short})); });
-    if(!chips.length) chips.push(el("span",{class:"chip open",text:"open"}));
-
-    var planned=s.planned[seg.id]||0;
-    var cost=planned*CONFIG.capacityCostPerUnit;
-    var canAdd = capitalRemaining() >= CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit;
-
-    // battlefield read: who owns this turf + the live threat level (mirrors resolveYear's triggers)
-    var owner=rivalMeta(seg.defender);
-    var dominate = yourShare > CONFIG.dominanceThreshold;
-    var alarm = planned > CONFIG.rivalAlarmBuildUnits;
-    var threat = dominate ? {cls:"war",label:"Price-war risk"} : alarm ? {cls:"watch",label:"Watchlist"} : {cls:"low",label:"Low"};
-
-    var underWar = (s.pending[seg.id]||1) < 1;
-    var rowCls = "seg" + (underWar&&App.freshView?" warhit":"") + (goodSeg===seg.id?" pulse-once":"");
-    list.appendChild(el("div",{class:rowCls,style:"--seg:"+seg.color+";--seg-tint:"+seg.tint},[
-      el("div",{class:"seghead"},[
-        el("div",{class:"segcar",html:carInline(seg.body, seg.color, nextUid("b"))}),
-        el("div",{class:"name"},[ el("span",{class:"emoji",text:seg.emoji}), seg.name ]),
-        el("div",{class:"arrow "+arr.cls+(App.freshView?" pulse-once":"")},[ arr.ch, el("span",{class:"dl",text:"demand"}) ]),
-      ]),
-      el("div",{class:"mid"},[
-        el("span",{class:"pill you"},[ "you ", el("b",{text:pct(yourShare)}) ]),
-        el("span",{class:"pill"},[ "capacity ", el("b",{text:String(Math.round(p.capacity[seg.id]||0))}) ]),
-        el("div",{class:"rivchips"},chips),
-      ]),
-      el("div",{class:"battle"},[
-        el("span",{class:"owner"},[ "Turf: ", el("b",{text:owner.city}), " "+owner.flag ]),
-        el("span",{class:"threat "+threat.cls,text:threat.label}),
-      ]),
-      el("div",{class:"alloc"},[
-        el("div",{class:"blurb",text:"Build "+seg.invest+"."}),
-        el("div",{class:"stepper"},[
-          el("button",{type:"button","aria-label":"Remove capacity from "+seg.name,disabled:planned<=0,
-            onclick:function(){ stepAlloc(seg.id,-1); }},["–"]),
-          el("div",{class:"qty"},[
-            el("span",{class:"u",text:planned>0?fmtMoney(cost):"$0"}),
-            el("span",{class:"c",text:"invest"}),
-          ]),
-          el("button",{type:"button","aria-label":"Add capacity to "+seg.name,disabled:!canAdd,
-            onclick:function(){ stepAlloc(seg.id,1); }},["+"]),
-        ]),
-      ]),
-      planned>0 ? el("div",{class:"opensnext",text:"→ +"+planned+" capacity, "+(y<CONFIG.turns-1?"opens next year":"too late to earn this run")}) : null,
+  // per-matchup review
+  var list=el("div",{class:"reviewlist"});
+  s.seq.forEach(function(m,i){
+    var r=s.results[i]; if(!r) return;
+    var win = ratingOf(m.a.c)>=ratingOf(m.b.c)?m.a.c:m.b.c;
+    var gap = Math.abs(ratingOf(m.a.c)-ratingOf(m.b.c));
+    list.appendChild(el("div",{class:"rev"},[
+      el("div",{class:"ri "+(r.correct?"w":"m"),text:r.correct?"✓":"✕"}),
+      el("div",{class:"rc"},[ el("b",{text:win.md}), " over "+(win===m.a.c?m.b.c.md:m.a.c.md) ]),
+      el("div",{class:"rg",text:fmtR(gap)}),
     ]));
   });
   wrap.appendChild(list);
 
-  // 6. company-wide posture
-  var posWrap=el("div",{class:"posture"},[ el("div",{class:"seclbl",text:"Company posture this year"}) ]);
-  var seg3=el("div",{class:"seg3"});
-  ["budget","standard","premium"].forEach(function(pk){
-    var pc=CONFIG.postures[pk];
-    seg3.appendChild(el("div",{class:"pbtn"+(s.playerPosture===pk?" on":""),role:"button",tabindex:"0",
-      onclick:function(){ s.playerPosture=pk; render(); },
-      onkeydown:function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); s.playerPosture=pk; render(); } }},[
-      el("div",{class:"pl",text:pc.label}),
-      el("div",{class:"pd",text:pc.blurb}),
-    ]));
-  });
-  posWrap.appendChild(seg3);
-  wrap.appendChild(posWrap);
-
-  // 4. next year's forecast (vague, possibly false)
-  if(y < CONFIG.turns-1){
-    var fc=EVENTS[s.scenario.forecastEvent[y]];
-    wrap.appendChild(el("div",{class:"forecast"},[
-      el("div",{class:"lbl",text:"Forecast for "+(y+2)+"/"+CONFIG.turns}),
-      el("div",{class:"txt",text:"“"+fc.forecast+"”"}),
-    ]));
-  }
-
-  // pending price-war warnings that land THIS year (so the squeeze is never silent)
-  var liveWarns=[];
-  SEG_IDS.forEach(function(seg){ if((s.pending[seg]||1) < 1) liveWarns.push(segMeta(seg)); });
-  if(liveWarns.length){
-    wrap.appendChild(el("div",{class:"forecast",style:"border-color:var(--red)"},[
-      el("div",{class:"lbl",style:"color:var(--red)",text:"Price war in effect"}),
-      el("div",{class:"warn",text:"A rival cut prices in "+liveWarns.map(function(x){return x.name;}).join(", ")+". Those pools are thinner this year."}),
-    ]));
-  }
-
-  // pre-run watchlist warnings: a big build into a rival's turf may provoke a price war next year
-  SEG_IDS.forEach(function(sid){
-    if((s.planned[sid]||0) > CONFIG.rivalAlarmBuildUnits){
-      var seg=segMeta(sid), def=rivalMeta(seg.defender);
-      wrap.appendChild(el("div",{class:"prewarn"},[
-        el("span",{class:"pwh",text:"Before you run"}),
-        el("b",{text:def.city}), " is watching your "+seg.name+" build. A push this big may trigger a price war next year.",
-      ]));
-    }
-  });
-
-  // 5/7. run bar — the remaining budget ticks down live as you allocate
-  var rem=capitalRemaining();
-  var fromBudget = (App.prevBudget==null) ? rem : App.prevBudget;
-  var remNode=el("span",{text:fmtMoney(fromBudget)});
-  animateCount(remNode, fromBudget, rem, 350, fmtMoney);
-  App.prevBudget=rem;
-  // escalating urgency: the run button's glow quickens in the closing years, fastest in the amplified finale
-  var glowCls = y>=CONFIG.turns-1 ? "cta-glow-faster" : (y>=CONFIG.turns-3 ? "cta-glow-fast" : "cta-glow");
-  wrap.appendChild(el("div",{class:"runbar"},[
-    el("div",{class:"capreadout"},[
-      el("span",{class:"muted",text:"Investment budget"}),
-      el("span",{class:"big "+(rem<0?"red":"accent")},[ remNode, " of "+fmtMoney(p.cash)+" left" ]),
-    ]),
-    el("button",{class:"btn primary "+glowCls,text:"Run the model year ▸",onclick:launchYear}),
-  ]));
-
+  // share card
+  var strip = s.results.map(function(r){ return r.correct?"🟩":"⬜"; }).join("");
+  var line1 = "🏁 HIGHER #"+s.daily+" — "+score+"/"+N_MATCHUPS;
+  var line2 = "🔥 Best streak: "+s.best;
+  var shareText = line1+"\n"+line2+"\n"+strip+"\n"+SHARE_URL;
+  wrap.appendChild(el("div",{class:"share",text:shareText}));
+  wrap.appendChild(el("button",{class:"btn primary",text:"Copy result",onclick:function(ev){ copyShare(shareText, ev.currentTarget); }}));
+  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random cars)",onclick:function(){ setPractice(); start(); }}));
   return wrap;
 }
-
-function stepAlloc(segId,dir){
-  var s=App.state;
-  var cur=s.planned[segId]||0, changed=false;
-  if(dir>0){
-    if(capitalRemaining() < CONFIG.allocStepUnits*CONFIG.capacityCostPerUnit) return;
-    s.planned[segId]=cur+CONFIG.allocStepUnits; changed=true;
-  } else if(cur>0){
-    s.planned[segId]=Math.max(0,cur-CONFIG.allocStepUnits); changed=true;
-  }
-  if(changed) floatChip(segId,dir);
-  render();
-}
-// a small "+N" chip that floats up from the tapped stepper (on body, survives the re-render)
-function floatChip(segId,dir){
-  if(reduced()) return;
-  var name=segMeta(segId).name;
-  var btn=document.querySelector('[aria-label="'+(dir>0?"Add capacity to ":"Remove capacity from ")+name+'"]');
-  if(!btn) return;
-  var r=btn.getBoundingClientRect();
-  var chip=el("div",{class:"floatchip",text:(dir>0?"+":"−")+CONFIG.allocStepUnits});
-  chip.style.left=(r.left+r.width/2-10+window.scrollX)+"px";
-  chip.style.top=(r.top-4+window.scrollY)+"px";
-  document.body.appendChild(chip);
-  setTimeout(function(){ if(chip.parentNode) chip.parentNode.removeChild(chip); }, 760);
-}
-
-// The launch ceremony: a brief green-flag wipe across the action bar, then the result
-// reveals. Skippable with a tap. Reduced-motion goes straight to the result.
-function launchYear(ev){
-  var btn=ev&&ev.currentTarget;
-  if(reduced()){ runYear(); return; }
-  var bar=document.querySelector(".runbar");
-  if(btn) btn.classList.add("depress");
-  if(bar) bar.appendChild(el("div",{class:"launch-wipe"}));
-  var done=false, timer=null, skip=null;
-  function go(){ if(done) return; done=true; if(timer) clearTimeout(timer); if(skip) document.removeEventListener("pointerdown",skip,true); runYear(); }
-  timer=setTimeout(go, 660);
-  skip=function(){ go(); };
-  setTimeout(function(){ if(!done) document.addEventListener("pointerdown",skip,true); }, 120);  // arm after the triggering tap
-}
-function runYear(){
-  var s=App.state, p=player(s);
-  // commit the player's build: it opens NEXT year (delayed capacity). Pay for it now.
-  SEG_IDS.forEach(function(seg){
-    var u=s.planned[seg]||0;
-    p.pendingCap[seg]=u;
-    if(u>0){ p.cash -= u*CONFIG.capacityCostPerUnit; }
-  });
-  p.posture=s.playerPosture;
-  // a launch = the segment that got this year's largest build; cosmetic, derived from s.planned (UI only)
-  var launch=primaryLaunch(s, s.planned, s.yearIndex);
-  s._lastLaunch=launch;
-  if(launch) s.launches.push(launch);
-  var res=resolveYear(s);
-  s.lastResult=res;
-  s.valHistory.push(valuation(p));                                         // sparkline point (UI only; headless ignores valHistory)
-  if(res.personal && res.personal.type==="recall") App.recallFlash=true;   // a recall flashes the scoreboard red next turn
-  if(s.yearIndex >= CONFIG.turns-1){ activatePending(s); s.phase="end"; }  // final builds count as asset value
-  else s.phase="result";
-  App.freshView=true;
-  render();
-  window.scrollTo(0,0);
-}
-
-function resultView(){
-  var s=App.state, res=s.lastResult, y=s.yearIndex;
-  var profit=res.profit;
-  var wrap=el("div",{class:"result"},[]);
-
-  // launch reveal — the Two Seats "card" beat: the car you just launched rises in as a studio card
-  var launch=s._lastLaunch;
-  if(launch){
-    var lseg=segMeta(launch.seg), luid=nextUid("launch");
-    wrap.appendChild(el("div",{class:"launchcard"+(App.freshView?" car-rise":""),style:"--seg:"+launch.livery+";--seg-tint:"+lseg.tint},[
-      el("div",{class:"lc-k",text:"New for model year "+(y+1)+" · "+lseg.name}),
-      el("div",{class:"lc-stage",html:ART.stageSVG(launch.body,launch.livery,luid)}),
-      el("div",{class:"lc-name"},[ el("span",{class:"lc-model",text:launch.name}), el("span",{class:"lc-maker",text:playerLabel(s)}) ]),
-      el("div",{class:"lc-specs"}, launch.specs.map(function(sp){ return el("span",{class:"lc-spec",text:sp}); })),
-    ]));
-  }
-
-  var late = y>=CONFIG.turns-3;   // closing years: snappier, more aggressive count-up
-  var heroV=el("div",{class:"heroV "+(profit>=0?"green":"red"),text:fmtSigned(0)});
-  animateCount(heroV, 0, profit, late?420:650, fmtSigned);   // the year's profit/loss counts up
-  wrap.appendChild(el("div",{class:"hero"},[
-    el("div",{class:"heroK",text:"Model year "+(y+1)+" result"}),
-    heroV,
-    el("div",{class:"heroSub",text:profit>=0?"Profit on the year.":"Loss on the year."}),
-  ]));
-
-  var notes=el("div",{class:"notes"});
-
-  // personal event (recall / viral) — the most dramatic beat, lead with it
-  if(res.personal && res.personal.type==="recall"){
-    notes.appendChild(el("div",{class:"note warn"+(App.freshView?" shake":"")},[ el("span",{class:"nh",text:"Recall"}),
-      "Cutting corners caught up with you — a recall hammers your brand and costs "+fmtMoney(Math.abs(res.personal.cashDelta))+". Quality isn't free." ]));
-  } else if(res.personal && res.personal.type==="viral"){
-    notes.appendChild(el("div",{class:"note good"},[ el("span",{class:"nh",text:"Breakout"}),
-      "One of your cars goes viral — the badge is suddenly everywhere and your brand spikes." ]));
-  }
-
-  // best / worst segment this year (computed, never faked) — written as business headlines
-  var best=null,worst=null;
-  SEG_IDS.forEach(function(seg){
-    var sp=res.segProfit[seg]; if(!sp) return;
-    if(sp.capacity<=0) return;
-    if(best===null || sp.profit>res.segProfit[best].profit) best=seg;
-    if(worst===null || sp.profit<res.segProfit[worst].profit) worst=seg;
-  });
-  if(best!==null && res.segProfit[best].profit>0){
-    var bm=segMeta(best), bp=res.segProfit[best];
-    var bmult=eventMultiplier(s.scenario.events[y],s.scenario.severities[y],best);
-    var bhead, bbody;
-    if(best==="ev" && bmult>1.2){ bhead="EV bet pays"; bbody="Your EV bet opened a year early — "+pct(bp.share)+" of the pool and "+fmtSigned(bp.profit)+"."; }
-    else { bhead="Sold out"; bbody="Dealers can't keep your "+bm.name+" on the lot — "+pct(bp.share)+" of the pool, "+fmtSigned(bp.profit)+"."; }
-    notes.appendChild(el("div",{class:"note good"},[ el("span",{class:"nh",text:bhead}), bm.emoji+" "+bbody ]));
-  }
-  if(worst!==null && worst!==best && res.segProfit[worst].profit<0){
-    var wm=segMeta(worst), wp=res.segProfit[worst];
-    notes.appendChild(el("div",{class:"note warn"},[
-      el("span",{class:"nh",text:"Dead steel"}),
-      wm.emoji+" "+wm.name+" is dead steel on the balance sheet — it bled "+fmtMoney(wp.profit)+" against running costs.",
-    ]));
-  }
-
-  // sacred mechanic 2 — the telegraphed warning for NEXT year
-  res.warnings.forEach(function(w){
-    notes.appendChild(el("div",{class:"note rival"},[
-      el("span",{class:"nh",text:"Incoming"}),
-      w.text,
-    ]));
-  });
-  if(!res.warnings.length){
-    notes.appendChild(el("div",{class:"note rival"},[
-      el("span",{class:"nh",text:"The field"}),
-      "No rival felt threatened enough to start a price war. You stayed under the radar.",
-    ]));
-  }
-
-  wrap.appendChild(notes);
-  wrap.appendChild(el("div",{class:"actions"},[
-    el("button",{class:"btn primary",text:"Next model year ▸",onclick:nextYear}),
-  ]));
-  return wrap;
-}
-
-// Enter a model year: record rank movement for the standings ticker, then render.
-function beginTurn(){
-  var s=App.state, r=playerRank(s);
-  s.rankMove = (s.lastRank==null) ? 0 : (s.lastRank - r);   // +ve = climbed
-  s.lastRank = r;
-  s.phase="turn";
-  App.freshView=true; App.prevBudget=null;   // budget resets to full at the start of a year
-  render();
-  window.scrollTo(0,0);
-}
-function nextYear(){
-  var s=App.state;
-  s.yearIndex++;
-  s.planned={};
-  activatePending(s);   // last year's builds (yours and the rivals') come online now
-  beginTurn();
-}
-
-/* ============================ end screen (staged finale reveal) ============================ */
-function prefersReducedMotion(){ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
-
-function endView(){
-  var s=App.state, p=player(s);
-  var rank=playerRank(s), bd=valuationBreakdown(p);
-  var grade=gradeFor(rank,bd.total,s.entities.length);
-  var ranked=rankings(s), pv=bd.total;
-  var nem=nemesisFor(s), nv=nem?valuation(nem):0, ahead=bd.total>=nv;
-  var headline = rank===1 ? "🏆 You won the decade outright."
-    : ahead ? ("🏁 You held off "+nem.name+" by "+fmtMoney(bd.total-nv)+".")
-            : ("So close — "+nem.name+" edged you by "+fmtMoney(nv-bd.total)+".");
-  var story=storyBeat(s);
-
-  // the rivals directly above and below the player in the final order (for the share line + photo finish)
-  var pIdx=0; for(var ii=0;ii<ranked.length;ii++){ if(ranked[ii].e.isPlayer){ pIdx=ii; break; } }
-  var above = pIdx>0 ? ranked[pIdx-1].e : null;
-  var below = pIdx<ranked.length-1 ? ranked[pIdx+1].e : null;
-  var photoRival = above || (ranked[1] ? ranked[1].e : null);   // who edged you — or the runner-up if you won
-
-  // daily lock + streak (official daily only, once per game; never hard-blocks replay)
-  var squares = segPath(s);
-  if(!s.isPractice && !App.savedThisGame){
-    App.savedThisGame=true;
-    // record only the FIRST official result for the day; a later replay must not overwrite the locked grade/value/path
-    if(!loadDaily(s.dailyNumber)) saveDaily(s.dailyNumber, { value:bd.total, rank:rank, grade:grade.g, path:squares, n:s.entities.length });
-    bumpStreak(s.dailyNumber);   // bumpStreak is itself idempotent per day (guards on lastDay)
-  }
-  var streak=loadStreak();
-
-  var wrap=el("div",{class:"end"},[]);
-  wrap.appendChild(el("div",{class:"endhead"},[
-    el("div",{class:"k",text:"🏁 Final standings · Daily #"+s.dailyNumber}),
-    el("div",{class:"ttl display",text:"Ten years, one number"}),
-  ]));
-
-  // standings grid — rivals drop in lowest->highest, then the player FLIPs into their slot
-  var grid=el("div",{class:"standings"}), rivalEls=[], playerObj=null, playerIdx=0;
-  ranked.forEach(function(o,i){
-    if(o.e.isPlayer) playerIdx=i;
-    var medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":("P"+(i+1));
-    var vNode=el("div",{class:"v num",text:"$0"});
-    var row=el("div",{class:"srow"+(o.e.isPlayer?" you":"")},[
-      el("div",{class:"pos",text:medal}),
-      el("div",{class:"who",html:(o.e.isPlayer?"Your company":(o.e.flag+" "+o.e.name))}),
-      vNode,
-    ]);
-    var obj={row:row,idx:i,vNode:vNode,val:o.v};
-    if(o.e.isPlayer) playerObj=obj; else rivalEls.push(obj);
-  });
-  rivalEls.forEach(function(o){ grid.appendChild(o.row); });   // rivals in final order
-  grid.appendChild(playerObj.row);                              // player parked at the bottom (will FLIP up)
-  var slotBefore=null; rivalEls.forEach(function(o){ if(o.idx===playerIdx+1) slotBefore=o.row; });
-  wrap.appendChild(grid);
-
-  // verdict — grade + nemesis headline + final valuation
-  var finalvalNode=el("div",{class:"finalval num",text:"$0"});
-  var verdict=el("div",{class:"verdict"},[
-    el("div",{class:"gbadge2 "+gradeColorClass(grade.g),text:grade.g}),
-    el("div",{class:"vco",text:playerLabel(s)}),
-    el("div",{class:"headline",text:headline}),
-    el("div",{class:"vsub",text:"Ranked #"+rank+" of "+s.entities.length+" · "+gradeBlurb(grade.g)}),
-    finalvalNode,
-  ]);
-  wrap.appendChild(verdict);
-
-  // everything else fades in after the reveal
-  var rest=el("div",{class:"endrest"});
-  // the garage — the player's whole decade of models lined up, a spectrum of liveries (the payoff)
-  var garage=garageModels(s);
-  if(garage.length){
-    // strip the module's width="100%" so the CSS fixed height drives sizing (cars stay legible; wide rows scroll)
-    var lineupHtml=ART.lineup(garage.map(function(m){ return {type:m.body, hex:m.livery}; })).replace('width="100%"','');
-    rest.appendChild(el("div",{class:"garage"},[
-      el("div",{class:"garage-k",text:"Your garage · "+garage.length+(garage.length===1?" model":" models")+" built across the decade"}),
-      el("div",{class:"garage-stage",html:lineupHtml}),
-      garage.length>3 ? el("div",{class:"garage-hint",text:"← swipe the garage →"}) : null,
-    ]));
-  }
-  // photo finish — you vs the rival who edged you (or the runner-up if you won)
-  if(photoRival) rest.appendChild(photoFinish(playerLabel(s), bd.total, photoRival));
-  var par=s._par || computePar(s.seed);
-  var botsBeaten=par.vals.filter(function(v){return v<bd.total;}).length;
-  var vsPar=Math.round((bd.total-par.par)/Math.max(1,Math.abs(par.par))*100);
-  rest.appendChild(el("div",{class:"parbox"},[
-    el("div",{class:"parhead"},[
-      el("span",{class:"parbig "+(bd.total>=par.par?"green":"red"),text:(vsPar>=0?"+":"")+vsPar+"% vs par"}),
-      el("span",{class:"parsub",text:"Beat "+botsBeaten+" of "+par.n+" strategy bots"}),
-    ]),
-    parrow("Bogey · even-spread floor",par.bogey,pv),
-    parrow("Par · 65th percentile",par.par,pv),
-    parrow("Top 10% · the line to chase",par.top10,pv),
-  ]));
-  rest.appendChild(el("div",{class:"breakdown"},[
-    brow("Cash on hand",bd.cash),
-    brow("Factory capacity value",bd.capacity),
-    brow("Brand equity",bd.brand),
-    brow("Idle-capacity drag",bd.idle),
-    brow("Company valuation",bd.total,true),
-  ]));
-  rest.appendChild(el("div",{class:"story",text:story}));
-
-  if(streak.count>0 && !s.isPractice) rest.appendChild(el("div",{style:"text-align:center;margin-top:14px"},[
-    el("span",{class:"streak",text:"🔥 "+streak.count+"-day streak"}) ]));
-
-  // Share card: encodes the PLAYER'S decade of bets (Wordle-style), so two cards differ run to run.
-  var line1 = "🏭 MODEL YEAR #"+s.dailyNumber+"  ·  "+fmtMoney(bd.total)+"  ·  P"+rank+" of "+s.entities.length;
-  var parts=[];
-  if(rank===1){ parts.push("Won the decade outright"); if(below) parts.push(fmtMoney(bd.total-valuation(below))+" clear of "+below.name); }
-  else { if(below) parts.push("ran down "+below.name); if(above) parts.push("lost to "+above.name+" by "+fmtMoney(valuation(above)-bd.total)); }
-  var sentence = parts.join(", "); sentence = sentence.charAt(0).toUpperCase()+sentence.slice(1);
-  var line3 = playerLabel(s)+". "+sentence+".";
-  var shareText = line1+"\n"+squares+"\n"+line3+"\n"+CONFIG.shareUrl;
-  // the flagship rides the share card: the player's biggest launch, featured above the copyable grid
-  var flag=flagshipModel(s);
-  if(flag) rest.appendChild(el("div",{class:"flagcard",style:"--seg:"+flag.livery},[
-    el("div",{class:"fc-k",text:"Flagship"}),
-    el("div",{class:"fc-stage",html:ART.stageSVG(flag.body, flag.livery, nextUid("flag"))}),
-    el("div",{class:"fc-name"},[ el("span",{class:"fc-model",text:flag.name}), el("span",{class:"fc-maker",text:playerLabel(s)}) ]),
-  ]));
-  rest.appendChild(el("div",{class:"share",text:shareText}));
-  rest.appendChild(el("div",{class:"actions"},[
-    el("button",{class:"btn ghost",text:"Copy result",onclick:function(ev){ copyShare(shareText,ev.target); }}),
-    el("button",{class:"btn primary",text:"Practice run",onclick:function(){ setSeed(newSeed(),true); beginTurn(); }}),
-  ]));
-  wrap.appendChild(rest);
-
-  // staged finale: rivals slam in lowest->highest with count-ups; the player drops in at
-  // the bottom then FLIPs up into its slot; the verdict stamps in (checkered wipe) and the
-  // final valuation counts up; then the rest. Tap to skip straight to the final board.
-  var timers=[], done=false;
-  function revealRow(o,ms){ o.row.classList.add("in","slam-in"); animateCount(o.vNode, 0, o.val, ms||480, fmtMoney); }
-  function settleVerdict(){
-    verdict.classList.add("in","checker-wipe");
-    var gb=verdict.querySelector(".gbadge2"); if(gb) gb.classList.add("grade-stamp");
-  }
-  function placePlayer(){ if(slotBefore && playerObj.row.nextSibling!==slotBefore) grid.insertBefore(playerObj.row, slotBefore); }
-  function finishAll(){
-    if(done) return; done=true; timers.forEach(clearTimeout);
-    rivalEls.concat([playerObj]).forEach(function(o){ o.row.classList.add("in"); o.vNode.textContent=fmtMoney(o.val); });
-    placePlayer(); settleVerdict(); finalvalNode.textContent=fmtMoney(bd.total); rest.classList.add("in");
-    document.removeEventListener("pointerdown", skip, true);
-  }
-  function skip(){ finishAll(); }
-  if(prefersReducedMotion()){
-    rivalEls.concat([playerObj]).forEach(function(o){ o.row.classList.add("in"); o.vNode.textContent=fmtMoney(o.val); });
-    placePlayer(); verdict.classList.add("in"); finalvalNode.textContent=fmtMoney(bd.total); rest.classList.add("in");
-  } else {
-    var rivalsAsc=rivalEls.slice().sort(function(a,b){ return b.idx-a.idx; });   // lowest finish first
-    var base=280, gapMs=140;
-    rivalsAsc.forEach(function(o,i){ timers.push(setTimeout(function(){ revealRow(o); }, base+i*gapMs)); });
-    var t=base+rivalsAsc.length*gapMs;
-    timers.push(setTimeout(function(){ revealRow(playerObj,560); }, t+140));                                  // player drops in at the bottom
-    timers.push(setTimeout(function(){ flipReorder(grid, placePlayer); }, t+780));                            // ...then slides up into its slot
-    timers.push(setTimeout(function(){ settleVerdict(); animateCount(finalvalNode, 0, bd.total, 700, fmtMoney); }, t+1350));
-    timers.push(setTimeout(function(){ rest.classList.add("in"); }, t+1900));
-    setTimeout(function(){ if(!done) document.addEventListener("pointerdown", skip, true); }, 220);           // arm tap-to-skip
-  }
-  return wrap;
-}
-function brow(k,v,total){
-  return el("div",{class:"brow"+(total?" total":"")},[
-    el("span",{text:k}),
-    el("span",{class:(v<0?"neg":""),text:(total?fmtMoney(v):fmtSigned(v))}),
-  ]);
-}
-function parrow(label,val,pv){
-  return el("div",{class:"parrow"+(pv>=val?" cleared":"")},[
-    el("span",{text:label}),
-    el("span",{class:"num",text:fmtMoney(val)+(pv>=val?"  ✓":"")}),
-  ]);
-}
-function gradeBlurb(g){
-  return { S:"Top of the field. Nobody touched you.", A:"A genuine contender.", B:"Solid podium finish.",
-    C:"Mid-grid. Room to push.", D:"You survived. Barely.", F:"Bankrupt. The board has questions." }[g];
-}
-function copyShare(text,btn){
-  var done=function(){ var t=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=t;},1400); };
-  // swap the display URL for the live one; fall back to appending it if the placeholder isn't present
-  var full = text.indexOf(CONFIG.shareUrl)>=0 ? text.replace(CONFIG.shareUrl, location.href) : (text+"\n"+location.href);
+function copyShare(text, btn){
+  var full = text.indexOf(SHARE_URL)>=0 ? text.replace(SHARE_URL, location.href) : (text+"\n"+location.href);
+  var done=function(){ var t=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){ btn.textContent=t; },1400); };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(done,done);
   else done();
 }
 
-// Derive a one-line story from the history: best cumulative segment + worst single decision.
-function storyBeat(state){
-  var cum={}; SEG_IDS.forEach(function(s){ cum[s]=0; });
-  var worst=null;
-  state.history.forEach(function(h){
-    SEG_IDS.forEach(function(s){
-      cum[s]+=h.seg[s].profit;
-      // "worst decision" = the year you put the most money into the segment that lost the most
-      if(h.seg[s].alloc>0 && h.seg[s].profit<0){
-        var score=h.seg[s].profit; // most negative
-        if(worst===null||score<worst.score) worst={score:score,seg:s,year:h.year};
-      }
-    });
-  });
-  var bestSeg=SEG_IDS[0]; SEG_IDS.forEach(function(s){ if(cum[s]>cum[bestSeg]) bestSeg=s; });
-  var line = "Your money machine was "+segMeta(bestSeg).name+" ("+fmtSigned(Math.round(cum[bestSeg]))+" over the decade). ";
-  if(worst){
-    line += "Your worst call was pouring capital into "+segMeta(worst.seg).name+" in year "+(worst.year+1)+" — it lost "+fmtMoney(Math.abs(worst.score))+".";
-  } else {
-    line += "You never made a losing bet on a segment you invested in. Clean sheet.";
-  }
-  return line;
-}
-
-/* ============================ headless sim + bots (balance check) ============================ */
-// Run a full 10-year game under a fixed allocation policy. policy(state,year) ->
-// { alloc:{seg:units}, posture }. Returns the player's final valuation.
-function runHeadless(seed,policy){
-  var st=createState(seed); st.phase="turn";
-  for(var y=0;y<CONFIG.turns;y++){
-    activatePending(st);                 // last year's builds (yours + rivals') come online
-    var p=player(st);
-    var dec=policy(st,y)||{alloc:{},posture:"standard"};
-    st.planned={};
-    SEG_IDS.forEach(function(seg){ p.pendingCap[seg]=0; });
-    SEG_IDS.forEach(function(seg){
-      var u=(dec.alloc&&dec.alloc[seg])||0;
-      u=Math.min(u, Math.floor(Math.max(0,p.cash)/CONFIG.capacityCostPerUnit)); // affordability clamp
-      if(u>0){ st.planned[seg]=u; p.pendingCap[seg]=u; p.cash-=u*CONFIG.capacityCostPerUnit; }  // delayed build
-    });
-    p.posture=dec.posture||"standard";
-    resolveYear(st);
-    st.yearIndex++;
-  }
-  activatePending(st);                    // final builds count as asset value
-  return { valuation:valuation(player(st)), rank:playerRankFinal(st) };
-}
-function playerRankFinal(st){
-  var r=st.entities.map(function(e){return {e:e,v:valuation(e)};}).sort(function(a,b){return b.v-a.v;});
-  for(var i=0;i<r.length;i++) if(r[i].e.isPlayer) return i+1; return r.length;
-}
-// Capacity bets pay back over years, so the sane policies build hard early and
-// taper to harvest. This weight is the fraction of CURRENT cash spent in year y.
-function buildWeight(y){ return Math.max(0, 0.55 - y*0.07); }
-function allocInto(state,segs,frac){
-  var p=player(state), budget=Math.max(0,p.cash)*frac, per=budget/segs.length, alloc={};
-  segs.forEach(function(s){
-    var units=Math.floor((per/CONFIG.capacityCostPerUnit)/CONFIG.allocStepUnits)*CONFIG.allocStepUnits;
-    units=Math.min(units, CONFIG.botMaxUnitsPerSeg);   // don't dump a whole pool's worth in one year
-    if(units>0) alloc[s]=units;
-  });
-  return alloc;
-}
-// Score a segment for an arbitrary event/severity (used to score either THIS year
-// or — for forecast-followers — what NEXT year is forecast to look like). Because
-// capacity now opens a year late, a smart bot scores the FORECAST, not the headline.
-function scoreFor(st,yProduce,s,eventId,sev){
-  var m=eventMultiplier(eventId,sev,s)*(s==="ev"?(1+yProduce*CONFIG.secularDriftEV):1);
-  var sumEff=0; st.entities.forEach(function(e){sumEff+=effectiveCapacity(e,s);});
-  var share=sumEff>0?effectiveCapacity(player(st),s)/sumEff:0;
-  var poolish=segMeta(s).basePool*CONFIG.poolUnit*m;
-  var crowd=sumEff>0?poolish/sumEff:poolish;        // revenue available per unit of effective capacity
-  return { s:s, score:m*(1+segMeta(s).baseMargin)*crowd*(share<CONFIG.dominanceThreshold?1:0.5), share:share, mult:m };
-}
-function segScoreThisYear(st,y,s){ return scoreFor(st,y,s,st.scenario.events[y],st.scenario.severities[y]); }
-function segScoreForecast(st,y,s){
-  if(y>=CONFIG.turns-1) return { s:s, score:0, mult:1 };
-  return scoreFor(st,y+1,s,st.scenario.forecastEvent[y],"medium");   // bet on next year's forecast at medium severity
-}
-function topTwo(scored){ scored=scored.slice().sort(function(a,b){return b.score-a.score;}); return [scored[0].s,scored[1].s]; }
-function topOne(scored){ return scored.slice().sort(function(a,b){return b.score-a.score;})[0].s; }
-// Aggressive single-segment build (used by the believer bots). It deliberately pours in
-// past the watchlist alarm, so a wrong bet really hurts — that is the risk that lets the
-// steady bots win on seeds where the forecast misfires.
-function allocConcentrated(state,seg,frac,cap){
-  var p=player(state), budget=Math.max(0,p.cash)*frac;
-  var units=Math.floor((budget/CONFIG.capacityCostPerUnit)/CONFIG.allocStepUnits)*CONFIG.allocStepUnits;
-  units=Math.min(units, cap||50);
-  var a={}; if(units>0) a[seg]=units; return a;
-}
-function postureForSegs(segs){ return (segs.indexOf("luxury")>=0||segs.indexOf("performance")>=0||segs.indexOf("ev")>=0)?"premium":"standard"; }
-// A committed specialist: build and SUSTAIN one lane every year (sub-alarm builds, so it
-// isn't auto-punished), riding it. Wins on the seeds whose era favors that lane, loses on
-// the rest — exactly the "wins on the days that favor it" behaviour the spec wants.
-function laneBot(lane, posture){
-  return function(st,y){
-    if(y>=CONFIG.turns-1) return { alloc:{}, posture:posture };
-    return { alloc:allocInto(st,lane,buildWeight(y)), posture:posture };
-  };
-}
-var BOTS = {
-  hoard:       function(st,y){ return { alloc:{}, posture:"standard" }; },
-  evenSpread:  function(st,y){ return { alloc:allocInto(st,SEG_IDS,0.30), posture:"standard" }; },   // the bogey
-  premiumSpread:function(st,y){ return { alloc:allocInto(st,["luxury","ev","performance","pickup"],0.34), posture:"premium" }; },  // diversified, margin-tilted — wins premium/EV/boom eras
-  valueSpread: function(st,y){ return { alloc:allocInto(st,["economy","family","pickup"],0.34), posture:"standard" }; },           // diversified, volume-tilted — wins recession/SUV eras
-  truckTitan:  laneBot(["pickup"],  "standard"),  // wins on cheap-gas / boom eras
-  evVisionary: laneBot(["ev"],      "premium"),   // wins on EV-subsidy eras + the late EV transition
-  luxBaron:    laneBot(["luxury"],  "premium"),   // wins on boom / luxury eras
-  familyVolume:laneBot(["family"],  "standard"),  // wins on SUV-craze eras
-  economyKing: laneBot(["economy"], "standard"),  // wins on recession eras (when everything else craters)
-  // contrarian: commits hard into the COLDEST decent segment this year, betting demand
-  // swings back by the time the capacity opens. Wins the seeds where the crowd (and the
-  // believers) pile into the wrong thing.
-  contrarian:  function(st,y){
-    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
-    var ranked=SEG_IDS.map(function(s){ return segScoreThisYear(st,y,s); }).filter(function(o){return segMeta(o.s).baseMargin>=0.18;})
-      .sort(function(a,b){return a.mult-b.mult;});   // coldest first
-    var top=ranked[0].s;
-    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
-  },
-  // eraReader: reads the DECADE's character from the events seen so far and commits early
-  // to the segment its dominant event favours, compounding first-mover share. Wins the
-  // strong-era seeds (a clear truck/EV/recession decade) that the 1-year readers miss.
-  eraReader:   function(st,y){
-    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
-    var counts={}; for(var i=0;i<=y;i++){ var e=st.scenario.events[i]; counts[e]=(counts[e]||0)+1; }
-    var dom=null,mx=0; for(var k in counts){ if(k!=="quiet"&&counts[k]>mx){mx=counts[k];dom=k;} }
-    if(!dom) dom=st.scenario.events[y];
-    var best=null,bm=-1; SEG_IDS.forEach(function(s){ var m=eventMultiplier(dom,"medium",s)*(s==="ev"?(1+(y+1)*CONFIG.secularDriftEV):1); if(m>bm){bm=m;best=s;} });
-    return { alloc:allocConcentrated(st,best,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([best]) };
-  },
-  // reactiveLate: pours hard into THIS year's hottest segment — but capacity opens a year
-  // late, so it is betting that next year looks like this year. Usually it doesn't.
-  reactiveLate:function(st,y){
-    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
-    var top=topOne(SEG_IDS.map(function(s){ return segScoreThisYear(st,y,s); }));
-    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
-  },
-  // adaptive: a forecast BELIEVER — commits hard into the single segment next year's
-  // forecast favours. Right ~70% of the time (forecasts are seed-fixed, 30% red herrings),
-  // so on seeds with several false forecasts it craters and a steady bot wins the day.
-  adaptive:    function(st,y){
-    if(y>=CONFIG.turns-1) return { alloc:{}, posture:"standard" };
-    var top=topOne(SEG_IDS.map(function(s){ return segScoreForecast(st,y,s); }));
-    return { alloc:allocConcentrated(st,top,CONFIG.believerFrac,CONFIG.believerCap), posture:postureForSegs([top]) };
-  },
-};
-function balanceCheck(nSeeds){
-  nSeeds=nSeeds||120;
-  var names=Object.keys(BOTS), wins={}, sum={};
-  names.forEach(function(n){wins[n]=0;sum[n]=0;});
-  for(var i=0;i<nSeeds;i++){
-    var seed="balance|"+i, best=-Infinity, bestBot=null, vals={};
-    names.forEach(function(n){ var r=runHeadless(seed,BOTS[n]); vals[n]=r.valuation; sum[n]+=r.valuation; if(r.valuation>best){best=r.valuation;bestBot=n;} });
-    wins[bestBot]++;
-  }
-  return names.map(function(n){ return { bot:n, winRate:wins[n]/nSeeds, avg:sum[n]/nSeeds }; })
-    .sort(function(a,b){return b.winRate-a.winRate;});
-}
-
-// Par for one seed: run every bot on the same scenario the player faced, so the player
-// can see where their valuation lands. Bogey = even-spread floor, par = 65th percentile,
-// top10 = the elite line. Cheap (a dozen 10-year sims).
-function computePar(seed){
-  var names=Object.keys(BOTS);
-  var vals=names.map(function(n){ return runHeadless(seed,BOTS[n]).valuation; });
-  var sorted=vals.slice().sort(function(a,b){return a-b;});
-  function pctile(p){ return sorted[clamp(Math.round(p*(sorted.length-1)),0,sorted.length-1)]; }
-  return { bogey:runHeadless(seed,BOTS.evenSpread).valuation, par:pctile(0.65), top10:pctile(0.90), vals:vals, n:names.length };
-}
-
-/* ============================ debug panel ============================ */
-function debugView(){
-  var s=App.state;
-  var box=el("div",{class:"debug"},[ el("h4",{text:"DEBUG · seed "+s.seed}) ]);
-
-  // event sequence + forecast truth
-  var seqTbl=el("table",{});
-  s.scenario.events.forEach(function(ev,i){
-    var f = i<CONFIG.turns-1 ? (s.scenario.forecastTrue[i]?"true":"RED HERRING ("+s.scenario.forecastEvent[i]+")") : "—";
-    seqTbl.appendChild(el("tr",{},[
-      el("td",{text:"Y"+(i+1)}),
-      el("td",{text:CONFIG.emoji[ev]+" "+EVENTS[ev].name+" ["+s.scenario.severities[i]+"]"}),
-      el("td",{text:"fc: "+f}),
-    ]));
-  });
-  box.appendChild(el("div",{text:"Event sequence + forecast truth:"}));
-  box.appendChild(seqTbl);
-
-  // live rival valuations
-  var rk=rankings(s), rtbl=el("table",{});
-  rk.forEach(function(o,i){ rtbl.appendChild(el("tr",{},[
-    el("td",{text:(i+1)+"."}),
-    el("td",{text:o.e.short}),
-    el("td",{class:"num",text:fmtMoney(o.v)}),
-  ])); });
-  box.appendChild(el("div",{style:"margin-top:6px",text:"Field valuations (live):"}));
-  box.appendChild(rtbl);
-
-  // bot balance check
-  var out=el("div",{style:"margin-top:8px"},["(run the check to populate)"]);
-  box.appendChild(el("button",{class:"dbtn",text:"Run balance check (120 seeds)",onclick:function(){
-    out.innerHTML="running…";
-    setTimeout(function(){
-      var res=balanceCheck(120);
-      var t=el("table",{});
-      res.forEach(function(r){ t.appendChild(el("tr",{},[
-        el("td",{text:r.bot}),
-        el("td",{class:"num",text:pct(r.winRate)}),
-        el("td",{class:"num",text:fmtMoney(r.avg)}),
-      ])); });
-      out.innerHTML=""; out.appendChild(el("div",{text:"win% / avg valuation per bot (smart should beat dumb; no bot >30%)"})); out.appendChild(t);
-    },30);
-  }}));
-  box.appendChild(out);
-
-  // hand-checkable single-segment self test
-  box.appendChild(el("button",{class:"dbtn",style:"margin-left:6px",text:"Math self-test",onclick:function(){ alert(selfTest()); }}));
-  return box;
-}
-
-// Section 3 build order: verify contested-share math by hand against a known input.
-function selfTest(){
-  // Two entities in one segment. Pool 1000. A has 60 eff cap, B has 40. No posture/brand effects.
-  // A share = 60/100 = 0.6, gross = 600. margin 0.2 => 120. opCost 60*1 => 60. profit = 60.
-  var pool=1000, effA=60, effB=40, shareA=effA/(effA+effB), gross=shareA*pool, margin=0.2, opCost=60;
-  var profit=gross*margin-opCost;
-  var ok = Math.abs(shareA-0.6)<1e-9 && Math.abs(gross-600)<1e-9 && Math.abs(profit-60)<1e-9;
-  return "Contested-share self-test: share="+shareA.toFixed(3)+" gross="+gross+" profit="+profit+"  => "+(ok?"PASS":"FAIL");
-}
-
-/* ============================ boot ============================ */
+/* ---------------- boot ---------------- */
 App.root=document.getElementById("app");
-setSeed(todaySeed(), false);   // default to today's official daily, identical for everyone
+setDaily();
+App.fresh=true;
 render();
-// expose for measurement in the preview (no node runtime here)
-window.__MODELYEAR__ = { runHeadless:runHeadless, balanceCheck:balanceCheck, computePar:computePar, BOTS:BOTS, createState:createState, resolveYear:resolveYear, activatePending:activatePending, valuation:valuation, CONFIG:CONFIG, selfTest:selfTest };
+window.__HIGHER__ = { CARS:CARS, WEIGHTS:WEIGHTS, ratingOf:ratingOf, buildSequence:buildSequence, dailyNumber:dailyNumber };
 })();
 </script>
 </body>
