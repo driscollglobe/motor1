@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Higher — the Motor1 Index game</title>
+<title>HIGHER — the Motor1 car game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -40,20 +40,24 @@
   .infobtn{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);color:var(--muted);font-family:var(--display);font-weight:700;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
   .infobtn:hover{border-color:var(--blue);color:var(--blue)}
 
-  /* hud */
-  .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-  .pips{display:flex;gap:4px;flex-wrap:wrap;flex:1}
-  .pip{width:14px;height:6px;border-radius:3px;background:var(--line)}
+  /* hud + timer */
+  .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .pips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+  .pip{width:22px;height:7px;border-radius:3px;background:var(--line)}
   .pip.win{background:var(--green)} .pip.miss{background:var(--red)} .pip.now{background:var(--blue)}
-  .streakchip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue-deep);background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:20px;padding:4px 11px;flex:none}
-  .streakchip.hot{color:#b3460a;background:#fdeede;border-color:#f3cda3}
+  .timerchip{display:inline-flex;align-items:center;justify-content:center;min-width:70px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--blue-deep);background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:20px;padding:4px 11px;flex:none}
+  .timerchip.warn{color:#b3460a;background:#fdeede;border-color:#f3cda3}
+  .timerchip.crit{color:#a52218;background:#fdecea;border-color:#f3c3bd}
+  .timebar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:0 0 12px}
+  .timebar .tfill{height:100%;width:100%;background:var(--blue)}
+  .timebar.warn .tfill{background:var(--amber)}
+  .timebar.crit .tfill{background:var(--red)}
 
   /* prompt */
   .prompt{text-align:center;margin:2px 0 12px}
   .prompt .q{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.01em;line-height:1.1}
-  .prompt .q .idx{color:var(--blue)}
+  .prompt .q .hl{color:var(--blue)}
   .prompt .sub{font-size:12px;color:var(--muted);margin-top:3px}
-  .prompt .sub a{color:var(--blue);font-weight:600;text-decoration:none;border-bottom:1px dotted var(--blue)}
 
   /* cars */
   .ring{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;position:relative}
@@ -64,21 +68,21 @@
   .car .yr{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
   .car .mk{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--side,var(--blue));text-transform:uppercase;letter-spacing:.08em;margin-top:5px}
   .car .md{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.08;margin-top:3px;letter-spacing:.005em}
-  .car .badge{align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:3px 7px;margin-top:9px}
+  .car .badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+  .car .badge{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:3px 7px}
+  .car .badge.anchor{color:var(--blue-deep);background:var(--blue-tint);border-color:#cfe0ff}
   .car .taphint{margin-top:auto;font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--side,var(--blue));text-align:center;border-top:1px dashed var(--line);padding-top:9px;margin-top:12px}
   /* reveal additions */
-  .car .anchor{margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--muted)}
-  .car .anchor b{color:var(--text);font-weight:600}
-  .car .ixk{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:10px}
-  .car .ix{font-family:var(--mono);font-weight:600;font-size:29px;line-height:1;margin-top:3px}
-  .car .est{font-family:var(--mono);font-size:9px;color:var(--faint);margin-left:5px;text-transform:none;letter-spacing:0}
+  .car .statk{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:11px}
+  .car .statv{display:inline-block;font-family:var(--mono);font-weight:600;font-size:22px;line-height:1.15;margin-top:4px;padding:0 0 1px;text-align:left;color:inherit;border-bottom:1px dotted var(--blue);align-self:flex-start}
+  .car.win .statv{color:var(--green)}
   .car .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
   .tag{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.07em;border-radius:5px;padding:2px 7px}
   .tag.pick{color:var(--blue-deep);background:var(--blue-tint);border:1px solid #cfe0ff}
   .tag.win{color:#fff;background:var(--green)}
-  .car .mathhint{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--blue);text-align:center;border-top:1px dashed var(--line);padding-top:8px;margin-top:11px}
+  .car .srchint{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--blue);text-align:center;border-top:1px dashed var(--line);padding-top:8px;margin-top:11px}
   .car.win{border-color:var(--green);box-shadow:0 0 0 2px var(--green) inset, 0 6px 18px rgba(18,161,75,.16)}
-  .car.win .ix{color:var(--green)} .car.lose{opacity:.62}
+  .car.lose{opacity:.62}
 
   /* pain marker */
   .pain{margin-top:12px;text-align:center;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.35;border:1px solid var(--line);box-shadow:var(--shadow)}
@@ -86,27 +90,10 @@
   .pain.bad{background:#fdecea;border-color:#f3c3bd;color:#a52218}
   .pain b{font-weight:700}
 
-  /* breakdown */
-  .breakdown{margin-top:11px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px 13px;box-shadow:var(--shadow)}
-  .breakdown .bh{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-  .leg{display:inline-flex;gap:10px}
-  .leg span{display:inline-flex;align-items:center;gap:4px;font-size:9.5px}
-  .leg i{width:9px;height:9px;border-radius:2px;display:inline-block}
-  .leg .la{background:var(--blue)} .leg .lb{background:var(--amber)}
-  .drow{margin-bottom:9px} .drow:last-child{margin-bottom:0}
-  .drow .dl{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between}
-  .drow .dl .de{color:var(--faint);text-transform:none;letter-spacing:0}
-  .bar{display:flex;align-items:center;gap:7px;margin-bottom:3px}
-  .bar .track{flex:1;height:8px;background:var(--panel2);border-radius:5px;overflow:hidden}
-  .bar .fill{height:100%;width:0;border-radius:5px;transition:width .6s cubic-bezier(.2,.7,.2,1)}
-  .bar.a .fill{background:var(--blue)} .bar.b .fill{background:var(--amber)}
-  .bar .bv{font-family:var(--mono);font-size:10.5px;font-weight:600;width:24px;text-align:right;color:var(--muted)}
-  .bar.hi .bv{color:var(--text)} .bar.hi .fill{filter:saturate(1.15)}
-
-  /* verdict */
-  .verdict{margin-top:11px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.4;box-shadow:var(--shadow)}
-  .verdict .vk{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);margin-bottom:3px}
-  .verdict b{font-weight:700}
+  /* editorial note */
+  .note{margin-top:11px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.4;box-shadow:var(--shadow)}
+  .note .nk{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);margin-bottom:3px}
+  .note b{font-weight:700}
 
   /* buttons */
   .btn{display:block;width:100%;text-align:center;border-radius:10px;padding:14px;margin-top:12px;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.03em;text-transform:uppercase}
@@ -115,10 +102,11 @@
 
   /* intro */
   .intro{padding:14px 4px 4px}
-  .intro .big{font-family:var(--display);font-weight:700;font-size:36px;line-height:1.03;letter-spacing:.005em;text-wrap:balance}
+  .intro .big{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05;letter-spacing:.005em;text-wrap:balance}
   .intro .big .hl{color:var(--blue)}
-  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:13px 0 4px;max-width:42ch}
+  .intro .lede{font-size:14px;color:var(--muted);line-height:1.5;margin:12px 0 4px;max-width:42ch}
   .intro .lede a{color:var(--blue);font-weight:600;text-decoration:none;border-bottom:1px dotted var(--blue)}
+  .anchork{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin:16px 0 7px}
   .how{display:flex;flex-direction:column;gap:9px;margin:18px 0 6px;border-top:1px solid var(--line);padding-top:16px}
   .how .h{display:flex;gap:11px;align-items:flex-start}
   .how .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--mono);font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
@@ -129,10 +117,6 @@
   .statbox .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:3px;color:var(--blue-deep)}
   .donebanner{display:flex;align-items:center;gap:10px;background:var(--green-tint);border:1px solid #b6e2c8;border-radius:9px;padding:10px 12px;margin:0 0 12px;font-size:12.5px;color:#0c6b34;line-height:1.35}
   .donebanner b{font-weight:700}
-  .indexcard{margin:16px 0 2px;background:var(--blue-tint);border:1px solid #cfe0ff;border-radius:12px;padding:13px 14px}
-  .indexcard .ic-k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
-  .indexcard .ic-b{font-size:13px;color:var(--text);line-height:1.45}
-  .indexcard .ic-link{display:inline-block;margin-top:8px;font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
   .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--faint);line-height:1.5}
 
   /* end */
@@ -140,9 +124,6 @@
   .endhead .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
   .endhead .score{font-family:var(--mono);font-weight:600;font-size:52px;line-height:1;margin-top:4px;color:var(--blue)}
   .endhead .ssub{font-size:13px;color:var(--muted);margin-top:4px}
-  .lesson{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 13px;box-shadow:var(--shadow)}
-  .lesson .lk{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);margin-bottom:4px}
-  .lesson .lt{font-size:14px;line-height:1.4;color:var(--text)} .lesson .lt b{font-weight:700}
   .endstats{display:flex;gap:8px;margin-top:14px}
   .reviewlist{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
   .rev{display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--line);font-size:12.5px} .rev:last-child{border-bottom:0}
@@ -151,8 +132,9 @@
   .rev .rc{flex:1;line-height:1.3} .rev .rc b{font-weight:600}
   .rev .rg{font-family:var(--mono);font-size:11px;color:var(--faint);flex:none}
   .share{margin-top:14px;background:var(--blue-tint);border:1px dashed #b9d2ff;border-radius:10px;padding:12px 13px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.55;color:var(--text)}
+  .version{margin-top:14px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--faint)}
 
-  /* modal (transparency panels) */
+  /* modal */
   .scrim{position:fixed;inset:0;background:rgba(20,33,61,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
   .modal{background:var(--panel);border-radius:16px 16px 0 0;width:100%;max-width:460px;max-height:88vh;overflow:auto;padding:16px 16px 22px;box-shadow:0 -8px 30px rgba(20,33,61,.25);animation:sheet .26s cubic-bezier(.2,.7,.2,1) both}
   @keyframes sheet{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
@@ -161,276 +143,215 @@
   .modal-h .ms{font-size:12.5px;color:var(--muted);margin-top:3px}
   .modal-x{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center}
   .mblurb{font-size:13.5px;color:var(--text);line-height:1.5;margin:8px 0 4px}
-  .inputrow{display:flex;align-items:baseline;gap:9px;padding:10px 0;border-top:1px solid var(--line)}
-  .inputrow .iw{font-family:var(--mono);font-weight:600;font-size:15px;color:var(--blue-deep);width:48px;flex:none}
-  .inputrow .il{font-family:var(--display);font-weight:600;font-size:14px;width:96px;flex:none}
-  .inputrow .ib{font-size:12px;color:var(--muted);line-height:1.35;flex:1}
-  .inputrow .ib em{color:var(--amber);font-style:normal;font-weight:600}
+  .srcrow{padding:11px 0;border-top:1px solid var(--line)}
+  .srcrow .sk{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+  .srcrow .sv{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:3px}
+  .srcrow .ss{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
   .disclosure{margin-top:12px;background:var(--amber-tint);border:1px solid #f3cda3;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#7a4510;line-height:1.45}
   .disclosure b{color:#5e3408}
-  /* car-math modal rows */
-  .mathrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-family:var(--mono);font-size:13px}
-  .mathrow .ml{flex:1;color:var(--text)} .mathrow .ml .mlsub{color:var(--faint);font-size:11px}
-  .mathrow .mc{font-weight:600}
-  .mathtot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:11px;border-top:2px solid var(--line);font-family:var(--mono)}
-  .mathtot .mtl{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
-  .mathtot .mtv{font-size:24px;font-weight:600;color:var(--blue)}
 
   /* debug */
-  .debug{margin-top:18px;border:1px solid #f3c3bd;border-radius:10px;background:#fdecea;padding:11px 13px;font-family:var(--mono);font-size:11.5px;line-height:1.5;color:#a52218}
+  .debug{margin-top:18px;border:1px solid #f3c3bd;border-radius:10px;background:#fdecea;padding:11px 13px;font-family:var(--mono);font-size:11px;line-height:1.6;color:#a52218;overflow-x:auto}
   .debug h4{margin:0 0 6px;font-family:var(--display);font-size:13px}
+  .debug .ok{color:#0c6b34}
 
   /* motion */
-  @keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
   @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .anim-up{animation:up .28s cubic-bezier(.2,.7,.2,1) both}
-  .anim-pop{animation:pop .34s cubic-bezier(.2,.7,.2,1) both}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<script src="cars.js"></script>
 <script>
 (function(){
 "use strict";
 
 /* =====================================================================
-   HIGHER — the Motor1 Index game. Two cars; pick the higher Motor1 Index
-   (0-100), a Motor1-owned composite (NOT a dollar figure). The reveal is a
-   glass box: every number is one tap from its sub-score math, and a standing
-   panel explains the Index. Single self-contained file, vanilla JS, no backend.
+   HIGHER v3 — one anchor car per day, five timed rounds, each round a
+   different challenger on a different hard stat. Every number shown is
+   a sourced fact from cars.js; the game never derives, estimates, or
+   computes a stat. No composite metric exists anywhere in this game.
+   Single self-contained file + cars.js, vanilla JS, no backend.
    ===================================================================== */
 
-var CARS = [
-  { "year":1955, "make":"Mercedes-Benz", "model":"300 SLR Uhlenhaut Coupe", "category":"Holy Grail", "value":"$140M+ (record)", "rating":89.5, "sv":1, "sp":0.55, "sd":1, "sr":0.9, "approx":true },
-  { "year":1962, "make":"Ferrari", "model":"250 GTO", "category":"Holy Grail", "value":"$50M-70M+", "rating":85.6, "sv":0.902, "sp":0.55, "sd":1, "sr":0.9, "approx":true },
-  { "year":1937, "make":"Bugatti", "model":"Type 57SC Atlantic", "category":"Holy Grail", "value":"$30M-40M+", "rating":83.1, "sv":0.839, "sp":0.55, "sd":1, "sr":0.9, "approx":true },
-  { "year":1957, "make":"Ferrari", "model":"335 S Scaglietti", "category":"Holy Grail", "value":"$30M+", "rating":82.4, "sv":0.822, "sp":0.55, "sd":1, "sr":0.9, "approx":true },
-  { "year":1994, "make":"McLaren", "model":"F1", "category":"European GT", "value":"$20M+", "rating":73.0, "sv":0.775, "sp":0.8, "sd":0.5, "sr":0.9, "approx":true },
-  { "year":2014, "make":"Porsche / Ferrari / McLaren", "model":"918 / LaFerrari / P1", "category":"Modern Hypercar", "value":"$1.5M-5M each", "rating":71.1, "sv":0.564, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1953, "make":"Jaguar", "model":"C-Type / D-Type", "category":"Prewar / Classic", "value":"$5M-25M", "rating":70.6, "sv":0.741, "sp":0.55, "sd":0.66, "sr":0.9, "approx":true },
-  { "year":1961, "make":"Aston Martin", "model":"DB4 GT Zagato", "category":"1950s-60s Classic", "value":"$10M+", "rating":68.8, "sv":0.694, "sp":0.55, "sd":0.66, "sr":0.9, "approx":true },
-  { "year":2005, "make":"Bugatti", "model":"Veyron", "category":"Modern Hypercar", "value":"$1.5M-2.5M", "rating":68.8, "sv":0.508, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1936, "make":"Mercedes-Benz", "model":"540K Special Roadster", "category":"Prewar / Classic", "value":"$5M-12M", "rating":68.0, "sv":0.675, "sp":0.55, "sd":0.66, "sr":0.9, "approx":true },
-  { "year":2017, "make":"Ford", "model":"GT", "category":"Modern Hypercar", "value":"$1M-1.8M", "rating":67.1, "sv":0.466, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1971, "make":"Plymouth", "model":"Hemi 'Cuda", "category":"American Muscle", "value":"$1M-3.5M", "rating":66.1, "sv":0.521, "sp":0.8, "sd":0.9, "sr":0.45, "approx":true },
-  { "year":1931, "make":"Bugatti", "model":"Type 41 Royale", "category":"Holy Grail", "value":"Essentially priceless", "rating":64.0, "sv":0.4, "sp":0.55, "sd":1, "sr":0.8, "approx":true },
-  { "year":1969, "make":"Chevrolet", "model":"Camaro ZL1", "category":"American Muscle", "value":"$500K-1M", "rating":63.3, "sv":0.394, "sp":0.8, "sd":0.78, "sr":0.8, "approx":true },
-  { "year":2005, "make":"Ford", "model":"GT", "category":"Modern Hypercar", "value":"$1M-1.8M", "rating":61.3, "sv":0.321, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1957, "make":"BMW", "model":"507", "category":"1950s-60s Classic", "value":"$2M-3M", "rating":60.9, "sv":0.534, "sp":0.55, "sd":0.66, "sr":0.8, "approx":true },
-  { "year":1955, "make":"Porsche", "model":"550 Spyder", "category":"1950s-60s Classic", "value":"$4M-6M", "rating":58.8, "sv":0.614, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Dodge", "model":"Charger Daytona", "category":"American Muscle", "value":"$300K-1M", "rating":57.4, "sv":0.378, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":2017, "make":"Acura/Honda", "model":"NSX (NC1)", "category":"Modern Hypercar", "value":"$120K-200K", "rating":57.1, "sv":0.215, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1957, "make":"Mercedes-Benz", "model":"300 SL Gullwing", "category":"1950s-60s Classic", "value":"$1.3M-2M+", "rating":56.6, "sv":0.485, "sp":0.55, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1992, "make":"Bugatti", "model":"EB110", "category":"European GT", "value":"$2M-3M", "rating":56.6, "sv":0.534, "sp":0.8, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":2013, "make":"Ferrari", "model":"LaFerrari", "category":"Ferrari", "value":"$3.5M-5M", "rating":56.0, "sv":0.595, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1967, "make":"Chevrolet", "model":"Corvette L88 (C2)", "category":"Corvette", "value":"$1M-3.5M", "rating":55.6, "sv":0.521, "sp":0.55, "sd":0.68, "sr":0.45, "approx":true },
-  { "year":2002, "make":"Ferrari", "model":"Enzo", "category":"Ferrari", "value":"$3M-4.5M", "rating":55.5, "sv":0.581, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1965, "make":"Shelby", "model":"GT350", "category":"American Muscle", "value":"$300K-500K", "rating":55.1, "sv":0.321, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1995, "make":"Ferrari", "model":"F50", "category":"Ferrari", "value":"$4M-6M", "rating":54.8, "sv":0.614, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1932, "make":"Duesenberg", "model":"Model J / SJ", "category":"Prewar / Classic", "value":"$1M-3M+", "rating":54.6, "sv":0.508, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1930, "make":"Bentley", "model":"8 Litre", "category":"Prewar / Classic", "value":"$1M-3M", "rating":54.6, "sv":0.508, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Plymouth", "model":"Superbird", "category":"American Muscle", "value":"$200K-500K", "rating":54.5, "sv":0.306, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Chevrolet", "model":"Corvette ZL1 (C3)", "category":"Corvette", "value":"$1M+", "rating":54.1, "sv":0.427, "sp":0.55, "sd":0.56, "sr":0.8, "approx":true },
-  { "year":1971, "make":"Lamborghini", "model":"Miura SV", "category":"Lamborghini", "value":"$2M-4M", "rating":54.0, "sv":0.555, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1967, "make":"Shelby", "model":"GT500", "category":"American Muscle", "value":"$200K-400K", "rating":53.8, "sv":0.288, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1967, "make":"Ferrari", "model":"275 GTB/4", "category":"Ferrari", "value":"$2M-3.5M", "rating":53.6, "sv":0.545, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":2003, "make":"Dodge", "model":"Viper SRT-10", "category":"Modern Hypercar", "value":"$50K-100K", "rating":53.6, "sv":0.127, "sp":0.9, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1984, "make":"Ferrari", "model":"288 GTO", "category":"Ferrari", "value":"$3M-4M", "rating":53.2, "sv":0.573, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1964, "make":"Aston Martin", "model":"DB5", "category":"1950s-60s Classic", "value":"$700K-2M", "rating":52.7, "sv":0.462, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":2004, "make":"Porsche", "model":"Carrera GT", "category":"Porsche", "value":"$1.5M-2.5M", "rating":52.6, "sv":0.508, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":2015, "make":"Porsche", "model":"918 Spyder", "category":"Porsche", "value":"$1.5M-2.5M", "rating":52.6, "sv":0.508, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1987, "make":"Ferrari", "model":"F40", "category":"Ferrari", "value":"$2.5M-3.5M", "rating":52.5, "sv":0.555, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1996, "make":"Dodge", "model":"Viper GTS", "category":"Modern Hypercar", "value":"$50K-120K", "rating":52.2, "sv":0.142, "sp":0.8, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":2006, "make":"Lexus", "model":"LFA", "category":"Future Classic", "value":"$700K-1.2M", "rating":51.6, "sv":0.421, "sp":0.65, "sd":0.6, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Ferrari", "model":"365 GTB/4 Daytona", "category":"Ferrari", "value":"$600K-1.2M", "rating":51.4, "sv":0.415, "sp":0.55, "sd":0.68, "sr":0.45, "approx":true },
-  { "year":1967, "make":"Toyota", "model":"2000GT", "category":"1950s-60s Classic", "value":"$800K-1.2M", "rating":51.3, "sv":0.427, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1992, "make":"Dodge", "model":"Viper RT/10", "category":"Modern Hypercar", "value":"$40K-90K", "rating":50.9, "sv":0.111, "sp":0.8, "sd":0.95, "sr":0.45, "approx":true },
-  { "year":1968, "make":"Ford", "model":"Mustang GT (390 Fastback)", "category":"American Muscle", "value":"$100K-200K", "rating":50.6, "sv":0.208, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Chevrolet", "model":"Chevelle SS 454 LS6", "category":"American Muscle", "value":"$100K-200K", "rating":50.6, "sv":0.208, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Buick", "model":"GSX Stage 1", "category":"American Muscle", "value":"$100K-200K", "rating":50.6, "sv":0.208, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1987, "make":"Buick", "model":"GNX", "category":"American Muscle", "value":"$150K-250K", "rating":50.4, "sv":0.241, "sp":0.8, "sd":0.72, "sr":0.45, "approx":true },
-  { "year":1980, "make":"BMW", "model":"M1", "category":"European GT", "value":"$500K-800K", "rating":50.4, "sv":0.378, "sp":0.8, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Dodge", "model":"Charger R/T", "category":"American Muscle", "value":"$80K-200K", "rating":50.3, "sv":0.2, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Pontiac", "model":"GTO 'The Judge'", "category":"American Muscle", "value":"$80K-180K", "rating":49.9, "sv":0.191, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1987, "make":"Porsche", "model":"959", "category":"Porsche", "value":"$1.5M-2M", "rating":49.9, "sv":0.492, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1973, "make":"BMW", "model":"3.0 CSL", "category":"European GT", "value":"$300K-500K", "rating":49.6, "sv":0.321, "sp":0.8, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Oldsmobile", "model":"442 W-30", "category":"American Muscle", "value":"$80K-150K", "rating":49.3, "sv":0.177, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1973, "make":"Porsche", "model":"911 Carrera RS 2.7", "category":"Porsche", "value":"$700K-1.5M", "rating":49.3, "sv":0.438, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1999, "make":"Nissan", "model":"Skyline GT-R (R34)", "category":"JDM", "value":"$200K-600K+", "rating":49.3, "sv":0.321, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":2000, "make":"BMW", "model":"Z8", "category":"European GT", "value":"$200K-400K", "rating":48.8, "sv":0.288, "sp":0.9, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Chevrolet", "model":"Camaro Z/28", "category":"American Muscle", "value":"$60K-120K", "rating":48.2, "sv":0.148, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Plymouth", "model":"Road Runner", "category":"American Muscle", "value":"$50K-120K", "rating":47.9, "sv":0.142, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1993, "make":"Toyota", "model":"Supra Turbo (Mk IV / A80)", "category":"JDM", "value":"$80K-200K", "rating":47.5, "sv":0.2, "sp":0.55, "sd":0.87, "sr":0.45, "approx":true },
-  { "year":1969, "make":"Plymouth", "model":"GTX", "category":"American Muscle", "value":"$50K-100K", "rating":47.3, "sv":0.127, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Ford", "model":"Torino Cobra", "category":"American Muscle", "value":"$50K-100K", "rating":47.3, "sv":0.127, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1970, "make":"Chevrolet", "model":"Nova SS 396", "category":"American Muscle", "value":"$50K-90K", "rating":47.0, "sv":0.119, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":2011, "make":"Porsche", "model":"911 GT3 RS 4.0 (997)", "category":"Porsche", "value":"$500K-700K", "rating":47.0, "sv":0.368, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1961, "make":"Maserati", "model":"3500 GT", "category":"European GT", "value":"$150K-300K", "rating":47.0, "sv":0.255, "sp":0.8, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1969, "make":"AMC", "model":"AMX", "category":"American Muscle", "value":"$40K-90K", "rating":46.7, "sv":0.111, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":1963, "make":"Chevrolet", "model":"Corvette Sting Ray Split-Window", "category":"Corvette", "value":"$100K-300K", "rating":46.6, "sv":0.241, "sp":0.55, "sd":0.56, "sr":0.8, "approx":true },
-  { "year":1974, "make":"Lamborghini", "model":"Countach", "category":"Lamborghini", "value":"$300K-800K", "rating":46.1, "sv":0.358, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":2011, "make":"Lamborghini", "model":"Aventador", "category":"Lamborghini", "value":"$350K-600K", "rating":45.9, "sv":0.341, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1964, "make":"Ford", "model":"Mustang", "category":"American Muscle", "value":"$25K-80K", "rating":45.7, "sv":0.086, "sp":0.8, "sd":0.78, "sr":0.45, "approx":true },
-  { "year":2009, "make":"Nissan", "model":"GT-R (R35)", "category":"JDM", "value":"$80K-150K", "rating":45.6, "sv":0.177, "sp":0.65, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":1989, "make":"Nissan", "model":"Skyline GT-R (R32)", "category":"JDM", "value":"$50K-120K", "rating":45.2, "sv":0.142, "sp":0.55, "sd":0.87, "sr":0.45, "approx":true },
-  { "year":1957, "make":"Porsche", "model":"356 Speedster", "category":"Porsche", "value":"$300K-600K", "rating":45.1, "sv":0.335, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1959, "make":"Cadillac", "model":"Eldorado Biarritz", "category":"1950s-60s Classic", "value":"$120K-300K", "rating":44.1, "sv":0.247, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1991, "make":"Acura/Honda", "model":"NSX", "category":"JDM", "value":"$80K-180K", "rating":44.1, "sv":0.191, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":1961, "make":"Jaguar", "model":"E-Type Series 1", "category":"1950s-60s Classic", "value":"$100K-300K", "rating":43.9, "sv":0.241, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1972, "make":"De Tomaso", "model":"Pantera", "category":"European GT", "value":"$80K-150K", "rating":43.8, "sv":0.177, "sp":0.8, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1990, "make":"Lamborghini", "model":"Diablo", "category":"Lamborghini", "value":"$300K-600K", "rating":43.6, "sv":0.335, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1963, "make":"Volkswagen", "model":"21-Window Microbus", "category":"Future Classic", "value":"$100K-250K", "rating":43.2, "sv":0.225, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1953, "make":"Chevrolet", "model":"Corvette (C1)", "category":"Corvette", "value":"$200K-300K", "rating":42.4, "sv":0.267, "sp":0.55, "sd":0.56, "sr":0.45, "approx":true },
-  { "year":1971, "make":"Datsun", "model":"240Z", "category":"JDM", "value":"$40K-90K", "rating":42.4, "sv":0.111, "sp":0.55, "sd":0.81, "sr":0.45, "approx":true },
-  { "year":1963, "make":"Mercedes-Benz", "model":"230 SL 'Pagoda'", "category":"1950s-60s Classic", "value":"$80K-200K", "rating":42.3, "sv":0.2, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1988, "make":"BMW", "model":"E30 M3", "category":"European GT", "value":"$80K-150K", "rating":42.3, "sv":0.177, "sp":0.8, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1996, "make":"Porsche", "model":"911 Turbo (993)", "category":"Porsche", "value":"$200K-400K", "rating":41.8, "sv":0.288, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":2000, "make":"Honda", "model":"S2000", "category":"JDM", "value":"$30K-70K", "rating":41.7, "sv":0.08, "sp":0.65, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":2002, "make":"Subaru", "model":"Impreza WRX STI", "category":"JDM", "value":"$30K-70K", "rating":41.7, "sv":0.08, "sp":0.65, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":1992, "make":"Mazda", "model":"RX-7 (FD)", "category":"JDM", "value":"$40K-100K", "rating":41.3, "sv":0.119, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":2019, "make":"Chevrolet", "model":"Corvette ZR1 (C7)", "category":"Corvette", "value":"$120K-200K", "rating":40.9, "sv":0.215, "sp":0.65, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1992, "make":"Honda", "model":"Civic / Integra Type R", "category":"JDM", "value":"$40K-90K", "rating":40.9, "sv":0.111, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":1957, "make":"Chevrolet", "model":"Bel Air", "category":"1950s-60s Classic", "value":"$50K-120K", "rating":39.9, "sv":0.142, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1985, "make":"Ferrari", "model":"Testarossa", "category":"Ferrari", "value":"$100K-250K", "rating":39.2, "sv":0.225, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1975, "make":"Porsche", "model":"911 Turbo (930)", "category":"Porsche", "value":"$100K-250K", "rating":39.2, "sv":0.225, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true },
-  { "year":1955, "make":"Ford", "model":"Thunderbird", "category":"1950s-60s Classic", "value":"$40K-90K", "rating":38.7, "sv":0.111, "sp":0.55, "sd":0.66, "sr":0.45, "approx":true },
-  { "year":1992, "make":"Mitsubishi", "model":"3000GT VR-4 / GTO", "category":"JDM", "value":"$25K-50K", "rating":38.4, "sv":0.047, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":2020, "make":"Toyota", "model":"GR Yaris / GR Corolla", "category":"Future Classic", "value":"$35K-60K", "rating":37.7, "sv":0.074, "sp":0.65, "sd":0.6, "sr":0.45, "approx":true },
-  { "year":1981, "make":"DeLorean", "model":"DMC-12", "category":"Future Classic", "value":"$40K-90K", "rating":37.2, "sv":0.111, "sp":0.55, "sd":0.6, "sr":0.45, "approx":true },
-  { "year":1987, "make":"Buick", "model":"Regal Grand National", "category":"Future Classic", "value":"$40K-80K", "rating":36.8, "sv":0.101, "sp":0.55, "sd":0.6, "sr":0.45, "approx":true },
-  { "year":1989, "make":"Mazda", "model":"MX-5 Miata (NA)", "category":"JDM", "value":"$15K-35K", "rating":36.5, "sv":0, "sp":0.55, "sd":0.75, "sr":0.45, "approx":true },
-  { "year":1991, "make":"GMC", "model":"Syclone", "category":"Future Classic", "value":"$40K-70K", "rating":36.4, "sv":0.091, "sp":0.55, "sd":0.6, "sr":0.45, "approx":true },
-  { "year":1990, "make":"Chevrolet", "model":"Corvette ZR-1 (C4)", "category":"Corvette", "value":"$30K-80K", "rating":33.9, "sv":0.091, "sp":0.55, "sd":0.5, "sr":0.45, "approx":true }
-];
+var VERSION="v3.0", BUILD_DATE="2026-07-02";
 
-// Weights are SHOWN to the player and FIXED in v1 (reweighting is a phase-2 idea).
-var WEIGHTS = { value:0.40, performance:0.20, desirability:0.25, rarity:0.15 };
-// Value is REAL; the other three are approximations (every car carries approx:true).
-var DIMS = [
-  { key:"sv", w:"value",        label:"Value",        real:true,  blurb:"Real market price — what it actually trades for." },
-  { key:"sd", w:"desirability", label:"Desirability", real:false, blurb:"How badly people want it." },
-  { key:"sp", w:"performance",  label:"Performance",  real:false, blurb:"Pace and capability." },
-  { key:"sr", w:"rarity",       label:"Rarity",       real:false, blurb:"How few were built." },
-];
-var CONFIG = { minGap:4, nMatchups:12 };   // minGap: bias gaps WIDER while sub-scores are approximate
-var SHARE_URL = "higher.motor1.com";
-var DEBUG = /[?&]debug=1\b/.test(location.search);
-
-/* ---- the cleaning gate: one real car per entry. Compound "Frankenstein" rows
-   (make or model contains " / ") are excluded from play until an editorial pass
-   splits them. ?debug=1 lists them. ---- */
-function isCompound(c){ return / \/ /.test(c.make) || / \/ /.test(c.model); }
-var COMPOUNDS = CARS.filter(isCompound);
-var PLAYABLE = CARS.filter(function(c){ return !isCompound(c); });
-if(DEBUG && COMPOUNDS.length) try{ console.warn("HIGHER: "+COMPOUNDS.length+" compound entries excluded:", COMPOUNDS.map(function(c){return c.make+" "+c.model;})); }catch(e){}
-
-/* ---- the Motor1 Index: 100 * weighted sum of the four 0..1 sub-scores ---- */
-function mIndex(c){
-  if(c._i!=null) return c._i;
-  c._i = 100*(WEIGHTS.value*c.sv + WEIGHTS.performance*c.sp + WEIGHTS.desirability*c.sd + WEIGHTS.rarity*c.sr);
-  return c._i;
-}
-function fmtIdx(v){ return v.toFixed(1); }
-function sub100(c,key){ return Math.round(c[key]*100); }   // a sub-score as 0..100 for display
-
-/* ---- sharper, more editorial category labels (display only) ---- */
-var CATEGORY_LABELS = {
-  "Holy Grail":"Auction Legend", "Prewar / Classic":"Auction Legend", "1950s-60s Classic":"Poster Car",
-  "American Muscle":"Muscle Icon", "Corvette":"Muscle Icon", "Ferrari":"Blue-Chip Ferrari",
-  "Lamborghini":"Poster Car", "Porsche":"Analog Supercar", "European GT":"Poster Car",
-  "JDM":"JDM Hero", "Modern Hypercar":"Million-Dollar Oddball", "Future Classic":"Future Classic",
+var CONFIG = {
+  roundSeconds: 10,          // the anti-Google mechanic; keep it tight
+  nRounds: 5,
+  // matchup curation: target relative-gap band per stat (fraction of the
+  // anchor's value). Challengers inside the band read as "close".
+  gapBands: {
+    msrp:       [0.10, 0.60],
+    msrp_adj:   [0.10, 0.60],
+    hp:         [0.05, 0.40],
+    zero_sixty: [0.05, 0.35],
+    weight:     [0.03, 0.20],
+    units_sold: [0.15, 3.00]
+  }
 };
-var MODEL_OVERRIDE = [
-  { re:/E30 M3|\b959\b|3\.0 CSL|Carrera RS 2\.7|Superbird|Charger Daytona|GT-R \(R32\)/, label:"Homologation Special" },
-  { re:/GNX|Grand National|Syclone/, label:"Malaise-Era Sleeper" },
-  { re:/Veyron|Type 41 Royale/, label:"Million-Dollar Oddball" },
+var SHARE_URL="motor1.com/higher";
+var DEBUG=/[?&]debug=1\b/.test(location.search);
+var CARS=(window.HIGHER_CARS||[]).slice();
+
+/* ---- dev check: one real car per entry. Any name containing " / " is
+   flagged (console + ?debug=1 report) for editorial to split. ---- */
+var COMPOUND_FLAGGED = CARS.filter(function(c){ return / \/ /.test(c.make) || / \/ /.test(c.model); });
+if(COMPOUND_FLAGGED.length) try{ console.warn("HIGHER: "+COMPOUND_FLAGGED.length+" entries have compound names (\" / \"):", COMPOUND_FLAGGED.map(function(c){return c.id;})); }catch(e){}
+
+/* ---- the stat menu. One stat per round, no repeats within a day. ---- */
+function fmtMoney(n){ return "$"+Math.round(n).toLocaleString("en-US"); }
+function fmtInt(n){ return Math.round(n).toLocaleString("en-US"); }
+var STATS = [
+  { key:"msrp",       label:"Original MSRP",   short:"original MSRP",
+    q:"Which had the higher original MSRP?", sub:"Sticker price when new, not adjusted",
+    tap:"Tap if higher", win:"HIGHER", lowerWins:false,
+    fmt:fmtMoney, gapFmt:fmtMoney },
+  { key:"msrp_adj",   label:"Adjusted MSRP",   short:"adjusted MSRP",
+    q:"Which cost more in today's dollars?", sub:"Original MSRP, inflation-adjusted",
+    tap:"Tap if higher", win:"HIGHER", lowerWins:false,
+    fmt:fmtMoney, gapFmt:fmtMoney },
+  { key:"hp",         label:"Horsepower",      short:"horsepower",
+    q:"Which has more horsepower?", sub:"Factory rating",
+    tap:"Tap if higher", win:"HIGHER", lowerWins:false,
+    fmt:function(n){return fmtInt(n)+" hp";}, gapFmt:function(n){return fmtInt(n)+" hp";} },
+  { key:"zero_sixty", label:"0-60 mph",        short:"0-60",
+    q:"Which is quicker 0-60?", sub:"Lower time wins this one",
+    tap:"Tap if quicker", win:"QUICKER", lowerWins:true,
+    fmt:function(n){return n.toFixed(1)+"s";}, gapFmt:function(n){return n.toFixed(1)+"s";} },
+  { key:"weight",     label:"Curb weight",     short:"curb weight",
+    q:"Which is heavier at the curb?", sub:"Factory curb weight",
+    tap:"Tap if heavier", win:"HEAVIER", lowerWins:false,
+    fmt:function(n){return fmtInt(n)+" lb";}, gapFmt:function(n){return fmtInt(n)+" lb";} },
+  { key:"units_sold", label:"Units sold",      short:"units sold",
+    q:"Which sold more?", sub:"Total units",
+    tap:"Tap if higher", win:"HIGHER", lowerWins:false,
+    fmt:fmtInt, gapFmt:function(n){return fmtInt(n)+" units";} }
 ];
-function catLabel(c){
-  for(var i=0;i<MODEL_OVERRIDE.length;i++) if(MODEL_OVERRIDE[i].re.test(c.model)) return MODEL_OVERRIDE[i].label;
-  return CATEGORY_LABELS[c.category] || c.category;
-}
+var STAT_BY_KEY={}; STATS.forEach(function(s){ STAT_BY_KEY[s.key]=s; });
 
 /* ---- helpers ---- */
 function hashString(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
 function mulberry32(seed){ var a=seed>>>0; return function(){ a|=0;a=(a+0x6d2b79f5)|0; var t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+function shuffle(arr,rng){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(rng()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function pad2(n){ return n<10?"0"+n:""+n; }
 function todaySeed(){ var d=new Date(); return ""+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()); }
 function dailyNumber(){ var d=new Date(); var now=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); return Math.floor((now-Date.UTC(2026,0,1))/86400000)+1; }
 function reduced(){ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+function fmtSecs(ms){ return (ms/1000).toFixed(1)+"s"; }
+function carName(c){ return c.year+" "+c.make+" "+c.model; }
+function shortCar(c){ return "'"+pad2(c.year%100)+" "+c.make+" "+c.model; }
 
-/* ---- the day's paced sequence (seeded). Gaps are biased WIDER (>= CONFIG.minGap)
-   while the data is approximate; tighten minGap once the Index is sourced. ---- */
-var GAP_TARGETS = [18, 14, 10, 7, 6, 5, 16, 6, 5, 8, 5, 5];
-function buildSequence(seed){
-  var rng = mulberry32(hashString("higher|"+seed));
-  var pool = PLAYABLE.map(function(c,i){ return { c:c, i:i, r:mIndex(c) }; }).sort(function(a,b){ return a.r-b.r; });
-  var targets = GAP_TARGETS.slice(0, CONFIG.nMatchups).map(function(t){ return Math.max(CONFIG.minGap, t + (rng()*3-1.5)); });
-  var used = new Array(pool.length), seq=[];
-  targets.forEach(function(t){
-    var bestDelta=Infinity, ties=[];
-    for(var x=0;x<pool.length;x++){ if(used[x]) continue;
-      for(var y=x+1;y<pool.length;y++){ if(used[y]) continue;
-        var gap = pool[y].r - pool[x].r;
-        if(gap < CONFIG.minGap) continue;                  // floor: never split hairs on soft data
-        var delta = Math.abs(gap - t);
-        if(delta < bestDelta - 1e-9){ bestDelta=delta; ties=[[x,y]]; }
-        else if(delta < bestDelta + 0.25){ ties.push([x,y]); }
-      }
-    }
-    if(!ties.length){   // fallback: widest unused pair (keeps the day full on tiny datasets)
-      var fb=null, fbGap=-1;
-      for(var x2=0;x2<pool.length;x2++){ if(used[x2]) continue;
-        for(var y2=x2+1;y2<pool.length;y2++){ if(used[y2]) continue;
-          var g2=pool[y2].r-pool[x2].r; if(g2>fbGap){ fbGap=g2; fb=[x2,y2]; } } }
-      if(!fb) return; ties=[fb];
-    }
-    var best = ties[Math.floor(rng()*ties.length)];
-    used[best[0]]=true; used[best[1]]=true;
-    var lo=pool[best[0]], hi=pool[best[1]], flip=rng()<0.5;
-    seq.push({ a: flip?hi:lo, b: flip?lo:hi });
+/* ---- day builder: seeded anchor + 5 curated stat rounds ----
+   Pairings are close or expectation-defying, never random: challengers
+   come from the stat's gap band, and 1-2 rounds per day are "upset"
+   picks where the intuitive answer is wrong. Cars with a null stat are
+   never used in that stat's round. Nothing is estimated. ---- */
+function usableStatKeys(anchor){
+  return STATS.map(function(s){return s.key;}).filter(function(k){
+    if(anchor.stats[k]==null) return false;
+    return CARS.some(function(c){ return c!==anchor && c.stats[k]!=null && c.stats[k]!==anchor.stats[k]; });
   });
-  return seq;
+}
+function statWinner(key,a,b){
+  var st=STAT_BY_KEY[key];
+  return st.lowerWins ? (a.stats[key]<b.stats[key]?a:b) : (a.stats[key]>b.stats[key]?a:b);
+}
+// "the intuitive answer is wrong" — intuition proxies, editorial-tunable:
+// hp / 0-60 / weight / both MSRPs: the newer car intuitively wins, so an
+// older-car win is the upset (the spec's example: the older car with the
+// higher adjusted MSRP). units_sold: the cheaper car intuitively sold
+// more, so the pricier car outselling it is the upset.
+function isUpset(anchor,ch,key){
+  if(anchor.year===ch.year) return false;
+  var older=anchor.year<ch.year?anchor:ch;
+  var w=statWinner(key,anchor,ch);
+  if(key==="units_sold"){
+    var pa=anchor.stats.msrp_adj, pb=ch.stats.msrp_adj;
+    if(pa!=null&&pb!=null&&pa!==pb) return w===(pa>pb?anchor:ch);
+  }
+  return w===older;
+}
+function pickChallenger(anchor,key,used,rng,wantUpset){
+  var av=anchor.stats[key];
+  var cands=CARS.filter(function(c){ return c!==anchor && !used[c.id] && c.stats[key]!=null && c.stats[key]!==av; });
+  if(!cands.length) return null;
+  var band=CONFIG.gapBands[key]||[0,Infinity];
+  function rel(c){ return Math.abs(c.stats[key]-av)/Math.abs(av); }
+  var inBand=cands.filter(function(c){ var r=rel(c); return r>=band[0]&&r<=band[1]; });
+  var pool;
+  if(wantUpset){
+    pool=inBand.filter(function(c){ return isUpset(anchor,c,key); });
+    if(!pool.length) pool=cands.filter(function(c){ return isUpset(anchor,c,key); });
+  } else {
+    // non-upset rounds actively avoid upset pairings so the day stays at 1-2
+    pool=inBand.filter(function(c){ return !isUpset(anchor,c,key); });
+    if(!pool.length) pool=cands.filter(function(c){ return !isUpset(anchor,c,key); });
+  }
+  if(!pool||!pool.length) pool=inBand.length?inBand:cands;
+  // prefer the tighter gaps: seeded pick among the 3 closest
+  pool=pool.slice().sort(function(x,y){ return rel(x)-rel(y); });
+  return pool[Math.floor(rng()*Math.min(3,pool.length))];
+}
+function buildDay(seed){
+  var rng=mulberry32(hashString("higher3|"+seed));
+  var pool=CARS.filter(function(c){ return usableStatKeys(c).length>=CONFIG.nRounds; });
+  if(!pool.length) return null;
+  var anchor=pool[Math.floor(rng()*pool.length)];
+  var keys=shuffle(usableStatKeys(anchor),rng);
+  var nUpsets=1+(rng()<0.45?1:0);                       // 1-2 upset rounds per day
+  var upsetSlots={}; shuffle([0,1,2,3,4],rng).slice(0,nUpsets).forEach(function(i){ upsetSlots[i]=true; });
+  var used={}, rounds=[];
+  for(var i=0;i<keys.length && rounds.length<CONFIG.nRounds;i++){
+    var ch=pickChallenger(anchor,keys[i],used,rng,!!upsetSlots[rounds.length]);
+    if(!ch) continue;
+    used[ch.id]=true;
+    rounds.push({ stat:STAT_BY_KEY[keys[i]], ch:ch, upset:isUpset(anchor,ch,keys[i]) });
+  }
+  if(rounds.length<CONFIG.nRounds) return null;
+  return { anchor:anchor, rounds:rounds };
 }
 
-/* ---- the deciding factor(s): dimensions where the winner most out-earned the loser ---- */
-function decidingDims(win, lose){
-  var scored = DIMS.map(function(d){ return { d:d, c:(win[d.key]-lose[d.key])*WEIGHTS[d.w] }; })
-    .filter(function(o){ return o.c>0; }).sort(function(a,b){ return b.c-a.c; });
-  return scored.map(function(o){ return o.d; });
-}
-function joinLabels(dims){
-  var names=dims.map(function(d){ return d.label.toLowerCase(); });
-  if(names.length===1) return names[0];
-  if(names.length===2) return names[0]+" and "+names[1];
-  return names.slice(0,-1).join(", ")+" and "+names[names.length-1];
-}
-function verdictLine(a,b){
-  var win = mIndex(a)>=mIndex(b)?a:b, lose = win===a?b:a;
-  var gap = Math.abs(mIndex(a)-mIndex(b));
-  var dims = decidingDims(win, lose).slice(0,2);
-  var on = dims.length ? " on "+joinLabels(dims) : "";
-  if(gap >= 16) return "The "+win.model+" runs away"+on+".";
-  if(gap >= 8)  return "The "+win.model+" takes it"+on+".";
-  return "The "+win.model+" edges it"+on+".";
-}
-
-/* ---- localStorage ---- */
+/* ---- localStorage (namespaced higher3_ so v2 records don't collide) ---- */
 function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ window.localStorage.setItem(k,v); }catch(e){} }
-function loadDaily(n){ try{ return JSON.parse(lsGet("higher_daily_"+n)); }catch(e){ return null; } }
-function saveDaily(n,rec){ lsSet("higher_daily_"+n, JSON.stringify(rec)); }
-function loadStats(){ try{ var v=JSON.parse(lsGet("higher_stats")); return (v&&typeof v.best==="number")?v:{best:0,played:0,lastDay:null}; }catch(e){ return {best:0,played:0,lastDay:null}; } }
-function saveStats(s){ lsSet("higher_stats", JSON.stringify(s)); }
+function loadDaily(n){ try{ return JSON.parse(lsGet("higher3_daily_"+n)); }catch(e){ return null; } }
+function saveDaily(n,rec){ lsSet("higher3_daily_"+n, JSON.stringify(rec)); }
+function loadStats(){
+  var d={streak:0,lastDay:null,perfect:0,lastPerfectDay:null,bestPerfectMs:null,played:0,history:[]};
+  try{ var v=JSON.parse(lsGet("higher3_stats")); return (v&&typeof v.played==="number")?v:d; }catch(e){ return d; }
+}
+function saveStats(s){ lsSet("higher3_stats", JSON.stringify(s)); }
+function recordDaily(day,score,timeMs,strip){
+  if(loadDaily(day)) return;                             // first completion only; replays never overwrite
+  saveDaily(day,{score:score,timeMs:timeMs,strip:strip});
+  var st=loadStats();
+  st.played=(st.played||0)+1;
+  st.streak=(st.lastDay===day-1)?(st.streak||0)+1:1;     // a streak day = played
+  st.lastDay=day;
+  if(score===CONFIG.nRounds){                            // perfect streak = consecutive 5/5 days
+    st.perfect=(st.lastPerfectDay===day-1)?(st.perfect||0)+1:1;
+    st.lastPerfectDay=day;
+    if(st.bestPerfectMs==null||timeMs<st.bestPerfectMs) st.bestPerfectMs=timeMs;
+  } else st.perfect=0;
+  st.history=(st.history||[]).concat([{day:day,score:score,timeMs:timeMs}]).slice(-90);
+  saveStats(st);
+}
+function effectiveStreak(st,today){ return (st.lastDay===today||st.lastDay===today-1)?(st.streak||0):0; }
+function effectivePerfect(st,today){ return (st.lastPerfectDay===today||st.lastPerfectDay===today-1)?(st.perfect||0):0; }
 
 /* ---- app / state ---- */
-var App = { state:null, root:null };
-function newState(seed, practice){
-  return { seed:seed, daily:dailyNumber(), practice:!!practice, seq:buildSequence(seed),
-    idx:0, results:[], streak:0, best:0, phase:"intro", picked:null, revealed:false };
+var App={ state:null, root:null, timerInt:null, timerNodes:null };
+function newState(seed,practice){
+  var day=buildDay(seed);
+  if(!day) return null;
+  return { seed:seed, daily:dailyNumber(), practice:!!practice, anchor:day.anchor, rounds:day.rounds,
+    idx:0, results:[], phase:"intro", picked:null, revealed:false, roundStart:0 };
 }
-function setDaily(){ App.state = newState(todaySeed(), false); }
-function setPractice(){ App.state = newState("practice-"+Math.floor(Math.random()*1e9), true); }
+function setDaily(){ App.state=newState(todaySeed(),false); }
+function setPractice(){ App.state=newState("practice-"+Math.floor(Math.random()*1e9),true); }
 
 /* ---- DOM helper ---- */
 function el(tag,props,kids){
@@ -441,64 +362,70 @@ function el(tag,props,kids){
     else if(k.indexOf("on")===0 && typeof v==="function") n.addEventListener(k.slice(2).toLowerCase(),v);
     else n.setAttribute(k,v);
   }
-  kids = kids==null?[]:(Array.isArray(kids)?kids:[kids]);
+  kids=kids==null?[]:(Array.isArray(kids)?kids:[kids]);
   kids.forEach(function(c){ if(c==null||c===false) return; n.appendChild(typeof c==="string"?document.createTextNode(c):c); });
   return n;
 }
-function animateCount(node, from, to, ms, fmt){
-  fmt = fmt || function(v){ return String(Math.round(v)); };
-  if(!node) return;
-  if(reduced() || ms<=0 || from===to){ node.textContent=fmt(to); return; }
-  var t0=null, done=false;
-  function finish(){ if(done) return; done=true; node.textContent=fmt(to); }
-  function step(ts){ if(done) return; if(t0===null) t0=ts; var t=Math.min(1,(ts-t0)/ms), e=1-Math.pow(1-t,3);
-    node.textContent=fmt(from+(to-from)*e); if(t<1) requestAnimationFrame(step); else finish(); }
-  requestAnimationFrame(step); setTimeout(finish, ms+80);
-}
 
-/* ---- modals (managed outside render() so they never restart the reveal) ---- */
+/* ---- modals ---- */
 function closeModal(){ var s=document.querySelector(".scrim"); if(s) s.parentNode.removeChild(s); }
 function openModal(node){
   closeModal();
-  var scrim=el("div",{class:"scrim",onclick:function(e){ if(e.target===scrim) closeModal(); }},[ node ]);
+  var scrim=el("div",{class:"scrim",onclick:function(e){ if(e.target===scrim) closeModal(); }},[node]);
   document.body.appendChild(scrim);
 }
 function howToModal(){
-  var body=el("div",{class:"modal"},[
+  return el("div",{class:"modal"},[
     el("div",{class:"modal-h"},[
-      el("div",{},[ el("div",{class:"mt",text:"The Motor1 Index"}), el("div",{class:"ms",text:"How the number is built"}) ]),
+      el("div",{},[ el("div",{class:"mt",text:"How to play"}), el("div",{class:"ms",text:"One anchor car. Five rounds. Real numbers."}) ]),
       el("button",{class:"modal-x","aria-label":"Close",text:"×",onclick:closeModal}),
     ]),
-    el("div",{class:"mblurb",text:"The Motor1 Index is a 0–100 score — our own composite, not a dollar figure. Higher Index wins the matchup. It blends four inputs at fixed weights:"}),
+    el("div",{class:"mblurb",html:
+      "Every day has one <b>anchor car</b>. Each of the five rounds puts it against a different challenger on a different hard stat — price, power, weight, speed, sales."}),
+    el("div",{class:"mblurb",html:
+      "You get <b>"+CONFIG.roundSeconds+" seconds</b> per round. Tap the car you think is higher (or quicker). No answer when time runs out counts as a miss. All five rounds always play."}),
+    el("div",{class:"mblurb",html:
+      "Score is correct answers out of 5; total time is the tiebreaker."}),
+    el("div",{class:"mblurb",html:
+      "Every number in this game is a <b>sourced fact</b> — no scores, no estimates. On the reveal, tap any stat value to see where it comes from."}),
   ]);
-  DIMS.forEach(function(d){
-    body.appendChild(el("div",{class:"inputrow"},[
-      el("div",{class:"iw",text:Math.round(WEIGHTS[d.w]*100)+"%"}),
-      el("div",{class:"il",text:d.label}),
-      el("div",{class:"ib"},[ d.blurb+" ", d.real?null:el("em",{text:"(estimate)"}) ]),
-    ]));
-  });
-  body.appendChild(el("div",{class:"disclosure"},[ el("b",{text:"Value is real. "}),
-    "Performance, desirability and rarity are approximations until real specs and production numbers land — that's why every car shows ", el("b",{text:"“est.”"}), " The weights are fixed for now." ]));
+}
+function sourceModal(car,stat){
+  var src=(car.sources&&car.sources[stat.key])||"No source note on file.";
+  var body=el("div",{class:"modal"},[
+    el("div",{class:"modal-h"},[
+      el("div",{},[ el("div",{class:"mt",text:carName(car)}), el("div",{class:"ms",text:car.category}) ]),
+      el("button",{class:"modal-x","aria-label":"Close",text:"×",onclick:closeModal}),
+    ]),
+    el("div",{class:"srcrow"},[
+      el("div",{class:"sk",text:stat.label}),
+      el("div",{class:"sv num",text:stat.fmt(car.stats[stat.key])}),
+      el("div",{class:"ss"},[ el("b",{text:"Source: "}), src ]),
+    ]),
+  ]);
+  if(car.note) body.appendChild(el("div",{class:"srcrow"},[ el("div",{class:"sk",text:"Editorial note"}), el("div",{class:"ss",text:car.note}) ]));
+  if(car.verified===false) body.appendChild(el("div",{class:"disclosure"},[ el("b",{text:"Placeholder data. "}), "This entry has not been verified by Motor1 editorial yet." ]));
   return body;
 }
-function carMathModal(c){
-  var body=el("div",{class:"modal"},[
-    el("div",{class:"modal-h"},[
-      el("div",{},[ el("div",{class:"mt",text:c.year+" "+c.make+" "+c.model}), el("div",{class:"ms",text:catLabel(c)+(c.value?" · "+c.value:"")}) ]),
-      el("button",{class:"modal-x","aria-label":"Close",text:"×",onclick:closeModal}),
-    ]),
-    el("div",{class:"mblurb",text:"How its Motor1 Index of "+fmtIdx(mIndex(c))+" is built — each sub-score (0–100) times its weight:"}),
-  ]);
-  DIMS.forEach(function(d){
-    var sub=c[d.key]*100, contrib=sub*WEIGHTS[d.w];   // 1-decimal so the rows actually sum to the Index (glass box)
-    body.appendChild(el("div",{class:"mathrow"},[
-      el("div",{class:"ml"},[ d.label+" ", el("span",{class:"mlsub",text:d.real?"(real)":"(est.)"}) ]),
-      el("div",{class:"mc",text:sub.toFixed(1)+" × "+Math.round(WEIGHTS[d.w]*100)+"% = "+contrib.toFixed(1)}),
-    ]));
-  });
-  body.appendChild(el("div",{class:"mathtot"},[ el("span",{class:"mtl",text:"Motor1 Index"}), el("span",{class:"mtv num",text:fmtIdx(mIndex(c))}) ]));
-  return body;
+
+/* ---- timer ---- */
+function stopTimer(){ if(App.timerInt){ clearInterval(App.timerInt); App.timerInt=null; } }
+function startTimer(){
+  stopTimer();
+  App.timerInt=setInterval(tick,100);
+  tick();
+}
+function tick(){
+  var s=App.state;
+  if(!s||s.phase!=="play"){ stopTimer(); return; }
+  var left=CONFIG.roundSeconds*1000-(Date.now()-s.roundStart);
+  if(left<=0){ stopTimer(); timeUp(); return; }
+  var t=App.timerNodes; if(!t) return;
+  t.chip.textContent=(left/1000).toFixed(1)+"s";
+  t.fill.style.width=(left/(CONFIG.roundSeconds*1000)*100)+"%";
+  var cls=left<=3000?"crit":(left<=5000?"warn":"");
+  t.chip.className="timerchip"+(cls?" "+cls:"");
+  t.bar.className="timebar"+(cls?" "+cls:"");
 }
 
 /* ---- render ---- */
@@ -506,10 +433,12 @@ function render(){
   var s=App.state, root=App.root, fresh=!!App.fresh;
   root.innerHTML="";
   root.appendChild(topbar());
+  if(!s){ root.appendChild(el("div",{class:"intro"},[ el("div",{class:"big",text:"Data file missing."}),
+    el("div",{class:"lede",text:"cars.js failed to load or has no playable cars (each anchor needs "+CONFIG.nRounds+" populated stats). Check the file and reload."}) ])); return; }
   var view = s.phase==="intro"?introView() : s.phase==="end"?endView() : roundView();
   root.appendChild(view);
   if(DEBUG && s.phase==="intro") root.appendChild(debugView());
-  if(fresh && s.phase!=="play"&&s.phase!=="reveal"){ [].forEach.call(view.children,function(c,i){ c.classList.add("anim-up"); c.style.animationDelay=(i*45)+"ms"; }); }
+  if(fresh && s.phase!=="play" && s.phase!=="reveal"){ [].forEach.call(view.children,function(c,i){ c.classList.add("anim-up"); c.style.animationDelay=(i*45)+"ms"; }); }
   App.fresh=false;
 }
 function topbar(){
@@ -517,8 +446,8 @@ function topbar(){
   return el("header",{class:"topbar"},[
     motor1Logo(),
     el("div",{class:"topright"},[
-      el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"HIGHER"}), el("span",{class:"gd",text:s.practice?"Practice":("Daily #"+s.daily)}) ]),
-      el("button",{class:"infobtn","aria-label":"How the Motor1 Index works",title:"How the Motor1 Index works",text:"i",onclick:function(){ openModal(howToModal()); }}),
+      el("div",{class:"gamechip"},[ el("span",{class:"gn",text:"HIGHER"}), el("span",{class:"gd",text:s?(s.practice?"Practice":"Daily #"+s.daily):"—"}) ]),
+      el("button",{class:"infobtn","aria-label":"How to play",title:"How to play",text:"i",onclick:function(){ openModal(howToModal()); }}),
     ]),
   ]);
 }
@@ -530,202 +459,257 @@ function motor1Logo(){
 
 /* ---- intro ---- */
 function introView(){
-  var s=App.state, stats=loadStats(), done = !s.practice ? loadDaily(s.daily) : null;
+  var s=App.state, st=loadStats(), today=dailyNumber();
+  var done=!s.practice?loadDaily(s.daily):null;
   var wrap=el("div",{class:"intro"},[]);
   if(done) wrap.appendChild(el("div",{class:"donebanner"},[ el("span",{text:"✅"}),
-    el("span",{},[ el("b",{text:"Today's done — "}), "you scored "+done.score+"/"+CONFIG.nMatchups+", best streak "+done.best+". Replay anytime; it won't change your record." ]) ]));
-  wrap.appendChild(el("div",{class:"big"},[ "Which has the higher ", el("span",{class:"hl",text:"Motor1 Index"}), "?" ]));
-  wrap.appendChild(el("div",{class:"lede"},[ "Two cars face off. Tap the one with the higher Motor1 Index — our 0–100 composite of value, performance, desirability and rarity. Then see exactly how it's scored. ",
-    el("a",{href:"#",onclick:function(e){ e.preventDefault(); openModal(howToModal()); },text:"How the Index works →"}) ]));
+    el("span",{},[ el("b",{text:"Today's done — "}), "you scored "+done.score+"/"+CONFIG.nRounds+" in "+fmtSecs(done.timeMs)+". Replay anytime; it won't change your record." ]) ]));
+  wrap.appendChild(el("div",{class:"big"},[ "One car. Five rounds. ", el("span",{class:"hl",text:"Real numbers."}) ]));
+  wrap.appendChild(el("div",{class:"lede"},[
+    "Today's anchor faces five challengers on five hard stats — price, power, weight, speed, sales. You get "+CONFIG.roundSeconds+" seconds a round. Every number is a sourced fact. ",
+    el("a",{href:"#",onclick:function(e){ e.preventDefault(); openModal(howToModal()); },text:"How to play →"}) ]));
+  wrap.appendChild(el("div",{class:"anchork",text:s.practice?"Practice anchor":"Today's anchor"}));
+  var a=s.anchor, card=el("div",{class:"car left"},[
+    el("div",{class:"yr",text:a.year}),
+    el("div",{class:"mk",text:a.make}),
+    el("div",{class:"md",text:a.model}),
+    el("div",{class:"badges"},[ el("span",{class:"badge",text:a.category}), el("span",{class:"badge anchor",text:"ANCHOR"}) ]),
+  ]);
+  wrap.appendChild(card);
   wrap.appendChild(el("div",{class:"how"},[
-    howStep("1","Two cars, side by side — year, make, model and class. The Index is hidden until you pick."),
-    howStep("2","Tap the one you think scores higher."),
-    howStep("3","See both Indexes, the four sub-score bars, the real price, and why it won. Tap any car for its full math. Right answer extends your streak."),
+    howStep("1","Five rounds. Each one: the anchor vs. a new challenger on a new stat."),
+    howStep("2","Tap the car you think is higher — before the "+CONFIG.roundSeconds+"-second clock runs out. Too slow counts as a miss."),
+    howStep("3","See both real numbers and the gap. Tap any stat for its source."),
   ]));
   wrap.appendChild(el("div",{class:"statline"},[
-    statBox("Best streak", stats.best||0), statBox("Days played", stats.played||0), statBox("Cars", PLAYABLE.length),
+    statBox("Day streak", effectiveStreak(st,today)),
+    statBox("Perfect streak", effectivePerfect(st,today)),
+    statBox("Best perfect", st.bestPerfectMs!=null?fmtSecs(st.bestPerfectMs):"—"),
   ]));
-  wrap.appendChild(el("button",{class:"btn primary",text:(done?"Replay daily #"+s.daily:"Play daily #"+s.daily),onclick:function(){ start(); }}));
-  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random cars)",onclick:function(){ setPractice(); start(); }}));
-  wrap.appendChild(el("div",{class:"foot",text:"New matchups every day, the same for everyone. Value is real; performance, desirability and rarity are estimates for now — tap any car to see the math."}));
+  wrap.appendChild(el("button",{class:"btn primary",text:(done?"Replay daily #"+s.daily:"Play daily #"+s.daily),onclick:start}));
+  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random anchor)",onclick:function(){ setPractice(); start(); }}));
+  wrap.appendChild(el("div",{class:"foot",text:"A new anchor every day, the same for everyone. Every stat is a documented fact — tap any revealed number to see its source."}));
   return wrap;
 }
 function howStep(n,t){ return el("div",{class:"h"},[ el("div",{class:"n",text:n}), el("div",{class:"t",text:t}) ]); }
 function statBox(k,v){ return el("div",{class:"statbox"},[ el("div",{class:"k",text:k}), el("div",{class:"v num",text:String(v)}) ]); }
-function start(){ var s=App.state; s.phase="play"; s.idx=0; s.results=[]; s.streak=0; s.best=0; s.picked=null; s.revealed=false; App.fresh=true; render(); window.scrollTo(0,0); }
+function start(){
+  var s=App.state; s.idx=0; s.results=[]; s.picked=null; s.revealed=false;
+  startRound();
+}
+function startRound(){
+  var s=App.state;
+  s.phase="play"; s.revealed=false; s.picked=null; s.roundStart=Date.now();
+  render(); window.scrollTo(0,0);
+  startTimer();
+}
 
 /* ---- round (play + reveal) ---- */
-function streakChip(){ var s=App.state, hot=s.streak>=3; return el("div",{class:"streakchip"+(hot?" hot":""),text:s.streak>0?(hot?"🔥 ":"")+s.streak+" streak":"no streak"}); }
-function pips(){ var s=App.state, row=el("div",{class:"pips"}); for(var i=0;i<s.seq.length;i++){ var cls="pip"; if(i<s.results.length) cls+=s.results[i].correct?" win":" miss"; else if(i===s.idx) cls+=" now"; row.appendChild(el("div",{class:cls})); } return row; }
-
-function carCard(side, m, role){
-  var c = side==="left"? m.a.c : m.b.c;
-  var isWin=null, isPick=null;
-  if(role==="reveal"){
-    var thisR=mIndex(c), otherR = side==="left"?mIndex(m.b.c):mIndex(m.a.c);
-    isWin = thisR>otherR; isPick = App.state.picked===side;
+function pips(){
+  var s=App.state, row=el("div",{class:"pips"});
+  for(var i=0;i<s.rounds.length;i++){ var cls="pip";
+    if(i<s.results.length) cls+=s.results[i].correct?" win":" miss";
+    else if(i===s.idx) cls+=" now";
+    row.appendChild(el("div",{class:cls}));
   }
-  var cls="car "+side+(role==="tap"?" tap":" tap")+(role==="reveal"?(isWin?" win":" lose"):"");
-  var node=el("div",{class:cls, role:"button", tabindex:"0"});
+  return row;
+}
+function carCard(side,round,role){
+  var s=App.state, c=side==="left"?s.anchor:round.ch, stat=round.stat;
+  var node=el("div",{class:"car "+side,role:"button",tabindex:"0"});
   node.appendChild(el("div",{class:"yr",text:c.year}));
   node.appendChild(el("div",{class:"mk",text:c.make}));
   node.appendChild(el("div",{class:"md",text:c.model}));
-  node.appendChild(el("div",{class:"badge",text:catLabel(c)}));
+  var badges=[ el("span",{class:"badge",text:c.category}) ];
+  if(side==="left") badges.push(el("span",{class:"badge anchor",text:"ANCHOR"}));
+  node.appendChild(el("div",{class:"badges"},badges));
   if(role==="tap"){
-    node.appendChild(el("div",{class:"taphint",text:"Tap if higher"}));
+    node.classList.add("tap");
+    node.appendChild(el("div",{class:"taphint",text:stat.tap}));
     var pick=function(){ choose(side); };
-    node.addEventListener("click", pick);
-    node.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } });
+    node.addEventListener("click",pick);
+    node.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } });
   } else {
-    if(c.value) node.appendChild(el("div",{class:"anchor"},[ "Worth ", el("b",{text:c.value}) ]));
-    node.appendChild(el("div",{class:"ixk"},[ "Motor1 Index", el("span",{class:"est",text:"est."}) ]));
-    var ixn=el("div",{class:"ix num",text:fmtIdx(0)}); node.appendChild(ixn); m["_ix_"+side]=ixn;
-    var tags=[]; if(isPick) tags.push(el("span",{class:"tag pick",text:"YOUR PICK"})); if(isWin) tags.push(el("span",{class:"tag win",text:"HIGHER"}));
+    var other=side==="left"?round.ch:s.anchor;
+    var isWin=statWinner(stat.key,c,other)===c;
+    var isPick=s.picked===side;
+    node.classList.add(isWin?"win":"lose");
+    node.appendChild(el("div",{class:"statk",text:stat.label}));
+    node.appendChild(el("button",{class:"statv num",text:stat.fmt(c.stats[stat.key]),
+      "aria-label":stat.label+" "+stat.fmt(c.stats[stat.key])+" — tap for source",
+      onclick:function(e){ e.stopPropagation(); openModal(sourceModal(c,stat)); }}));
+    var tags=[];
+    if(isPick) tags.push(el("span",{class:"tag pick",text:"YOUR PICK"}));
+    if(isWin) tags.push(el("span",{class:"tag win",text:stat.win}));
     if(tags.length) node.appendChild(el("div",{class:"tags"},tags));
-    node.appendChild(el("div",{class:"mathhint",text:"ⓘ tap for the math"}));
-    var openM=function(){ openModal(carMathModal(c)); };
-    node.addEventListener("click", openM);
-    node.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openM(); } });
+    node.appendChild(el("div",{class:"srchint",text:"ⓘ tap the number for its source"}));
+    var openSrc=function(){ openModal(sourceModal(c,stat)); };
+    node.addEventListener("click",openSrc);
+    node.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openSrc(); } });
   }
   return node;
 }
 function roundView(){
-  var s=App.state, m=s.seq[s.idx], role = s.revealed?"reveal":"tap";
+  var s=App.state, round=s.rounds[s.idx], stat=round.stat, role=s.revealed?"reveal":"tap";
   var wrap=el("div",{},[]);
-  wrap.appendChild(el("div",{class:"hud"},[ pips(), streakChip() ]));
+  var chip=el("div",{class:"timerchip",text:s.revealed?"—":CONFIG.roundSeconds.toFixed(1)+"s"});
+  wrap.appendChild(el("div",{class:"hud"},[ pips(), chip ]));
+  var fill=el("div",{class:"tfill"});
+  var bar=el("div",{class:"timebar"},[fill]);
+  wrap.appendChild(bar);
+  App.timerNodes={ chip:chip, fill:fill, bar:bar };
+  if(s.revealed){ chip.textContent=fmtSecs(s.results[s.idx].timeMs); fill.style.width="0%"; }
   wrap.appendChild(el("div",{class:"prompt"},[
-    s.revealed ? el("div",{class:"q",text:"The reveal"}) : el("div",{class:"q"},[ "Which has the higher ", el("span",{class:"idx",text:"Motor1 Index"}), "?" ]),
-    s.revealed ? el("div",{class:"sub",text:"Matchup "+(s.idx+1)+" of "+s.seq.length})
-               : el("div",{class:"sub"},[ "Matchup "+(s.idx+1)+" of "+s.seq.length+" · ", el("a",{href:"#",onclick:function(e){e.preventDefault();openModal(howToModal());},text:"what's the Index?"}) ]),
+    el("div",{class:"q"},[ s.revealed?"The reveal — ":"", el("span",{class:s.revealed?"":"hl",text:s.revealed?stat.label.toLowerCase():stat.q}) ]),
+    el("div",{class:"sub",text:"Round "+(s.idx+1)+" of "+s.rounds.length+(s.revealed?"":" · "+stat.sub)}),
   ]));
-  var ring=el("div",{class:"ring"},[ carCard("left",m,role), carCard("right",m,role), el("div",{class:"vs",text:"VS"}) ]);
+  var ring=el("div",{class:"ring"},[ carCard("left",round,role), carCard("right",round,role), el("div",{class:"vs",text:"VS"}) ]);
   wrap.appendChild(ring);
   if(!s.revealed) return wrap;
 
-  // reveal: count up indexes, pain marker, bars, verdict
-  var ra=mIndex(m.a.c), rb=mIndex(m.b.c), gap=Math.abs(ra-rb);
-  animateCount(m._ix_left, 0, ra, 650, fmtIdx);
-  animateCount(m._ix_right, 0, rb, 650, fmtIdx);
-  var win = ra>=rb?m.a.c:m.b.c, lose=win===m.a.c?m.b.c:m.a.c, correct=s.results[s.idx].correct;
-  wrap.appendChild(el("div",{class:"pain "+(correct?"good":"bad")},
-    correct ? [ "Nailed it — the ", el("b",{text:win.model}), " by "+fmtIdx(gap)+"." ]
-            : [ "You picked the ", el("b",{text:lose.model}), ". The ", el("b",{text:win.model}), " took it by "+fmtIdx(gap)+"." ]));
-  wrap.appendChild(breakdownPanel(m));
-  wrap.appendChild(el("div",{class:"verdict"},[ el("div",{class:"vk",text:"Why"}), el("span",{html:verdictLineHtml(m.a.c,m.b.c)}) ]));
-  var last = s.idx>=s.seq.length-1;
-  wrap.appendChild(el("button",{class:"btn primary",text: last?"See your results ▸":"Next matchup ▸",onclick:next}));
+  // reveal: gap + verdict + optional editorial note
+  var r=s.results[s.idx];
+  var win=statWinner(stat.key,s.anchor,round.ch);
+  var gap=Math.abs(s.anchor.stats[stat.key]-round.ch.stats[stat.key]);
+  var gapTxt=stat.gapFmt(gap);
+  var by=(stat.lowerWins?"quicker by ":"by ")+gapTxt;
+  wrap.appendChild(el("div",{class:"pain "+(r.correct?"good":"bad")},
+    r.picked==null ? [ "Time's up — that's a miss. The ", el("b",{text:win.model}), " "+by+"." ]
+    : r.correct    ? [ "Correct — the ", el("b",{text:win.model}), " "+by+"." ]
+                   : [ "Wrong — the ", el("b",{text:win.model}), " had it "+by+"." ]));
+  var notes=[round.ch,s.anchor].filter(function(c){ return c.note; });
+  if(notes.length) wrap.appendChild(el("div",{class:"note"},[ el("div",{class:"nk",text:"Editorial note"}),
+    el("div",{},[ el("b",{text:notes[0].model+": "}), notes[0].note ]) ]));
+  var last=s.idx>=s.rounds.length-1;
+  wrap.appendChild(el("button",{class:"btn primary",text:last?"See your results ▸":"Next round ▸",onclick:next}));
   return wrap;
 }
-function verdictLineHtml(a,b){ var t=verdictLine(a,b); return t.replace(/^The ([^ ]+(?: [^ ]+)*?) (runs away|takes it|edges it)/, function(mm,name,verb){ return "The <b>"+name+"</b> "+verb; }); }
-function breakdownPanel(m){
-  var panel=el("div",{class:"breakdown"},[
-    el("div",{class:"bh"},[ el("span",{text:"The breakdown"}),
-      el("span",{class:"leg"},[ el("span",{},[ el("i",{class:"la"}), trunc(m.a.c.model) ]), el("span",{},[ el("i",{class:"lb"}), trunc(m.b.c.model) ]) ]) ]),
-  ]);
-  var fills=[];
-  DIMS.forEach(function(d){
-    var av=sub100(m.a.c,d.key), bv=sub100(m.b.c,d.key);
-    var fa=el("div",{class:"fill"}), fb=el("div",{class:"fill"}); fills.push([fa,av],[fb,bv]);
-    panel.appendChild(el("div",{class:"drow"},[
-      el("div",{class:"dl"},[ el("span",{text:d.label}), d.real?null:el("span",{class:"de",text:"est."}) ]),
-      el("div",{class:"bar a"+(av>=bv?" hi":"")},[ el("div",{class:"track"},[fa]), el("span",{class:"bv",text:String(av)}) ]),
-      el("div",{class:"bar b"+(bv>av?" hi":"")},[ el("div",{class:"track"},[fb]), el("span",{class:"bv",text:String(bv)}) ]),
-    ]));
-  });
-  if(reduced()){ fills.forEach(function(f){ f[0].style.width=f[1]+"%"; }); }
-  else { requestAnimationFrame(function(){ requestAnimationFrame(function(){ fills.forEach(function(f){ f[0].style.width=f[1]+"%"; }); }); }); }
-  return panel;
-}
-function trunc(s){ return s.length>10?s.slice(0,10)+"…":s; }
 
 function choose(side){
-  var s=App.state; if(s.revealed) return;
-  var m=s.seq[s.idx], ra=mIndex(m.a.c), rb=mIndex(m.b.c);
-  var pickedHigher = side==="left" ? (ra>=rb) : (rb>=ra);
-  s.picked=side; s.revealed=true; s.results[s.idx]={ correct:pickedHigher };
-  if(pickedHigher){ s.streak++; if(s.streak>s.best) s.best=s.streak; } else s.streak=0;
-  s.phase="reveal"; render(); window.scrollTo(0,0);
+  var s=App.state; if(s.phase!=="play"||s.revealed) return;
+  stopTimer();
+  var elapsed=Math.min(Date.now()-s.roundStart, CONFIG.roundSeconds*1000);
+  var round=s.rounds[s.idx];
+  var winSide=statWinner(round.stat.key,s.anchor,round.ch)===s.anchor?"left":"right";
+  s.picked=side; s.revealed=true; s.phase="reveal";
+  s.results[s.idx]={ correct:side===winSide, picked:side, timeMs:elapsed };
+  render(); window.scrollTo(0,0);
 }
-function next(){ var s=App.state; if(s.idx>=s.seq.length-1){ finish(); return; } s.idx++; s.revealed=false; s.picked=null; s.phase="play"; render(); window.scrollTo(0,0); }
+function timeUp(){
+  var s=App.state; if(!s||s.phase!=="play") return;
+  s.picked=null; s.revealed=true; s.phase="reveal";
+  s.results[s.idx]={ correct:false, picked:null, timeMs:CONFIG.roundSeconds*1000 };
+  render(); window.scrollTo(0,0);
+}
+function next(){
+  var s=App.state;
+  if(s.idx>=s.rounds.length-1){ finish(); return; }
+  s.idx++;
+  startRound();
+}
+function totalTime(s){ return s.results.reduce(function(t,r){ return t+(r?r.timeMs:0); },0); }
 function finish(){
   var s=App.state;
-  if(!s.practice){
-    var score=s.results.filter(function(r){return r.correct;}).length;
-    if(!loadDaily(s.daily)) saveDaily(s.daily,{ score:score, best:s.best, strip:s.results.map(function(r){return r.correct?1:0;}) });
-    var st=loadStats(); if(st.lastDay!==s.daily){ st.played=(st.played||0)+1; st.lastDay=s.daily; } if(s.best>(st.best||0)) st.best=s.best; saveStats(st);
-  }
+  var score=s.results.filter(function(r){return r.correct;}).length;
+  if(!s.practice) recordDaily(s.daily,score,totalTime(s),s.results.map(function(r){return r.correct?1:0;}));
   s.phase="end"; App.fresh=true; render(); window.scrollTo(0,0);
 }
 
 /* ---- end / share ---- */
-function scoreVerdict(score, total){ var p=score/(total||CONFIG.nMatchups);
-  if(p>=0.92) return "Collector-grade. You know the market."; if(p>=0.75) return "Sharp eye.";
-  if(p>=0.5) return "Respectable. The close ones are the skill."; if(p>=0.25) return "The market humbled you."; return "Rough day at auction."; }
-// the day's takeaway, computed: which factor decided the most matchups (weighted-largest sub-score gap).
-function marketLesson(state){
-  var tally={}; DIMS.forEach(function(d){ tally[d.key]=0; });
-  state.seq.forEach(function(m){ var win=mIndex(m.a.c)>=mIndex(m.b.c)?m.a.c:m.b.c, lose=win===m.a.c?m.b.c:m.a.c;
-    var dd=decidingDims(win,lose)[0]; if(dd) tally[dd.key]++; });
-  var top=DIMS[0], mx=-1; DIMS.forEach(function(d){ if(tally[d.key]>mx){ mx=tally[d.key]; top=d; } });
-  var lines={ sv:"Money talked today — raw <b>value</b> decided more matchups than anything else.",
-    sd:"<b>Desirability</b> ran the board today — want beat numbers in most calls.",
-    sp:"<b>Performance</b> did the deciding today — pace carried the most matchups.",
-    sr:"<b>Rarity</b> beat fame today — scarcity decided more matchups than value or hype." };
-  return (lines[top.key]||"A mixed board today.")+" ("+mx+" of "+state.seq.length+" matchups)";
+function scoreVerdict(score){
+  if(score===5) return "Perfect. The clock is your only rival now.";
+  if(score===4) return "Sharp — one got away.";
+  if(score===3) return "Respectable. The close ones are the skill.";
+  if(score===2) return "The facts humbled you.";
+  return "Rough day at the spec sheet.";
+}
+function closestMiss(s){
+  var best=null,bestRel=Infinity;
+  s.rounds.forEach(function(round,i){
+    var r=s.results[i]; if(!r||r.correct) return;
+    var av=s.anchor.stats[round.stat.key];
+    var rel=Math.abs(av-round.ch.stats[round.stat.key])/Math.abs(av);
+    if(rel<bestRel){ bestRel=rel; best=round; }
+  });
+  return best;
+}
+function shareText(s){
+  var score=s.results.filter(function(r){return r.correct;}).length;
+  var strip=s.results.map(function(r){return r.correct?"🟩":"🟥";}).join("");
+  var lines=[
+    (s.practice?"HIGHER (practice)":"HIGHER #"+s.daily)+" · Motor1",
+    "Anchor: "+carName(s.anchor),
+    strip+" "+score+"/"+s.rounds.length+" · "+fmtSecs(totalTime(s)),
+  ];
+  var miss=closestMiss(s);
+  if(miss) lines.push("Missed: "+miss.stat.short+" vs. "+shortCar(miss.ch));
+  lines.push(SHARE_URL);
+  return lines.join("\n");
 }
 function endView(){
-  var s=App.state, score=s.results.filter(function(r){return r.correct;}).length, stats=loadStats();
+  var s=App.state, score=s.results.filter(function(r){return r.correct;}).length, st=loadStats(), today=dailyNumber();
   var wrap=el("div",{class:"end"},[]);
   wrap.appendChild(el("div",{class:"endhead"},[
     el("div",{class:"k",text:(s.practice?"Practice run":"Daily #"+s.daily)+" · complete"}),
-    el("div",{class:"score num",text:score+"/"+s.seq.length}),
-    el("div",{class:"ssub",text:scoreVerdict(score, s.seq.length)+" · best streak "+s.best}),
+    el("div",{class:"score num",text:score+"/"+s.rounds.length}),
+    el("div",{class:"ssub",text:fmtSecs(totalTime(s))+" total · "+scoreVerdict(score)}),
   ]));
-  wrap.appendChild(el("div",{class:"lesson"},[ el("div",{class:"lk",text:"Today's market lesson"}), el("div",{class:"lt",html:marketLesson(s)}) ]));
-  wrap.appendChild(el("div",{class:"endstats"},[ statBox("This run", score+"/"+s.seq.length), statBox("Run streak", s.best), statBox("All-time best", Math.max(stats.best||0,s.best)) ]));
-
-  // review (closest miss highlighted via gap)
+  // stat row — the "fastest perfect run" box is the slot a global board drops into later
+  wrap.appendChild(el("div",{class:"endstats"},[
+    statBox("Day streak", s.practice?effectiveStreak(st,today):effectiveStreak(st,today)),
+    statBox("Perfect streak", effectivePerfect(st,today)),
+    statBox("Best perfect", st.bestPerfectMs!=null?fmtSecs(st.bestPerfectMs):"—"),
+  ]));
   var list=el("div",{class:"reviewlist"});
-  s.seq.forEach(function(m,i){ var r=s.results[i]; if(!r) return;
-    var win=mIndex(m.a.c)>=mIndex(m.b.c)?m.a.c:m.b.c, gap=Math.abs(mIndex(m.a.c)-mIndex(m.b.c));
+  s.rounds.forEach(function(round,i){
+    var r=s.results[i]; if(!r) return;
+    var gap=Math.abs(s.anchor.stats[round.stat.key]-round.ch.stats[round.stat.key]);
     list.appendChild(el("div",{class:"rev"},[
       el("div",{class:"ri "+(r.correct?"w":"m"),text:r.correct?"✓":"✕"}),
-      el("div",{class:"rc"},[ el("b",{text:win.year+" "+win.model}), " over "+(function(l){return l.year+" "+l.model;})(win===m.a.c?m.b.c:m.a.c) ]),
-      el("div",{class:"rg",text:fmtIdx(gap)}),
+      el("div",{class:"rc"},[ el("b",{text:round.stat.label}), " vs. "+shortCar(round.ch)+(r.picked==null?" · timed out":"") ]),
+      el("div",{class:"rg",text:round.stat.gapFmt(gap)}),
     ]));
   });
   wrap.appendChild(list);
-
-  // closest miss (smallest gap among wrong answers) — share bait
-  var miss=null; s.seq.forEach(function(m,i){ if(s.results[i]&&!s.results[i].correct){ var g=Math.abs(mIndex(m.a.c)-mIndex(m.b.c)); if(miss==null||g<miss) miss=g; } });
-  var strip=s.results.map(function(r){ return r.correct?"🟩":"⬜"; }).join("");
-  var line1=(s.practice?"🏁 HIGHER (practice) — ":"🏁 HIGHER #"+s.daily+" — ")+score+"/"+s.seq.length;
-  var line2="🔥 Best streak "+s.best+(miss!=null?"   ·   closest miss "+fmtIdx(miss):"   ·   no misses");
-  var shareText=line1+"\n"+line2+"\n"+strip+"\n"+SHARE_URL;
-  wrap.appendChild(el("div",{class:"share",text:shareText}));
-  wrap.appendChild(el("button",{class:"btn primary",text:"Copy result",onclick:function(ev){ copyShare(shareText, ev.currentTarget); }}));
-  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random cars)",onclick:function(){ setPractice(); start(); }}));
+  var txt=shareText(s);
+  wrap.appendChild(el("div",{class:"share",text:txt}));
+  wrap.appendChild(el("button",{class:"btn primary",text:"Copy result",onclick:function(ev){ copyShare(txt,ev.currentTarget); }}));
+  wrap.appendChild(el("button",{class:"btn ghost",text:"Practice run (random anchor)",onclick:function(){ setPractice(); start(); }}));
+  wrap.appendChild(el("div",{class:"version",text:VERSION+" · "+BUILD_DATE}));
   return wrap;
 }
-function copyShare(text, btn){
-  var full = text.indexOf(SHARE_URL)>=0 ? text.replace(SHARE_URL, location.href) : (text+"\n"+location.href);
+function copyShare(text,btn){
   var done=function(){ var t=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){ btn.textContent=t; },1400); };
-  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(done,done); else done();
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done,done); else done();
 }
 
-/* ---- debug: the cleaning-gate check (lists compound entries) ---- */
+/* ---- debug: stat-completeness report for editorial (?debug=1) ---- */
 function debugView(){
-  var box=el("div",{class:"debug"},[ el("h4",{text:"DEBUG · cleaning gate"}),
-    el("div",{text:COMPOUNDS.length+" compound entries excluded from play (make/model contains \" / \"):"}) ]);
-  COMPOUNDS.forEach(function(c){ box.appendChild(el("div",{text:"• "+c.year+" "+c.make+" "+c.model})); });
-  box.appendChild(el("div",{style:"margin-top:6px",text:PLAYABLE.length+" playable cars."}));
+  var keys=STATS.map(function(s){return s.key;});
+  var box=el("div",{class:"debug"},[ el("h4",{text:"DEBUG · data report ("+CARS.length+" cars)"}) ]);
+  var unverified=CARS.filter(function(c){return c.verified!==true;}).length;
+  box.appendChild(el("div",{text:unverified+" of "+CARS.length+" entries unverified (verified:false)."}));
+  if(COMPOUND_FLAGGED.length){
+    box.appendChild(el("div",{text:COMPOUND_FLAGGED.length+" compound names (\" / \") — split these:"}));
+    COMPOUND_FLAGGED.forEach(function(c){ box.appendChild(el("div",{text:"  • "+c.id})); });
+  } else box.appendChild(el("div",{class:"ok",text:"No compound names — one real car per entry. ✓"}));
+  box.appendChild(el("div",{text:"Stat completeness ("+keys.map(function(k){return STAT_BY_KEY[k].label;}).join(" · ")+"):"}));
+  CARS.forEach(function(c){
+    var marks=keys.map(function(k){ return c.stats&&c.stats[k]!=null?"✓":"·"; }).join("");
+    var n=keys.filter(function(k){ return c.stats&&c.stats[k]!=null; }).length;
+    box.appendChild(el("div",{class:n===keys.length?"ok":"",text:marks+" "+n+"/"+keys.length+"  "+c.id}));
+  });
   return box;
 }
 
 /* ---- boot ---- */
 App.root=document.getElementById("app");
-setDaily(); App.fresh=true; render();
-window.__HIGHER__ = { CARS:CARS, PLAYABLE:PLAYABLE, COMPOUNDS:COMPOUNDS, WEIGHTS:WEIGHTS, CONFIG:CONFIG, mIndex:mIndex, buildSequence:buildSequence, catLabel:catLabel, dailyNumber:dailyNumber };
+if(CARS.length) setDaily();
+App.fresh=true; render();
+window.__HIGHER__={ VERSION:VERSION, CARS:CARS, CONFIG:CONFIG, STATS:STATS,
+  buildDay:buildDay, dailyNumber:dailyNumber, isUpset:isUpset,
+  _forceTimeout:function(){ if(App.state&&App.state.phase==="play"){ stopTimer(); timeUp(); } },
+  _state:function(){ return App.state; } };
 })();
 </script>
 </body>
